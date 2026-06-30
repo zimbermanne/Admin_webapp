@@ -3,7 +3,9 @@ import { useApi } from '../hooks/useApi.js'
 
 export default function Dashboard() {
   const api = useApi()
-  const [data, setData] = useState(null) // Combine your states for cleaner logic
+  const [daily, setDaily] = useState(null)
+  const [inv, setInv] = useState(null)
+  const [fin, setFin] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -12,54 +14,58 @@ export default function Dashboard() {
       api.get('/inventory/metrics'),
       api.get('/reports/financial-summary'),
     ])
-      .then(([d, i, f]) => setData({ daily: d, inv: i, fin: f }))
+      .then(([d, i, f]) => {
+        setDaily(d)
+        setInv(i)
+        setFin(f)
+      })
       .catch((e) => setError(e.message))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  if (!data) return <div className="loading">Loading...</div>
-
-  const { daily, inv, fin } = data
 
   return (
     <div className="page">
-      <div className="page-header"><h1>Dashboard</h1></div>
+      <div className="page-header">
+        <h1>Home</h1>
+      </div>
 
-      {/* KPI GRID */}
-      <div className="kpi-grid">
-        <div className="card kpi-card">
-          <div className="kpi-icon">🛒</div>
-          <div className="kpi-label">Today's Revenue</div>
-          <div className="kpi-value text-gold mono">TZS {daily.earnings.toLocaleString()}</div>
-          <div className="kpi-change text-muted">Today · {daily.items_sold} items sold</div>
-        </div>
-        
-        <div className="card kpi-card">
-          <div className="kpi-icon">📦</div>
-          <div className="kpi-label">Stock Alerts</div>
-          <div className="kpi-value text-red">{daily.low_stock_count}</div>
-          <div className="kpi-change text-muted">Items low or out of stock</div>
-        </div>
+      {error && <div className="error-text">{error}</div>}
 
-        <div className="card kpi-card">
-          <div className="kpi-icon">💰</div>
-          <div className="kpi-label">Net Profit (All-time)</div>
-          <div className="kpi-value mono text-green">TZS {fin.net_profit.toLocaleString()}</div>
-          <div className="kpi-change text-muted">Total margin</div>
+      <div className="card-grid">
+        <div className="card metric-card">
+          <div className="label">Today's Earnings</div>
+          <div className="value">TZS {daily ? daily.earnings.toLocaleString() : '—'}</div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Items Sold Today</div>
+          <div className="value">{daily ? daily.items_sold : '—'}</div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Top Product Today</div>
+          <div className="value" style={{ fontSize: 16 }}>{daily?.top_product || 'No sales yet'}</div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Low Stock Items</div>
+          <div className="value">{daily ? daily.low_stock_count : '—'}</div>
         </div>
       </div>
 
-      {/* DASH GRID */}
-      <div className="dash-grid">
-        <div className="card card-pad">
-          <div className="section-title">Inventory Overview</div>
-          <div className="table-wrap">
-             <table className="data-table">
-               <tbody>
-                 <tr><td>Total Inventory Value</td><td className="mono">TZS {inv.total_value.toLocaleString()}</td></tr>
-                 <tr><td>Total Stock Units</td><td className="mono">{inv.total_units}</td></tr>
-               </tbody>
-             </table>
-          </div>
+      <div className="card-grid">
+        <div className="card metric-card">
+          <div className="label">Inventory Value</div>
+          <div className="value">TZS {inv ? inv.total_value.toLocaleString() : '—'}</div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Total Stock Units</div>
+          <div className="value">{inv ? inv.total_units : '—'}</div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Net Profit (All-time)</div>
+          <div className="value">TZS {fin ? fin.net_profit.toLocaleString() : '—'}</div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Total Revenue (All-time)</div>
+          <div className="value">TZS {fin ? fin.revenue.toLocaleString() : '—'}</div>
         </div>
       </div>
     </div>
