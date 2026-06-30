@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 import Sidebar, { NAV } from './components/Sidebar.jsx'
 import MobileTopBar from './components/MobileTopBar.jsx'
+import Clock from './Clock.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Dashboard from './pages/Dashboard.jsx'
@@ -37,7 +38,12 @@ function Layout({ children }) {
       <MobileTopBar title={pageTitle(location.pathname)} open={mobileOpen} onToggle={() => setMobileOpen((o) => !o)} />
       <div className={`mobile-backdrop ${mobileOpen ? 'open' : ''}`} onClick={() => setMobileOpen(false)} />
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-      <div className="main-content">{children}</div>
+      <div className="main-content">
+        <div className="desktop-topbar">
+          <Clock />
+        </div>
+        {children}
+      </div>
     </div>
   )
 }

@@ -287,7 +287,7 @@ label {
 }
 
 .mobile-topbar {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 12px;
   background: var(--navy);
@@ -297,6 +297,12 @@ label {
   position: sticky;
   top: 0;
   z-index: 50;
+}
+
+.desktop-topbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 24px 0;
 }
 
 .hamburger {
@@ -310,7 +316,7 @@ label {
 }
 
 .clock-widget {
-  text-align: bottom right;
+  text-align: right;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
@@ -322,6 +328,10 @@ label {
 
 .clock-date {
   font-size: 10px;
+  color: var(--text-muted);
+}
+
+.mobile-topbar .clock-date {
   color: rgba(255, 255, 255, 0.7);
 }
 
@@ -343,6 +353,14 @@ label {
 
   .hamburger {
     display: block;
+  }
+
+  .mobile-topbar {
+    display: flex;
+  }
+
+  .desktop-topbar {
+    display: none;
   }
 
   .mobile-backdrop.open {
