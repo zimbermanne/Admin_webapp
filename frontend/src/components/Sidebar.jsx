@@ -17,6 +17,14 @@ const NAV = [
     children: [
       { label: 'Purchases Ledger', icon: '📦', path: '/purchases' },
       { label: 'Creditors Ledger', icon: '🏦', path: '/creditors' },
+      { label: 'vendors', icon: '🏦', path: '/vendors' },
+    ],
+  },
+   {
+    type: 'group', label: 'Proforma/quotations', key: 'proforma',
+    children: [
+      { label: 'Proforma', icon: '📦', path: '/proforma' },
+      { label: 'quotation/estimate', icon: '🏦', path: 'quotation/estimate' },
     ],
   },
   {
@@ -67,7 +75,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
     <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-brand">
         <div className="brand-logo">Z</div>
-        <div className="brand-text">Zimbermanne</div>
+        <div className="brand-text">Zimbermanne Accounting</div>
       </div>
 
       <nav className="sidebar-nav">
