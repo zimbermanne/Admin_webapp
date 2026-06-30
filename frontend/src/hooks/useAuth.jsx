@@ -51,6 +51,19 @@ export function AuthProvider({ children }) {
     return data.user
   }, [])
 
+  const loginAsDemo = useCallback(async () => {
+    const res = await fetch('/api/auth/demo-login', { method: 'POST' })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || 'Demo login failed')
+    }
+    const data = await res.json()
+    sessionStorage.setItem(TOKEN_KEY, data.access_token)
+    setToken(data.access_token)
+    setUser(data.user)
+    return data.user
+  }, [])
+
   const logout = useCallback(() => {
     sessionStorage.removeItem(TOKEN_KEY)
     setToken(null)
@@ -58,7 +71,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, login, logout }}>
+    <AuthContext.Provider value={{ token, user, loading, login, loginAsDemo, logout }}>
       {children}
     </AuthContext.Provider>
   )

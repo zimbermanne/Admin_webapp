@@ -22,6 +22,22 @@ def seed():
             print("Default admin created -> username: admin, password: admin123")
         else:
             print("Admin user already exists, skipping seed.")
+
+        if not db.query(User).filter(User.username == "demo").first():
+            import uuid
+            demo = User(
+                username="demo",
+                full_name="Demo User",
+                email="demo@zimbermanne.co.tz",
+                hashed_password=hash_password(uuid.uuid4().hex),  # unused, unguessable
+                role=RoleEnum.manager,
+                is_demo=True,
+            )
+            db.add(demo)
+            db.commit()
+            print("Demo account created -> use POST /api/auth/demo-login (no password needed)")
+        else:
+            print("Demo account already exists, skipping seed.")
     finally:
         db.close()
 

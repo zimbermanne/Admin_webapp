@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 export default function Login() {
-  const { login, user } = useAuth()
+  const { login, loginAsDemo, user } = useAuth()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [demoBusy, setDemoBusy] = useState(false)
 
   if (user) {
     navigate('/', { replace: true })
@@ -26,6 +27,19 @@ export default function Login() {
       setError(err.message)
     } finally {
       setBusy(false)
+    }
+  }
+
+  const tryDemo = async () => {
+    setError('')
+    setDemoBusy(true)
+    try {
+      await loginAsDemo()
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setDemoBusy(false)
     }
   }
 
@@ -48,6 +62,17 @@ export default function Login() {
             {busy ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0' }}>
+          <div style={{ flex: 1, height: 1, background: '#e8e4dc' }} />
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>or</span>
+          <div style={{ flex: 1, height: 1, background: '#e8e4dc' }} />
+        </div>
+
+        <button className="btn btn-gold" style={{ width: '100%' }} onClick={tryDemo} disabled={demoBusy}>
+          {demoBusy ? 'Loading demo…' : '✨ Continue as Demo (no password)'}
+        </button>
+
         <div style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
           Default: admin / admin123
         </div>

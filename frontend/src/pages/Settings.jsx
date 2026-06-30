@@ -39,6 +39,11 @@ export default function Settings() {
 
         <div className="card" style={{ flex: 1, minWidth: 280 }}>
           <h3 style={{ marginTop: 0 }}>Change Password</h3>
+          {user?.is_demo ? (
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              This is a shared demo account, so its password can't be changed.
+            </div>
+          ) : (
           <form onSubmit={changePassword}>
             <div className="form-row"><label>Current Password</label><input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} required /></div>
             <div className="form-row"><label>New Password</label><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required /></div>
@@ -46,6 +51,7 @@ export default function Settings() {
             {message && <div style={{ color: 'var(--success)', fontSize: 13, marginBottom: 8 }}>{message}</div>}
             <button className="btn btn-primary">Update Password</button>
           </form>
+          )}
         </div>
       </div>
     </div>

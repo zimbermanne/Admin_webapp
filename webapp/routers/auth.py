@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -46,6 +47,28 @@ def me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
+@router.post("/demo-login", response_model=Token)
+def demo_login(db: Session = Depends(get_db)):
+    """Instant login as a read-friendly demo account — no credentials required."""
+    user = db.query(User).filter(User.username == "demo").first()
+    if not user:
+        # Lazily create it if init_db hasn't run yet / fresh DB
+        user = User(
+            username="demo",
+            full_name="Demo User",
+            email="demo@zimbermanne.co.tz",
+            hashed_password=hash_password(uuid.uuid4().hex),  # unguessable, unused
+            role=RoleEnum.manager,
+            is_demo=True,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    token = create_access_token({"sub": user.username, "role": user.role.value})
+    log_activity(db, user.username, "demo_login", "Demo account accessed")
+    return Token(access_token=token, user=user)
+
+
 @router.put("/change-password")
 def change_password(
     payload: ChangePasswordRequest,
@@ -53,6 +76,8 @@ def change_password(
     db: Session = Depends(get_db),
 ):
     from auth import verify_password
+    if current_user.is_demo:
+        raise HTTPException(status_code=403, detail="The demo account's password cannot be changed")
     if not verify_password(payload.old_password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Old password is incorrect")
     current_user.hashed_password = hash_password(payload.new_password)

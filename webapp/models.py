@@ -35,6 +35,7 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     role = Column(Enum(RoleEnum), default=RoleEnum.employee)
     is_active = Column(Boolean, default=True)
+    is_demo = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

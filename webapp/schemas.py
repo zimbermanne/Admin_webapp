@@ -21,6 +21,7 @@ class UserOut(BaseModel):
     email: str
     role: RoleEnum
     is_active: bool
+    is_demo: bool
     created_at: datetime
 
 
