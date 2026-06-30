@@ -310,7 +310,7 @@ label {
 }
 
 .clock-widget {
-  text-align: right;
+  text-align: left;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
