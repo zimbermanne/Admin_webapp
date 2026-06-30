@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
+import { apiUrl } from '../api-config.js'
 
 export default function Register() {
   const { login, user } = useAuth()
@@ -33,14 +34,23 @@ export default function Register() {
 
     setBusy(true)
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, full_name: fullName, email }),
-      })
+      let res
+      try {
+        res = await fetch(apiUrl('/api/auth/register'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, full_name: fullName, email }),
+        })
+      } catch {
+        throw new Error('Could not reach the server. Check your connection or the API configuration.')
+      }
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.detail || 'Registration failed')
+        const contentType = res.headers.get('content-type') || ''
+        if (contentType.includes('application/json')) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err.detail || 'Registration failed')
+        }
+        throw new Error(`Registration failed (${res.status}) — the server returned an unexpected response. The API URL may be misconfigured.`)
       }
       // Auto sign-in right after successful registration
       await login(username, password)

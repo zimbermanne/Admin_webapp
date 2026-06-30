@@ -47,6 +47,27 @@ Open `http://localhost:5173`. The Vite dev server proxies `/api/*` to `http://lo
 Default login: **admin / admin123** — change this immediately after first login
 (Settings → Change Password).
 
+### 3. Production deployment (Railway, or any host where frontend/backend are separate services)
+
+The dev server's `/api` proxy (in `vite.config.js`) only exists while running `vite dev` —
+it is **not** part of the production build. If you deploy the frontend as a static site
+(e.g. on its own Railway service) separately from the FastAPI backend, you must tell the
+frontend where the backend lives at **build time**, otherwise `/api/*` requests will hit the
+frontend's own host and fail (you'll see a generic "Registration failed" / "Login failed"
+instead of a real error, because the response isn't JSON).
+
+Set `VITE_API_URL` to your backend's public URL before building:
+
+```bash
+VITE_API_URL=https://your-backend-service.up.railway.app npm run build
+```
+
+On Railway, add `VITE_API_URL` as a **build-time** environment variable on the frontend
+service (Settings → Variables), pointing at the backend service's public domain, then
+redeploy. Also make sure the backend's `ALLOWED_ORIGINS` env var includes the frontend's
+URL so CORS doesn't block the requests.
+
+
 ## Not yet implemented
 
 The README's **Roadmap (v3.0+)** items — double-entry accounting, invoicing/quotes,
