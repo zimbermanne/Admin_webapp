@@ -78,7 +78,7 @@ export default function Login() {
         </div>
 
         <div style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
-          Default:let take care of the money problem.
+          let take care of the money problem.
         </div>
       </div>
     </div>
