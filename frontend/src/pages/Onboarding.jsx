@@ -86,14 +86,12 @@ export default function Onboarding() {
   const validateStep = () => {
     if (step === 1) {
       if (!form.name.trim()) return 'Business name is required.'
-      if (!form.owner_full_name.trim()) return 'Owner / representative full name is required.'
       if (form.business_structure === 'company' && !form.tin.trim()) return 'TIN is required for a registered company.'
       if (!form.region.trim() || !form.district.trim()) return 'Region and district are required.'
       return ''
     }
     if (step === 2) {
       if (!form.phone.trim()) return 'A contact phone number is required.'
-      if (!form.email.trim()) return 'A contact email is required.'
       return ''
     }
     return ''
@@ -123,7 +121,7 @@ export default function Onboarding() {
     setStep((s) => Math.min(s + 1, STEPS.length))
   }
 
-  const goBack = () => setStep((s) => Math.max(s - 1, 1))
+  const goBack = () => { setError(''); setStep((s) => Math.max(s - 1, 1)) }
 
   const saveItemsAndContinue = async () => {
     setError(''); setItemsMsg('')
@@ -214,6 +212,9 @@ export default function Onboarding() {
         {/* Step 1 — Business basics */}
         {step === 1 && (
           <>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
+              Owner name is set from your registration details — edit it anytime in Settings.
+            </div>
             <div className="form-row">
               <label>Business structure</label>
               <select value={form.business_structure} onChange={set('business_structure')}>
@@ -225,10 +226,6 @@ export default function Onboarding() {
               <div className="form-row">
                 <label>Business name *</label>
                 <input value={form.name} onChange={set('name')} autoFocus />
-              </div>
-              <div className="form-row">
-                <label>Owner / representative full name *</label>
-                <input value={form.owner_full_name} onChange={set('owner_full_name')} />
               </div>
               <div className="form-row">
                 <label>TIN {form.business_structure === 'company' ? '(required)' : '(optional)'}</label>
@@ -259,13 +256,14 @@ export default function Onboarding() {
         {/* Step 2 — Contact & branding */}
         {step === 2 && (
           <div className="wizard-row">
+            <div className="form-row" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>
+                Contact email is set from your registration details — edit it anytime in Settings.
+              </div>
+            </div>
             <div className="form-row">
               <label>Phone *</label>
               <input value={form.phone} onChange={set('phone')} autoFocus />
-            </div>
-            <div className="form-row">
-              <label>Email *</label>
-              <input type="email" value={form.email} onChange={set('email')} />
             </div>
             <div className="form-row" style={{ gridColumn: '1 / -1' }}>
               <label>Logo URL (optional)</label>
