@@ -46,8 +46,8 @@ export default function Login() {
   return (
     <div className="login-screen">
       <div className="login-card">
-        <h1>Zimbermanne Retail OS</h1>
-        <div className="sub">Sign in to your business dashboard</div>
+        <h1>Zimbermanne Accounting OS</h1>
+        <div className="sub">Login to your Business dashboard</div>
         <form onSubmit={submit}>
           <div className="form-row">
             <label>Username</label>
@@ -78,7 +78,7 @@ export default function Login() {
         </div>
 
         <div style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
-          Default: admin / admin123
+          let take care of the money problem.
         </div>
       </div>
     </div>
