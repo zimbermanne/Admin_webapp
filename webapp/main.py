@@ -11,7 +11,7 @@ from routers import auth, inventory, sales, purchases, expenses, ledgers, report
 Base.metadata.create_all(bind=engine)
 run_migrations(engine)
 
-app = FastAPI(title="Zimbermanne Retail OS API", version="2.5.0")
+app = FastAPI(title="Zimbermanne Accounting OS API", version="2.5.0")
 
 origins_env = os.getenv("ALLOWED_ORIGINS", "*")
 allowed_origins = [o.strip() for o in origins_env.split(",")] if origins_env != "*" else ["*"]

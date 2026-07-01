@@ -1,6 +1,6 @@
-# Zimbermanne Retail OS — v2.5 Scaffold
+# Zimbermanne Accounting  — v3.0 Skyscratcher
 
-This project was generated from `README2_5.md`. It implements the **"Currently Working (v2.5)"**
+This project was generated from `README3.0.md`. It implements the **"Currently Working (v3.0)"**
 feature set as a working FastAPI backend (`webapp/`) and a React + Vite frontend (`frontend/`),
 matching the project structure, sidebar design, and theme described in the README.
 
