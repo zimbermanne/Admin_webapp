@@ -35,22 +35,7 @@ def seed():
                 account_id=None,  # Superadmin has no account
             )
             db.add(superadmin)
-            try:
-                db.commit()
-            except sqlalchemy.exc.DataError:
-                # Most likely cause: the DB's roleenum type predates the
-                # 'superadmin' value and run_migrations() couldn't add it
-                # (e.g. non-Postgres DB, or insufficient privileges to
-                # ALTER TYPE). Roll back so the session is usable again and
-                # fail with a message that points at the real cause instead
-                # of a raw DataError.
-                db.rollback()
-                raise RuntimeError(
-                    "Failed to insert superadmin user: the database's "
-                    "'roleenum' type may be missing the 'superadmin' value. "
-                    "Check that run_migrations() ran successfully and that "
-                    "the DB user has privileges to ALTER TYPE."
-                )
+            db.commit()
             print("[OK] Superadmin created -> username: superadmin, password: superadmin123")
         else:
             print("[INFO] Superadmin already exists, skipping seed.")

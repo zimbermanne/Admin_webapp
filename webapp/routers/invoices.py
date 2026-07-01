@@ -16,7 +16,7 @@ from activity import log_activity_for_user
 
 router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 
-COMPANY_NAME    = os.getenv("COMPANY_NAME", "Zimbermanne Retail OS")
+COMPANY_NAME    = os.getenv("COMPANY_NAME", "Zimbermanne Accounting OS")
 COMPANY_ADDRESS = os.getenv("COMPANY_ADDRESS", "Arusha, Tanzania")
 COMPANY_PHONE   = os.getenv("COMPANY_PHONE", "")
 COMPANY_EMAIL   = os.getenv("COMPANY_EMAIL", "")

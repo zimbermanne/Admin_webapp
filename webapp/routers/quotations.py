@@ -178,7 +178,7 @@ def _render_quotation_pdf(q: Quotation) -> io.BytesIO:
     from reportlab.lib.enums import TA_RIGHT
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 
-    COMPANY_NAME    = os.getenv("COMPANY_NAME", "Zimbermanne Retail OS")
+    COMPANY_NAME    = os.getenv("COMPANY_NAME", "Zimbermanne Accounting OS")
     COMPANY_ADDRESS = os.getenv("COMPANY_ADDRESS", "Arusha, Tanzania")
     COMPANY_PHONE   = os.getenv("COMPANY_PHONE", "")
     COMPANY_EMAIL   = os.getenv("COMPANY_EMAIL", "")
