@@ -3,13 +3,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import User, RoleEnum
-from schemas import UserCreate, UserOut, LoginRequest, Token, ChangePasswordRequest
+from models import User, RoleEnum, Account
+from schemas import UserCreate, UserOut, LoginRequest, Token, ChangePasswordRequest, AccountCreate
 from auth import (
     hash_password, authenticate_user, create_access_token,
     get_current_user, require_admin,
 )
-from activity import log_activity
+from activity import log_activity_for_user
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -18,18 +18,30 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 def register(payload: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == payload.username).first():
         raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Create a new account for self-service registration
+    account = Account(
+        name=f"{payload.full_name}'s Business",
+        owner_full_name=payload.full_name or payload.username,
+        business_type="retail",
+        email=payload.email or "",
+    )
+    db.add(account)
+    db.commit()
+    db.refresh(account)
+    
     user = User(
         username=payload.username,
         full_name=payload.full_name or "",
         email=payload.email or "",
         hashed_password=hash_password(payload.password),
-        role=RoleEnum.employee,  # public self-registration is always lowest privilege;
-                                 # an admin can promote via PUT /api/users/{username}
+        role=RoleEnum.admin,  # First user in an account becomes admin
+        account_id=account.id,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
-    log_activity(db, user.username, "register", "New account created")
+    log_activity_for_user(db, user, "register", f"New account created: {account.name}")
     return user
 
 
@@ -38,8 +50,14 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     user = authenticate_user(db, payload.username, payload.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    token = create_access_token({"sub": user.username, "role": user.role.value})
-    log_activity(db, user.username, "login", "User logged in")
+    
+    # Include account_id in JWT token
+    token_data = {"sub": user.username, "role": user.role.value}
+    if user.account_id:
+        token_data["account_id"] = user.account_id
+    
+    token = create_access_token(token_data)
+    log_activity_for_user(db, user, "login", "User logged in")
     return Token(access_token=token, user=user)
 
 
@@ -54,6 +72,18 @@ def demo_login(db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == "demo").first()
     if not user:
         # Lazily create it if init_db hasn't run yet / fresh DB
+        # Create a demo account first
+        demo_account = Account(
+            name="Demo Business",
+            owner_full_name="Demo Owner",
+            business_type="retail",
+            email="demo@zimbermanne.co.tz",
+            phone="+255123456789",
+        )
+        db.add(demo_account)
+        db.commit()
+        db.refresh(demo_account)
+        
         user = User(
             username="demo",
             full_name="Demo User",
@@ -61,12 +91,18 @@ def demo_login(db: Session = Depends(get_db)):
             hashed_password=hash_password(uuid.uuid4().hex),  # unguessable, unused
             role=RoleEnum.manager,
             is_demo=True,
+            account_id=demo_account.id,
         )
         db.add(user)
         db.commit()
         db.refresh(user)
-    token = create_access_token({"sub": user.username, "role": user.role.value})
-    log_activity(db, user.username, "demo_login", "Demo account accessed")
+    
+    token_data = {"sub": user.username, "role": user.role.value}
+    if user.account_id:
+        token_data["account_id"] = user.account_id
+    
+    token = create_access_token(token_data)
+    log_activity_for_user(db, user, "demo_login", "Demo account accessed")
     return Token(access_token=token, user=user)
 
 
@@ -83,7 +119,7 @@ def change_password(
         raise HTTPException(status_code=400, detail="Old password is incorrect")
     current_user.hashed_password = hash_password(payload.new_password)
     db.commit()
-    log_activity(db, current_user.username, "change_password", "Password changed")
+    log_activity_for_user(db, current_user, "change_password", "Password changed")
     return {"detail": "Password updated successfully"}
 
 
@@ -99,5 +135,5 @@ def reset_password(
         raise HTTPException(status_code=404, detail="User not found")
     user.hashed_password = hash_password(new_password)
     db.commit()
-    log_activity(db, admin.username, "reset_password", f"Reset password for {username}")
+    log_activity_for_user(db, admin, "reset_password", f"Reset password for {username}")
     return {"detail": f"Password reset for {username}"}

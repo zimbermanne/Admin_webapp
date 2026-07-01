@@ -3,33 +3,54 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Expense, User
+from models import Expense, User, RoleEnum
 from schemas import ExpenseCreate, ExpenseOut
 from auth import get_current_user, require_manager_up
-from activity import log_activity
+from activity import log_activity_for_user
 
 router = APIRouter(prefix="/api/expenses", tags=["expenses"])
+
+
+def get_account_filter(current_user: User):
+    """Return account_id filter for queries. Superadmin gets None (no filter)."""
+    if current_user.role == RoleEnum.superadmin:
+        return None
+    if not current_user.account_id:
+        raise HTTPException(status_code=403, detail="User must belong to an account")
+    return current_user.account_id
 
 
 @router.post("/", response_model=ExpenseOut)
 def record_expense(payload: ExpenseCreate, db: Session = Depends(get_db),
                     current_user: User = Depends(get_current_user)):
-    expense = Expense(**payload.model_dump())
+    account_id = get_account_filter(current_user)
+    if account_id is None:
+        raise HTTPException(status_code=403, detail="Superadmin cannot record expenses")
+    
+    expense = Expense(**payload.model_dump(), account_id=account_id)
     db.add(expense)
     db.commit()
     db.refresh(expense)
-    log_activity(db, current_user.username, "expense_record", f"Recorded expense {expense.amount} ({expense.category})")
+    log_activity_for_user(db, current_user, "expense_record", f"Recorded expense {expense.amount} ({expense.category})")
     return expense
 
 
 @router.get("/", response_model=List[ExpenseOut])
 def list_expenses(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Expense).order_by(Expense.created_at.desc()).all()
+    query = db.query(Expense)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Expense.account_id == account_id)
+    return query.order_by(Expense.created_at.desc()).all()
 
 
 @router.get("/stats/summary")
 def expense_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    expenses = db.query(Expense).all()
+    query = db.query(Expense)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Expense.account_id == account_id)
+    expenses = query.all()
     by_category = {}
     for e in expenses:
         by_category[e.category] = by_category.get(e.category, 0) + e.amount
@@ -42,7 +63,11 @@ def expense_stats(db: Session = Depends(get_db), current_user: User = Depends(ge
 
 @router.get("/{expense_id}", response_model=ExpenseOut)
 def get_expense(expense_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    query = db.query(Expense).filter(Expense.id == expense_id)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Expense.account_id == account_id)
+    expense = query.first()
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     return expense
@@ -51,10 +76,14 @@ def get_expense(expense_id: int, db: Session = Depends(get_db), current_user: Us
 @router.delete("/{expense_id}")
 def delete_expense(expense_id: int, db: Session = Depends(get_db),
                     current_user: User = Depends(require_manager_up)):
-    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    account_id = get_account_filter(current_user)
+    query = db.query(Expense).filter(Expense.id == expense_id)
+    if account_id is not None:
+        query = query.filter(Expense.account_id == account_id)
+    expense = query.first()
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     db.delete(expense)
     db.commit()
-    log_activity(db, current_user.username, "expense_delete", f"Deleted expense {expense_id}")
+    log_activity_for_user(db, current_user, "expense_delete", f"Deleted expense {expense_id}")
     return {"detail": "Expense deleted"}

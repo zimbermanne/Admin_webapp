@@ -6,12 +6,21 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Sale, InventoryItem, Debtor, User, PaymentMode, LedgerStatus
+from models import Sale, InventoryItem, Debtor, User, PaymentMode, LedgerStatus, RoleEnum
 from schemas import SaleCreate, SaleOut, CheckoutRequest, CheckoutResponse
 from auth import get_current_user, require_manager_up
-from activity import log_activity
+from activity import log_activity_for_user
 
 router = APIRouter(prefix="/api/sales", tags=["sales"])
+
+
+def get_account_filter(current_user: User):
+    """Return account_id filter for queries. Superadmin gets None (no filter)."""
+    if current_user.role == RoleEnum.superadmin:
+        return None
+    if not current_user.account_id:
+        raise HTTPException(status_code=403, detail="User must belong to an account")
+    return current_user.account_id
 
 
 def _decrement_stock(db: Session, item: InventoryItem, qty: float):
@@ -23,6 +32,10 @@ def _decrement_stock(db: Session, item: InventoryItem, qty: float):
 @router.post("/", response_model=SaleOut)
 def record_sale(payload: SaleCreate, db: Session = Depends(get_db),
                  current_user: User = Depends(get_current_user)):
+    account_id = get_account_filter(current_user)
+    if account_id is None:
+        raise HTTPException(status_code=403, detail="Superadmin cannot record sales")
+    
     item = None
     unit_price = payload.unit_price or 0
     item_name = payload.item_name or ""
@@ -30,12 +43,15 @@ def record_sale(payload: SaleCreate, db: Session = Depends(get_db),
         item = db.query(InventoryItem).filter(InventoryItem.id == payload.item_id).first()
         if not item:
             raise HTTPException(status_code=404, detail="Inventory item not found")
+        if item.account_id != account_id:
+            raise HTTPException(status_code=403, detail="Item does not belong to your account")
         _decrement_stock(db, item, payload.quantity)
         unit_price = payload.unit_price if payload.unit_price is not None else item.selling_price
         item_name = item.name
 
     total = unit_price * payload.quantity
     sale = Sale(
+        account_id=account_id,
         item_id=item.id if item else None,
         item_name=item_name,
         quantity=payload.quantity,
@@ -50,6 +66,7 @@ def record_sale(payload: SaleCreate, db: Session = Depends(get_db),
 
     if payload.payment_mode == PaymentMode.credit:
         debtor = Debtor(
+            account_id=account_id,
             name=payload.customer_name or "Walk-in",
             total_owed=total,
             status=LedgerStatus.unpaid,
@@ -59,19 +76,25 @@ def record_sale(payload: SaleCreate, db: Session = Depends(get_db),
 
     db.commit()
     db.refresh(sale)
-    log_activity(db, current_user.username, "sale_record", f"Sold {payload.quantity} x {item_name}")
+    log_activity_for_user(db, current_user, "sale_record", f"Sold {payload.quantity} x {item_name}")
     return sale
 
 
 @router.post("/checkout", response_model=CheckoutResponse)
 def checkout(payload: CheckoutRequest, db: Session = Depends(get_db),
              current_user: User = Depends(get_current_user)):
+    account_id = get_account_filter(current_user)
+    if account_id is None:
+        raise HTTPException(status_code=403, detail="Superadmin cannot perform checkout")
+    
     # Validate stock for all lines first (no overselling)
     items_map = {}
     for line in payload.lines:
         item = db.query(InventoryItem).filter(InventoryItem.id == line.item_id).first()
         if not item:
             raise HTTPException(status_code=404, detail=f"Item {line.item_id} not found")
+        if item.account_id != account_id:
+            raise HTTPException(status_code=403, detail=f"Item {line.item_id} does not belong to your account")
         if item.quantity < line.quantity:
             raise HTTPException(status_code=400, detail=f"Insufficient stock for {item.name}")
         items_map[line.item_id] = item
@@ -85,6 +108,7 @@ def checkout(payload: CheckoutRequest, db: Session = Depends(get_db),
         total = item.selling_price * line.quantity
         grand_total += total
         sale = Sale(
+            account_id=account_id,
             item_id=item.id,
             item_name=item.name,
             quantity=line.quantity,
@@ -100,6 +124,7 @@ def checkout(payload: CheckoutRequest, db: Session = Depends(get_db),
 
     if payload.payment_mode == PaymentMode.credit:
         debtor = Debtor(
+            account_id=account_id,
             name=payload.customer_name or "Walk-in",
             phone=payload.customer_phone or "",
             total_owed=grand_total,
@@ -111,7 +136,7 @@ def checkout(payload: CheckoutRequest, db: Session = Depends(get_db),
     db.commit()
     for s in sales:
         db.refresh(s)
-    log_activity(db, current_user.username, "pos_checkout", f"Checkout {receipt_no} total {grand_total}")
+    log_activity_for_user(db, current_user, "pos_checkout", f"Checkout {receipt_no} total {grand_total}")
     return CheckoutResponse(receipt_no=receipt_no, sales=sales, total=grand_total)
 
 
@@ -119,6 +144,9 @@ def checkout(payload: CheckoutRequest, db: Session = Depends(get_db),
 def list_sales(start: Optional[date] = None, end: Optional[date] = None,
                 db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     query = db.query(Sale)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Sale.account_id == account_id)
     if start:
         query = query.filter(Sale.created_at >= datetime.combine(start, datetime.min.time()))
     if end:
@@ -128,7 +156,11 @@ def list_sales(start: Optional[date] = None, end: Optional[date] = None,
 
 @router.get("/stats/summary")
 def sales_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    sales = db.query(Sale).all()
+    query = db.query(Sale)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Sale.account_id == account_id)
+    sales = query.all()
     total_revenue = sum(s.total for s in sales)
     total_qty = sum(s.quantity for s in sales)
     return {
@@ -142,7 +174,11 @@ def sales_stats(db: Session = Depends(get_db), current_user: User = Depends(get_
 @router.get("/customers/history")
 def customer_purchase_history(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Returns each customer with the items they bought and when, for the Purchases Ledger view."""
-    sales = db.query(Sale).order_by(Sale.created_at.desc()).all()
+    query = db.query(Sale)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Sale.account_id == account_id)
+    sales = query.order_by(Sale.created_at.desc()).all()
     grouped = {}
     for s in sales:
         key = s.customer_name or "Walk-in"
@@ -169,12 +205,20 @@ def customer_purchase_history(db: Session = Depends(get_db), current_user: User 
 
 @router.get("/by-item/{item_id}", response_model=List[SaleOut])
 def sales_by_item(item_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Sale).filter(Sale.item_id == item_id).order_by(Sale.created_at.desc()).all()
+    query = db.query(Sale).filter(Sale.item_id == item_id)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Sale.account_id == account_id)
+    return query.order_by(Sale.created_at.desc()).all()
 
 
 @router.get("/{sale_id}", response_model=SaleOut)
 def get_sale(sale_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    sale = db.query(Sale).filter(Sale.id == sale_id).first()
+    query = db.query(Sale).filter(Sale.id == sale_id)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Sale.account_id == account_id)
+    sale = query.first()
     if not sale:
         raise HTTPException(status_code=404, detail="Sale not found")
     return sale
@@ -182,7 +226,11 @@ def get_sale(sale_id: int, db: Session = Depends(get_db), current_user: User = D
 
 @router.delete("/{sale_id}")
 def delete_sale(sale_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_manager_up)):
-    sale = db.query(Sale).filter(Sale.id == sale_id).first()
+    account_id = get_account_filter(current_user)
+    query = db.query(Sale).filter(Sale.id == sale_id)
+    if account_id is not None:
+        query = query.filter(Sale.account_id == account_id)
+    sale = query.first()
     if not sale:
         raise HTTPException(status_code=404, detail="Sale not found")
     if sale.item_id:
@@ -191,5 +239,5 @@ def delete_sale(sale_id: int, db: Session = Depends(get_db), current_user: User 
             item.quantity += sale.quantity
     db.delete(sale)
     db.commit()
-    log_activity(db, current_user.username, "sale_delete", f"Deleted sale {sale_id}, stock restored")
+    log_activity_for_user(db, current_user, "sale_delete", f"Deleted sale {sale_id}, stock restored")
     return {"detail": "Sale deleted and stock restored"}

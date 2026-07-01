@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from models import RoleEnum, PaymentMode, LedgerStatus, DocumentStatus
+from models import RoleEnum, PaymentMode, LedgerStatus, DocumentStatus, BusinessStructure
 
 
 # ---------- Auth / Users ----------
@@ -20,6 +20,7 @@ class UserOut(BaseModel):
     full_name: str
     email: str
     role: RoleEnum
+    account_id: Optional[int] = None
     is_active: bool
     is_demo: bool
     created_at: datetime
@@ -46,6 +47,69 @@ class Token(BaseModel):
 class ChangePasswordRequest(BaseModel):
     old_password: str
     new_password: str
+
+
+# ---------- Accounts ----------
+class AccountCreate(BaseModel):
+    business_structure: BusinessStructure = BusinessStructure.solo
+    name: str
+    tin: Optional[str] = None
+    owner_full_name: str
+    business_type: Optional[str] = "retail"
+    region: Optional[str] = ""
+    district: Optional[str] = ""
+    street_address: Optional[str] = ""
+    phone: Optional[str] = ""
+    email: Optional[str] = ""
+    logo_url: Optional[str] = ""
+    tax_rate: float = 0
+    invoice_prefix: Optional[str] = "INV"
+    payment_terms_days: int = 7
+
+
+class AccountUpdate(BaseModel):
+    business_structure: Optional[BusinessStructure] = None
+    name: Optional[str] = None
+    tin: Optional[str] = None
+    owner_full_name: Optional[str] = None
+    business_type: Optional[str] = None
+    region: Optional[str] = None
+    district: Optional[str] = None
+    street_address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    logo_url: Optional[str] = None
+    tax_rate: Optional[float] = None
+    invoice_prefix: Optional[str] = None
+    payment_terms_days: Optional[int] = None
+    is_active: Optional[bool] = None
+    is_suspended: Optional[bool] = None
+
+
+class AccountOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    business_structure: BusinessStructure
+    name: str
+    tin: Optional[str]
+    owner_full_name: str
+    business_type: str
+    region: str
+    district: str
+    street_address: str
+    phone: str
+    email: str
+    logo_url: str
+    tax_rate: float
+    invoice_prefix: str
+    payment_terms_days: int
+    is_active: bool
+    is_suspended: bool
+    created_at: datetime
+
+
+class AccountWithUsersOut(AccountOut):
+    users: List[UserOut] = []
 
 
 # ---------- Inventory ----------

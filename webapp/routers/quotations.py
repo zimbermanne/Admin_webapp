@@ -8,12 +8,21 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Quotation, QuotationItem, Invoice, InvoiceItem, User, DocumentStatus
+from models import Quotation, QuotationItem, Invoice, InvoiceItem, User, DocumentStatus, RoleEnum, Account
 from schemas import QuotationCreate, QuotationOut, InvoiceOut
 from auth import get_current_user, require_manager_up
-from activity import log_activity
+from activity import log_activity_for_user
 
 router = APIRouter(prefix="/api/quotations", tags=["quotations"])
+
+
+def get_account_filter(current_user: User):
+    """Return account_id filter for queries. Superadmin gets None (no filter)."""
+    if current_user.role == RoleEnum.superadmin:
+        return None
+    if not current_user.account_id:
+        raise HTTPException(status_code=403, detail="User must belong to an account")
+    return current_user.account_id
 
 
 def _calc(items, tax_rate, discount):
@@ -25,11 +34,16 @@ def _calc(items, tax_rate, discount):
 @router.post("/", response_model=QuotationOut)
 def create_quotation(payload: QuotationCreate, db: Session = Depends(get_db),
                      current_user: User = Depends(get_current_user)):
+    account_id = get_account_filter(current_user)
+    if account_id is None:
+        raise HTTPException(status_code=403, detail="Superadmin cannot create quotations")
+    
     if not payload.items:
         raise HTTPException(400, "Quotation must have at least one line item")
     sub, tax, total = _calc(payload.items, payload.tax_rate, payload.discount)
     valid_until = datetime.utcnow() + timedelta(days=payload.valid_days or 14)
     q = Quotation(
+        account_id=account_id,
         quote_no=f"QUO-{uuid.uuid4().hex[:8].upper()}",
         customer_name=payload.customer_name or "Walk-in",
         customer_phone=payload.customer_phone or "",
@@ -41,22 +55,35 @@ def create_quotation(payload: QuotationCreate, db: Session = Depends(get_db),
     )
     db.add(q); db.flush()
     for ln in payload.items:
-        db.add(QuotationItem(quotation_id=q.id, description=ln.description,
-                             quantity=ln.quantity, unit_price=ln.unit_price,
-                             total=round(ln.quantity*ln.unit_price,2)))
+        db.add(QuotationItem(
+            account_id=account_id,
+            quotation_id=q.id, 
+            description=ln.description,
+            quantity=ln.quantity, 
+            unit_price=ln.unit_price,
+            total=round(ln.quantity*ln.unit_price,2)
+        ))
     db.commit(); db.refresh(q)
-    log_activity(db, current_user.username, "quotation_create", f"Created {q.quote_no}")
+    log_activity_for_user(db, current_user, "quotation_create", f"Created {q.quote_no}")
     return q
 
 
 @router.get("/", response_model=List[QuotationOut])
 def list_quotations(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Quotation).order_by(Quotation.created_at.desc()).all()
+    query = db.query(Quotation)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Quotation.account_id == account_id)
+    return query.order_by(Quotation.created_at.desc()).all()
 
 
 @router.get("/{qid}", response_model=QuotationOut)
 def get_quotation(qid: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    q = db.query(Quotation).filter(Quotation.id == qid).first()
+    query = db.query(Quotation).filter(Quotation.id == qid)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Quotation.account_id == account_id)
+    q = query.first()
     if not q: raise HTTPException(404, "Quotation not found")
     return q
 
@@ -64,7 +91,11 @@ def get_quotation(qid: int, db: Session = Depends(get_db), current_user: User = 
 @router.patch("/{qid}/status", response_model=QuotationOut)
 def update_status(qid: int, status: DocumentStatus,
                   db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    q = db.query(Quotation).filter(Quotation.id == qid).first()
+    query = db.query(Quotation).filter(Quotation.id == qid)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        query = query.filter(Quotation.account_id == account_id)
+    q = query.first()
     if not q: raise HTTPException(404, "Quotation not found")
     q.status = status; db.commit(); db.refresh(q)
     return q
@@ -73,10 +104,23 @@ def update_status(qid: int, status: DocumentStatus,
 @router.post("/{qid}/convert", response_model=InvoiceOut)
 def convert_to_invoice(qid: int, db: Session = Depends(get_db),
                        current_user: User = Depends(get_current_user)):
-    q = db.query(Quotation).filter(Quotation.id == qid).first()
+    account_id = get_account_filter(current_user)
+    if account_id is None:
+        raise HTTPException(status_code=403, detail="Superadmin cannot convert quotations")
+    
+    query = db.query(Quotation).filter(Quotation.id == qid)
+    if account_id is not None:
+        query = query.filter(Quotation.account_id == account_id)
+    q = query.first()
     if not q: raise HTTPException(404, "Quotation not found")
+    
+    # Get account settings for invoice prefix
+    account = db.query(Account).filter(Account.id == account_id).first()
+    prefix = account.invoice_prefix if account else "INV"
+    
     inv = Invoice(
-        invoice_no=f"INV-{uuid.uuid4().hex[:8].upper()}",
+        account_id=account_id,
+        invoice_no=f"{prefix}-{uuid.uuid4().hex[:8].upper()}",
         customer_name=q.customer_name, customer_phone=q.customer_phone,
         customer_address=q.customer_address, subtotal=q.subtotal,
         tax_rate=q.tax_rate, tax_amount=q.tax_amount, discount=q.discount,
@@ -85,21 +129,31 @@ def convert_to_invoice(qid: int, db: Session = Depends(get_db),
     )
     db.add(inv); db.flush()
     for ln in q.items:
-        db.add(InvoiceItem(invoice_id=inv.id, description=ln.description,
-                           quantity=ln.quantity, unit_price=ln.unit_price, total=ln.total))
+        db.add(InvoiceItem(
+            account_id=account_id,
+            invoice_id=inv.id, 
+            description=ln.description,
+            quantity=ln.quantity, 
+            unit_price=ln.unit_price, 
+            total=ln.total
+        ))
     q.status = DocumentStatus.accepted
     db.commit(); db.refresh(inv)
-    log_activity(db, current_user.username, "quotation_convert", f"{q.quote_no} → {inv.invoice_no}")
+    log_activity_for_user(db, current_user, "quotation_convert", f"{q.quote_no} → {inv.invoice_no}")
     return inv
 
 
 @router.delete("/{qid}")
 def delete_quotation(qid: int, db: Session = Depends(get_db),
                      current_user: User = Depends(require_manager_up)):
-    q = db.query(Quotation).filter(Quotation.id == qid).first()
+    account_id = get_account_filter(current_user)
+    query = db.query(Quotation).filter(Quotation.id == qid)
+    if account_id is not None:
+        query = query.filter(Quotation.account_id == account_id)
+    q = query.first()
     if not q: raise HTTPException(404, "Quotation not found")
     db.delete(q); db.commit()
-    log_activity(db, current_user.username, "quotation_delete", f"Deleted {q.quote_no}")
+    log_activity_for_user(db, current_user, "quotation_delete", f"Deleted {q.quote_no}")
     return {"detail": "Quotation deleted"}
 
 

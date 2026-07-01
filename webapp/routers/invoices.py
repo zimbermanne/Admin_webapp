@@ -9,10 +9,10 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Invoice, InvoiceItem, User, DocumentStatus
+from models import Invoice, InvoiceItem, User, DocumentStatus, RoleEnum, Account
 from schemas import InvoiceCreate, InvoiceOut
 from auth import get_current_user, require_manager_up
-from activity import log_activity
+from activity import log_activity_for_user
 
 router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 
@@ -21,6 +21,31 @@ COMPANY_ADDRESS = os.getenv("COMPANY_ADDRESS", "Arusha, Tanzania")
 COMPANY_PHONE   = os.getenv("COMPANY_PHONE", "")
 COMPANY_EMAIL   = os.getenv("COMPANY_EMAIL", "")
 CURRENCY        = os.getenv("CURRENCY", "TZS")
+
+
+def get_account_filter(current_user: User):
+    """Return account_id filter for queries. Superadmin gets None (no filter)."""
+    if current_user.role == RoleEnum.superadmin:
+        return None
+    if not current_user.account_id:
+        raise HTTPException(status_code=403, detail="User must belong to an account")
+    return current_user.account_id
+
+
+def get_account_details(db: Session, account_id: int):
+    """Get account details for PDF generation."""
+    account = db.query(Account).filter(Account.id == account_id).first()
+    if account:
+        return {
+            "name": account.name,
+            "address": f"{account.region}, {account.district}, {account.street_address}",
+            "phone": account.phone,
+            "email": account.email,
+            "tin": account.tin,
+            "tax_rate": account.tax_rate,
+            "invoice_prefix": account.invoice_prefix,
+        }
+    return None
 
 
 def _calc_totals(items, tax_rate, discount):
@@ -33,11 +58,21 @@ def _calc_totals(items, tax_rate, discount):
 @router.post("/", response_model=InvoiceOut)
 def create_invoice(payload: InvoiceCreate, db: Session = Depends(get_db),
                    current_user: User = Depends(get_current_user)):
+    account_id = get_account_filter(current_user)
+    if account_id is None:
+        raise HTTPException(status_code=403, detail="Superadmin cannot create invoices")
+    
     if not payload.items:
         raise HTTPException(status_code=400, detail="Invoice must have at least one line item")
+    
+    # Get account settings for invoice prefix
+    account = db.query(Account).filter(Account.id == account_id).first()
+    prefix = account.invoice_prefix if account else "INV"
+    
     subtotal, tax_amount, total = _calc_totals(payload.items, payload.tax_rate, payload.discount)
     invoice = Invoice(
-        invoice_no=f"INV-{uuid.uuid4().hex[:8].upper()}",
+        account_id=account_id,
+        invoice_no=f"{prefix}-{uuid.uuid4().hex[:8].upper()}",
         customer_name=payload.customer_name or "Walk-in",
         customer_phone=payload.customer_phone or "",
         customer_address=payload.customer_address or "",
@@ -47,11 +82,16 @@ def create_invoice(payload: InvoiceCreate, db: Session = Depends(get_db),
     )
     db.add(invoice); db.flush()
     for line in payload.items:
-        db.add(InvoiceItem(invoice_id=invoice.id, description=line.description,
-                           quantity=line.quantity, unit_price=line.unit_price,
-                           total=round(line.quantity * line.unit_price, 2)))
+        db.add(InvoiceItem(
+            account_id=account_id,
+            invoice_id=invoice.id, 
+            description=line.description,
+            quantity=line.quantity, 
+            unit_price=line.unit_price,
+            total=round(line.quantity * line.unit_price, 2)
+        ))
     db.commit(); db.refresh(invoice)
-    log_activity(db, current_user.username, "invoice_create", f"Created {invoice.invoice_no}")
+    log_activity_for_user(db, current_user, "invoice_create", f"Created {invoice.invoice_no}")
     return invoice
 
 
@@ -60,6 +100,9 @@ def list_invoices(start: Optional[date] = None, end: Optional[date] = None,
                   status: Optional[DocumentStatus] = None,
                   db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     q = db.query(Invoice)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        q = q.filter(Invoice.account_id == account_id)
     if start: q = q.filter(Invoice.created_at >= datetime.combine(start, datetime.min.time()))
     if end:   q = q.filter(Invoice.created_at <= datetime.combine(end, datetime.max.time()))
     if status: q = q.filter(Invoice.status == status)
@@ -69,7 +112,11 @@ def list_invoices(start: Optional[date] = None, end: Optional[date] = None,
 @router.get("/{invoice_id}", response_model=InvoiceOut)
 def get_invoice(invoice_id: int, db: Session = Depends(get_db),
                 current_user: User = Depends(get_current_user)):
-    inv = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    q = db.query(Invoice).filter(Invoice.id == invoice_id)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        q = q.filter(Invoice.account_id == account_id)
+    inv = q.first()
     if not inv: raise HTTPException(404, "Invoice not found")
     return inv
 
@@ -77,20 +124,28 @@ def get_invoice(invoice_id: int, db: Session = Depends(get_db),
 @router.patch("/{invoice_id}/status", response_model=InvoiceOut)
 def update_status(invoice_id: int, status: DocumentStatus,
                   db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    inv = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    q = db.query(Invoice).filter(Invoice.id == invoice_id)
+    account_id = get_account_filter(current_user)
+    if account_id is not None:
+        q = q.filter(Invoice.account_id == account_id)
+    inv = q.first()
     if not inv: raise HTTPException(404, "Invoice not found")
     inv.status = status; db.commit(); db.refresh(inv)
-    log_activity(db, current_user.username, "invoice_status", f"{inv.invoice_no} → {status.value}")
+    log_activity_for_user(db, current_user, "invoice_status", f"{inv.invoice_no} → {status.value}")
     return inv
 
 
 @router.delete("/{invoice_id}")
 def delete_invoice(invoice_id: int, db: Session = Depends(get_db),
                    current_user: User = Depends(require_manager_up)):
-    inv = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    account_id = get_account_filter(current_user)
+    q = db.query(Invoice).filter(Invoice.id == invoice_id)
+    if account_id is not None:
+        q = q.filter(Invoice.account_id == account_id)
+    inv = q.first()
     if not inv: raise HTTPException(404, "Invoice not found")
     db.delete(inv); db.commit()
-    log_activity(db, current_user.username, "invoice_delete", f"Deleted {inv.invoice_no}")
+    log_activity_for_user(db, current_user, "invoice_delete", f"Deleted {inv.invoice_no}")
     return {"detail": "Invoice deleted"}
 
 
@@ -100,7 +155,7 @@ def invoice_pdf(invoice_id: int, db: Session = Depends(get_db),
     inv = db.query(Invoice).filter(Invoice.id == invoice_id).first()
     if not inv: raise HTTPException(404, "Invoice not found")
     buf = _render_pdf(inv, "INVOICE")
-    log_activity(db, current_user.username, "invoice_pdf", f"Exported {inv.invoice_no}")
+    log_activity_for_user(db, current_user, "invoice_pdf", f"Exported {inv.invoice_no}")
     return StreamingResponse(buf, media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="Invoice-{inv.invoice_no}.pdf"'})
 

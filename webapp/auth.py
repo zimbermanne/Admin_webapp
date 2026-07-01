@@ -63,6 +63,17 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     user = db.query(User).filter(User.username == username).first()
     if user is None or not user.is_active:
         raise credentials_exception
+    
+    # Check if user's account is suspended (unless they're a superadmin)
+    if user.role != RoleEnum.superadmin and user.account_id:
+        from models import Account
+        account = db.query(Account).filter(Account.id == user.account_id).first()
+        if account and account.is_suspended:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is suspended. Please contact support."
+            )
+    
     return user
 
 
@@ -76,3 +87,11 @@ def require_roles(*roles: RoleEnum):
 
 require_admin = require_roles(RoleEnum.admin)
 require_manager_up = require_roles(RoleEnum.admin, RoleEnum.manager)
+require_superadmin = require_roles(RoleEnum.superadmin)
+
+
+def require_account_user(user: User = Depends(get_current_user)) -> User:
+    """Ensure user belongs to an account (not a superadmin without account)."""
+    if user.role != RoleEnum.superadmin and not user.account_id:
+        raise HTTPException(status_code=403, detail="User must belong to an account")
+    return user

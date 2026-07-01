@@ -8,12 +8,19 @@ export default function Settings() {
   const { user, logout } = useAuth()
   const api = useApi()
   const isAdmin = user?.role === 'admin'
+  const isSuperadmin = user?.role === 'superadmin'
 
   // Change own password
   const [oldPwd, setOldPwd] = useState('')
   const [newPwd, setNewPwd] = useState('')
   const [pwdMsg, setPwdMsg] = useState('')
   const [pwdErr, setPwdErr] = useState('')
+
+  // Account settings (for regular admins)
+  const [account, setAccount] = useState(null)
+  const [accountErr, setAccountErr] = useState('')
+  const [accountSaving, setAccountSaving] = useState(false)
+  const [accountMsg, setAccountMsg] = useState('')
 
   // Admin panel
   const [users, setUsers] = useState([])
@@ -26,8 +33,14 @@ export default function Settings() {
   const [resetMsg, setResetMsg] = useState('')
 
   useEffect(() => {
-    if (isAdmin) api.get('/users/').then(setUsers).catch((e) => setUsersErr(e.message))
-  }, [isAdmin]) // eslint-disable-line
+    if (isAdmin && !isSuperadmin) {
+      // Load account settings for regular admins
+      api.get('/accounts/my-account').then(setAccount).catch((e) => setAccountErr(e.message))
+    }
+    if (isAdmin) {
+      api.get('/users/').then(setUsers).catch((e) => setUsersErr(e.message))
+    }
+  }, [isAdmin, isSuperadmin]) // eslint-disable-line
 
   const changePassword = async (e) => {
     e.preventDefault(); setPwdErr(''); setPwdMsg('')
@@ -70,6 +83,22 @@ export default function Settings() {
       setResetPwd('')
       setTimeout(() => { setResetTarget(null); setResetMsg('') }, 1500)
     } catch (e) { setResetMsg('Error: ' + e.message) }
+  }
+
+  const saveAccountSettings = async () => {
+    setAccountSaving(true)
+    setAccountErr('')
+    setAccountMsg('')
+    try {
+      const updated = await api.put('/accounts/my-account', account)
+      setAccount(updated)
+      setAccountMsg('Account settings updated successfully!')
+      setTimeout(() => setAccountMsg(''), 3000)
+    } catch (e) {
+      setAccountErr(e.message)
+    } finally {
+      setAccountSaving(false)
+    }
   }
 
   const userColumns = [
@@ -134,6 +163,71 @@ export default function Settings() {
           )}
         </div>
       </div>
+
+      {/* Account settings — only for regular admins (not superadmin) */}
+      {isAdmin && !isSuperadmin && account && (
+        <div className="card" style={{ marginTop: 4 }}>
+          <h3 style={{ margin: 0, marginBottom: 16 }}>🏢 Business Settings</h3>
+          {accountErr && <div className="error-text" style={{ marginBottom: 12 }}>{accountErr}</div>}
+          {accountMsg && <div style={{ color:'var(--success)', fontSize:13, marginBottom:12 }}>{accountMsg}</div>}
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
+            <div className="form-row">
+              <label>Business Name</label>
+              <input value={account.name} onChange={(e) => setAccount({...account, name: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>Business Type</label>
+              <input value={account.business_type} onChange={(e) => setAccount({...account, business_type: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>TIN (Tax ID)</label>
+              <input value={account.tin || ''} onChange={(e) => setAccount({...account, tin: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>Phone</label>
+              <input value={account.phone || ''} onChange={(e) => setAccount({...account, phone: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>Email</label>
+              <input type="email" value={account.email || ''} onChange={(e) => setAccount({...account, email: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>Region</label>
+              <input value={account.region || ''} onChange={(e) => setAccount({...account, region: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>District</label>
+              <input value={account.district || ''} onChange={(e) => setAccount({...account, district: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>Street Address</label>
+              <input value={account.street_address || ''} onChange={(e) => setAccount({...account, street_address: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>Tax Rate (%)</label>
+              <input type="number" step="0.1" value={account.tax_rate} onChange={(e) => setAccount({...account, tax_rate: parseFloat(e.target.value) || 0})} />
+            </div>
+            <div className="form-row">
+              <label>Invoice Prefix</label>
+              <input value={account.invoice_prefix} onChange={(e) => setAccount({...account, invoice_prefix: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>Payment Terms (days)</label>
+              <input type="number" value={account.payment_terms_days} onChange={(e) => setAccount({...account, payment_terms_days: parseInt(e.target.value) || 7})} />
+            </div>
+          </div>
+          
+          <button 
+            className="btn btn-primary" 
+            onClick={saveAccountSettings}
+            disabled={accountSaving}
+            style={{ marginTop: 16 }}
+          >
+            {accountSaving ? 'Saving...' : 'Save Business Settings'}
+          </button>
+        </div>
+      )}
 
       {/* Admin panel — only visible to admin role */}
       {isAdmin && (
