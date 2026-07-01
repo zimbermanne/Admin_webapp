@@ -1,6 +1,18 @@
 -- Multi-tenant migration script for PostgreSQL
 -- This script adds the new accounts table and account_id columns to existing tables
 
+-- Add superadmin to the roleenum if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum 
+        WHERE enumlabel = 'superadmin' 
+        AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'roleenum')
+    ) THEN
+        ALTER TYPE roleenum ADD VALUE 'superadmin';
+    END IF;
+END $$;
+
 -- Create the accounts table
 CREATE TABLE IF NOT EXISTS accounts (
     id SERIAL PRIMARY KEY,
