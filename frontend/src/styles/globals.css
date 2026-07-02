@@ -377,7 +377,9 @@ label {
 .desktop-topbar {
   display: flex;
   justify-content: flex-end;
-  padding: 14px 24px 0;
+  align-items: center;
+  padding: 10px 24px 0;
+  min-height: 48px;
 }
 
 .hamburger {
@@ -513,14 +515,6 @@ label {
    anchored to the right; the reminders segment fills the space to its
    left so future items (due invoices, low stock, follow-ups, etc.) have
    somewhere to live without needing another widget. */
-.desktop-topbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 10px 24px 0;
-  min-height: 48px;
-}
-
 .clock-bar {
   position: relative;
   display: flex;
