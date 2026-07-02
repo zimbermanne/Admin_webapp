@@ -115,11 +115,21 @@ export function AuthProvider({ children }) {
   }, [fetchAccount])
 
   const logout = useCallback(() => {
+    if (token) {
+      // Fire-and-forget: record the logout for the audit trail before we
+      // drop the token. Use the raw fetch (not useApi) to avoid a circular
+      // dependency, and don't let a failed request block logging out.
+      fetch(apiUrl('/api/activity/log'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: 'logout', details: 'User logged out' }),
+      }).catch(() => {})
+    }
     sessionStorage.removeItem(TOKEN_KEY)
     setToken(null)
     setUser(null)
     setAccount(null)
-  }, [])
+  }, [token])
 
   return (
     <AuthContext.Provider value={{

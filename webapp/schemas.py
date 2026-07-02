@@ -180,6 +180,7 @@ class SaleOut(BaseModel):
 class CheckoutLine(BaseModel):
     item_id: int
     quantity: float
+    unit_price: Optional[float] = None
 
 
 class CheckoutRequest(BaseModel):
@@ -187,6 +188,7 @@ class CheckoutRequest(BaseModel):
     payment_mode: PaymentMode = PaymentMode.cash
     customer_name: Optional[str] = "Walk-in"
     customer_phone: Optional[str] = ""
+    sale_mode: Optional[str] = "pos"  # "pos" = locked prices, "salesman" = prices editable
 
 
 class CheckoutResponse(BaseModel):

@@ -4,7 +4,8 @@ import { useApi } from '../hooks/useApi.js'
 export default function POS() {
   const api = useApi()
   const [items, setItems] = useState([])
-  const [cart, setCart] = useState([]) // [{item_id, name, price, qty, stock}]
+  const [cart, setCart] = useState([]) // [{item_id, name, price, original_price, qty, stock}]
+  const [saleMode, setSaleMode] = useState('pos') // 'pos' = locked prices, 'salesman' = editable
   const [paymentMode, setPaymentMode] = useState('cash')
   const [customerName, setCustomerName] = useState('Walk-in')
   const [search, setSearch] = useState('')
@@ -25,12 +26,28 @@ export default function POS() {
         return prev.map((c) => c.item_id === item.id ? { ...c, qty: c.qty + 1 } : c)
       }
       if (item.quantity < 1) return prev
-      return [...prev, { item_id: item.id, name: item.name, price: item.selling_price, qty: 1, stock: item.quantity }]
+      return [...prev, { item_id: item.id, name: item.name, price: item.selling_price, original_price: item.selling_price, qty: 1, stock: item.quantity }]
     })
   }
 
   const updateQty = (item_id, qty) => {
     setCart((prev) => prev.map((c) => c.item_id === item_id ? { ...c, qty: Math.max(1, Math.min(qty, c.stock)) } : c))
+  }
+
+  const updatePrice = (item_id, price) => {
+    setCart((prev) => prev.map((c) => c.item_id === item_id ? { ...c, price: Math.max(0, price) } : c))
+  }
+
+  const switchMode = (newMode) => {
+    if (newMode === saleMode) return
+    setSaleMode(newMode)
+    if (newMode === 'pos') {
+      setCart((prev) => prev.map((c) => ({ ...c, price: c.original_price })))
+    }
+    api.post('/activity/log', {
+      action: 'pos_mode_switch',
+      details: `Switched to ${newMode === 'salesman' ? 'Salesman (editable prices)' : 'POS (locked prices)'} mode`,
+    }).catch(() => {}) // don't block the UI if logging fails
   }
 
   const removeLine = (item_id) => setCart((prev) => prev.filter((c) => c.item_id !== item_id))
@@ -43,9 +60,10 @@ export default function POS() {
     setError('')
     try {
       const res = await api.post('/sales/checkout', {
-        lines: cart.map((c) => ({ item_id: c.item_id, quantity: c.qty })),
+        lines: cart.map((c) => ({ item_id: c.item_id, quantity: c.qty, unit_price: c.price })),
         payment_mode: paymentMode,
         customer_name: customerName || 'Walk-in',
+        sale_mode: saleMode,
       })
       setReceipt(res)
       setCart([])
@@ -62,9 +80,36 @@ export default function POS() {
 
   return (
     <div className="page">
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <h1>Point of Sale</h1>
+        <div style={{ display: 'inline-flex', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+          <button
+            onClick={() => switchMode('pos')}
+            style={{
+              padding: '6px 14px', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer',
+              background: saleMode === 'pos' ? 'var(--accent)' : 'var(--surface)',
+              color: saleMode === 'pos' ? '#fff' : 'var(--text-muted)',
+            }}
+          >
+            🔒 POS (locked prices)
+          </button>
+          <button
+            onClick={() => switchMode('salesman')}
+            style={{
+              padding: '6px 14px', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer',
+              background: saleMode === 'salesman' ? 'var(--accent)' : 'var(--surface)',
+              color: saleMode === 'salesman' ? '#fff' : 'var(--text-muted)',
+            }}
+          >
+            ✎ Salesman (editable prices)
+          </button>
+        </div>
       </div>
+      {saleMode === 'salesman' && (
+        <div style={{ fontSize: 12, color: 'var(--warning)', marginBottom: 12 }}>
+          Salesman mode is on — prices can be changed at checkout and this is recorded in the activity log.
+        </div>
+      )}
 
       {error && <div className="error-text" style={{ marginBottom: 12 }}>{error}</div>}
 
@@ -98,20 +143,37 @@ export default function POS() {
             <h2 style={{ marginTop: 0, fontSize: 16 }}>Cart</h2>
             {cart.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No items added.</div>}
             {cart.map((c) => (
-              <div key={c.item_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <div style={{ flex: 1 }}>
+              <div key={c.item_id} style={{ marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{c.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>TZS {c.price.toLocaleString()} each</div>
+                  <button className="btn btn-outline" style={{ padding: '2px 8px' }} onClick={() => removeLine(c.item_id)}>✕</button>
                 </div>
-                <input
-                  type="number"
-                  min="1"
-                  max={c.stock}
-                  value={c.qty}
-                  onChange={(e) => updateQty(c.item_id, Number(e.target.value))}
-                  style={{ width: 60, marginRight: 8 }}
-                />
-                <button className="btn btn-outline" onClick={() => removeLine(c.item_id)}>✕</button>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>Qty</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={c.stock}
+                      value={c.qty}
+                      onChange={(e) => updateQty(c.item_id, Number(e.target.value))}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>Price (each)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={c.price}
+                      disabled={saleMode === 'pos'}
+                      onChange={(e) => updatePrice(c.item_id, Number(e.target.value))}
+                      style={saleMode === 'pos' ? { background: 'var(--surface-sunken)', color: 'var(--text-muted)', cursor: 'not-allowed' } : undefined}
+                    />
+                  </div>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, textAlign: 'right' }}>
+                  Line total: TZS {(c.price * c.qty).toLocaleString()}
+                </div>
               </div>
             ))}
 

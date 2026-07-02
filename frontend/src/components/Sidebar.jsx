@@ -41,6 +41,7 @@ const NAV = [
     ],
   },
   { type: 'item', label: 'Expenses', icon: '💸', path: '/expenses' },
+  { type: 'item', label: 'Activity Logs', icon: '🕵️', path: '/activity', roles: ['manager', 'admin', 'superadmin'] },
   { type: 'item', label: 'Settings', icon: '⚙️', path: '/settings' },
 ]
 
@@ -79,7 +80,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
       </div>
 
       <nav className="sidebar-nav">
-        {NAV.map((entry) => {
+        {NAV.filter((entry) => !entry.roles || entry.roles.includes(user?.role)).map((entry) => {
           if (entry.type === 'item') {
             const active = location.pathname === entry.path
             return (

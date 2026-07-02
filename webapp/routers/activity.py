@@ -1,11 +1,13 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from database import get_db
 from models import ActivityLog, User, RoleEnum
 from schemas import ActivityOut
-from auth import require_manager_up
+from auth import require_manager_up, get_current_user
+from activity import log_activity_for_user
 
 router = APIRouter(prefix="/api/activity", tags=["activity"])
 
@@ -17,6 +19,25 @@ def get_account_filter(current_user: User):
     if not current_user.account_id:
         raise HTTPException(status_code=403, detail="User must belong to an account")
     return current_user.account_id
+
+
+ALLOWED_CLIENT_ACTIONS = {"pos_mode_switch", "logout"}
+
+
+class ClientEventIn(BaseModel):
+    action: str
+    details: str = ""
+
+
+@router.post("/log")
+def log_client_event(payload: ClientEventIn, db: Session = Depends(get_db),
+                      current_user: User = Depends(get_current_user)):
+    """Lets the frontend record specific whitelisted staff actions (e.g. switching
+    POS pricing mode) so admins can audit who changed what and when."""
+    if payload.action not in ALLOWED_CLIENT_ACTIONS:
+        raise HTTPException(status_code=400, detail="Unrecognized action")
+    log_activity_for_user(db, current_user, payload.action, payload.details)
+    return {"detail": "logged"}
 
 
 @router.get("/", response_model=List[ActivityOut])

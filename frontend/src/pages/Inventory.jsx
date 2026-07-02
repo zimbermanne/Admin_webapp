@@ -41,7 +41,7 @@ export default function Inventory() {
 
   const handleExport = async () => {
     try {
-      const res = await fetch(apiUrl('/api/inventory/export'), {
+      const res = await fetch(apiUrl('/api/inventory/export/spreadsheet'), {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error('Export failed')

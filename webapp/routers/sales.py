@@ -102,17 +102,25 @@ def checkout(payload: CheckoutRequest, db: Session = Depends(get_db),
     receipt_no = f"RCT-{uuid.uuid4().hex[:8].upper()}"
     sales = []
     grand_total = 0.0
+    is_salesman_mode = payload.sale_mode == "salesman"
+
     for line in payload.lines:
         item = items_map[line.item_id]
         item.quantity -= line.quantity
-        total = item.selling_price * line.quantity
+        if is_salesman_mode and line.unit_price is not None:
+            price = line.unit_price
+        else:
+            price = item.selling_price
+        if price < 0:
+            raise HTTPException(status_code=400, detail=f"Price for {item.name} cannot be negative")
+        total = price * line.quantity
         grand_total += total
         sale = Sale(
             account_id=account_id,
             item_id=item.id,
             item_name=item.name,
             quantity=line.quantity,
-            unit_price=item.selling_price,
+            unit_price=price,
             total=total,
             payment_mode=payload.payment_mode,
             customer_name=payload.customer_name or "Walk-in",
@@ -136,7 +144,10 @@ def checkout(payload: CheckoutRequest, db: Session = Depends(get_db),
     db.commit()
     for s in sales:
         db.refresh(s)
-    log_activity_for_user(db, current_user, "pos_checkout", f"Checkout {receipt_no} total {grand_total}")
+    overridden = sum(1 for line, s in zip(payload.lines, sales) if is_salesman_mode and line.unit_price is not None)
+    mode_label = f"salesman mode, {overridden} price override(s)" if is_salesman_mode else "pos mode"
+    log_activity_for_user(db, current_user, "pos_checkout",
+                           f"Checkout {receipt_no} total {grand_total} ({mode_label})")
     return CheckoutResponse(receipt_no=receipt_no, sales=sales, total=grand_total)
 
 

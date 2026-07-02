@@ -162,40 +162,54 @@ def quotation_pdf(qid: int, db: Session = Depends(get_db),
                   current_user: User = Depends(get_current_user)):
     q = db.query(Quotation).filter(Quotation.id == qid).first()
     if not q: raise HTTPException(404, "Quotation not found")
-    # Reuse the invoice PDF renderer with a Quotation-shaped object
-    buf = _render_quotation_pdf(q)
-    log_activity(db, current_user.username, "quotation_pdf", f"Exported {q.quote_no}")
+    account = db.query(Account).filter(Account.id == q.account_id).first()
+    buf = _render_quotation_pdf(q, account)
+    log_activity_for_user(db, current_user, "quotation_pdf", f"Exported {q.quote_no}")
     return StreamingResponse(buf, media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="Quotation-{q.quote_no}.pdf"'})
 
 
-def _render_quotation_pdf(q: Quotation) -> io.BytesIO:
+def _render_quotation_pdf(q: Quotation, account: Account = None) -> io.BytesIO:
     import os
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import mm
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.enums import TA_RIGHT
+    from reportlab.lib.enums import TA_RIGHT, TA_CENTER
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 
-    COMPANY_NAME    = os.getenv("COMPANY_NAME", "Zimbermanne Accounting OS")
-    COMPANY_ADDRESS = os.getenv("COMPANY_ADDRESS", "Arusha, Tanzania")
-    COMPANY_PHONE   = os.getenv("COMPANY_PHONE", "")
-    COMPANY_EMAIL   = os.getenv("COMPANY_EMAIL", "")
-    CURRENCY        = os.getenv("CURRENCY", "TZS")
+    ACCENT = colors.HexColor("#C15F3C")   # matches app --accent (terracotta)
+
+    if account:
+        biz_name    = account.name
+        biz_owner   = account.owner_full_name or ""
+        biz_address = ", ".join(p for p in [account.region, account.district, account.street_address] if p)
+        biz_phone   = account.phone or ""
+        biz_email   = account.email or ""
+    else:
+        biz_name    = os.getenv("COMPANY_NAME", "Zimbermanne Accounting OS")
+        biz_owner   = ""
+        biz_address = os.getenv("COMPANY_ADDRESS", "Arusha, Tanzania")
+        biz_phone   = os.getenv("COMPANY_PHONE", "")
+        biz_email   = os.getenv("COMPANY_EMAIL", "")
+    CURRENCY = os.getenv("CURRENCY", "TZS")
 
     buf = io.BytesIO()
     pdf = SimpleDocTemplate(buf, pagesize=A4,
-          topMargin=18*mm, bottomMargin=18*mm, leftMargin=18*mm, rightMargin=18*mm)
+          topMargin=18*mm, bottomMargin=24*mm, leftMargin=18*mm, rightMargin=18*mm)
     styles = getSampleStyleSheet()
     normal = ParagraphStyle("N", parent=styles["Normal"], fontSize=10, leading=14)
     right  = ParagraphStyle("R", parent=styles["Normal"], fontSize=10, leading=14, alignment=TA_RIGHT)
-    section = ParagraphStyle("S", parent=styles["Heading4"], fontSize=11)
+    section = ParagraphStyle("S", parent=styles["Heading4"], fontSize=11, textColor=ACCENT)
 
     elems = []
-    co_lines = [f"<b>{COMPANY_NAME}</b>", COMPANY_ADDRESS]
-    if COMPANY_PHONE: co_lines.append(f"Tel: {COMPANY_PHONE}")
-    if COMPANY_EMAIL: co_lines.append(COMPANY_EMAIL)
+    co_lines = [f"<b>{biz_name}</b>"]
+    if biz_owner: co_lines.append(biz_owner)
+    if biz_address: co_lines.append(biz_address)
+    if biz_phone:
+        co_lines.append(f"Tel: {biz_phone}")
+        co_lines.append(f"WhatsApp: {biz_phone}")
+    if biz_email: co_lines.append(biz_email)
     doc_lines = ["<b>QUOTATION</b>", f"No: {q.quote_no}",
                  f"Date: {q.created_at.strftime('%d %b %Y')}"]
     if q.valid_until: doc_lines.append(f"Valid until: {q.valid_until.strftime('%d %b %Y')}")
@@ -217,7 +231,7 @@ def _render_quotation_pdf(q: Quotation) -> io.BytesIO:
                      f"{ln.unit_price:,.2f}", f"{ln.total:,.2f}"])
     t = Table(rows, colWidths=[14*mm,72*mm,18*mm,32*mm,36*mm], repeatRows=1)
     t.setStyle(TableStyle([
-        ("BACKGROUND",(0,0),(-1,0),colors.HexColor("#0F1923")),
+        ("BACKGROUND",(0,0),(-1,0),ACCENT),
         ("TEXTCOLOR",(0,0),(-1,0),colors.white),
         ("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),
         ("FONTSIZE",(0,0),(-1,-1),9.5),
@@ -238,7 +252,7 @@ def _render_quotation_pdf(q: Quotation) -> io.BytesIO:
     tt.setStyle(TableStyle([
         ("ALIGN",(0,0),(-1,-1),"RIGHT"), ("FONTSIZE",(0,0),(-1,-1),10),
         ("TOPPADDING",(0,0),(-1,-1),4),("BOTTOMPADDING",(0,0),(-1,-1),4),
-        ("LINEABOVE",(0,-1),(-1,-1),0.75,colors.HexColor("#0F1923")),
+        ("LINEABOVE",(0,-1),(-1,-1),0.75,ACCENT),
         ("FONTNAME",(0,-1),(-1,-1),"Helvetica-Bold"),("FONTSIZE",(0,-1),(-1,-1),11.5),
     ]))
     elems.append(tt)
@@ -251,6 +265,17 @@ def _render_quotation_pdf(q: Quotation) -> io.BytesIO:
               Paragraph("This quotation is subject to confirmation of stock availability.",
                         ParagraphStyle("F",parent=styles["Normal"],fontSize=9,
                                        textColor=colors.HexColor("#6b7280")))]
-    pdf.build(elems)
+
+    footer_style = ParagraphStyle("Footer", parent=styles["Normal"], fontSize=8,
+                                   alignment=TA_CENTER, textColor=colors.HexColor("#A79D8E"))
+
+    def draw_footer(canvas, pdf_doc):
+        canvas.saveState()
+        p = Paragraph("Zimbermanne Accounting OS", footer_style)
+        w, h = p.wrap(pdf_doc.width, pdf_doc.bottomMargin)
+        p.drawOn(canvas, pdf_doc.leftMargin, 10*mm)
+        canvas.restoreState()
+
+    pdf.build(elems, onFirstPage=draw_footer, onLaterPages=draw_footer)
     buf.seek(0)
     return buf
