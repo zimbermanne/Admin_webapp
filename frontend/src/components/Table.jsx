@@ -1,4 +1,9 @@
-export default function Table({ columns, rows, emptyText = 'No records yet.' }) {
+import Spinner from './Spinner.jsx'
+
+export default function Table({ columns, rows, emptyText = 'No records yet.', loading = false, loadingText = 'Loading…' }) {
+  if (loading) {
+    return <div className="card"><Spinner label={loadingText} /></div>
+  }
   if (!rows || rows.length === 0) {
     return <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{emptyText}</div>
   }

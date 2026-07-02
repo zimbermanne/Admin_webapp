@@ -12,9 +12,11 @@ export default function Purchases() {
   const [error, setError] = useState('')
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(empty)
+  const [listLoading, setListLoading] = useState(true)
 
   const load = () => {
-    api.get('/purchases/').then(setPurchases).catch((e) => setError(e.message))
+    setListLoading(true)
+    api.get('/purchases/').then(setPurchases).catch((e) => setError(e.message)).finally(() => setListLoading(false))
     api.get('/purchases/stats/summary').then(setStats).catch(() => {})
   }
 
@@ -63,7 +65,7 @@ export default function Purchases() {
           <div className="card metric-card"><div className="label">Total Spent</div><div className="value">TZS {stats.total_spent.toLocaleString()}</div></div>
         </div>
       )}
-      <Table columns={columns} rows={purchases} />
+      <Table columns={columns} rows={purchases} loading={listLoading} loadingText="Loading purchases…" />
 
       {open && (
         <Modal

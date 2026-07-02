@@ -12,9 +12,11 @@ export default function Expenses() {
   const [error, setError] = useState('')
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(empty)
+  const [listLoading, setListLoading] = useState(true)
 
   const load = () => {
-    api.get('/expenses/').then(setExpenses).catch((e) => setError(e.message))
+    setListLoading(true)
+    api.get('/expenses/').then(setExpenses).catch((e) => setError(e.message)).finally(() => setListLoading(false))
     api.get('/expenses/stats/summary').then(setStats).catch(() => {})
   }
 
@@ -62,7 +64,7 @@ export default function Expenses() {
           <div className="card metric-card"><div className="label">Total Amount</div><div className="value">TZS {stats.total_amount.toLocaleString()}</div></div>
         </div>
       )}
-      <Table columns={columns} rows={expenses} />
+      <Table columns={columns} rows={expenses} loading={listLoading} loadingText="Loading expenses…" />
 
       {open && (
         <Modal

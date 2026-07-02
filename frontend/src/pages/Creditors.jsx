@@ -19,8 +19,9 @@ export default function Creditors() {
   const [form, setForm] = useState(empty)
   const [payTarget, setPayTarget] = useState(null)
   const [payAmount, setPayAmount] = useState(0)
+  const [listLoading, setListLoading] = useState(true)
 
-  const load = () => api.get('/ledgers/creditors').then(setCreditors).catch((e) => setError(e.message))
+  const load = () => { setListLoading(true); api.get('/ledgers/creditors').then(setCreditors).catch((e) => setError(e.message)).finally(() => setListLoading(false)) }
 
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -68,7 +69,7 @@ export default function Creditors() {
         <button className="btn btn-primary" onClick={() => setOpen(true)}>+ Add Creditor</button>
       </div>
       {error && <div className="error-text" style={{ marginBottom: 12 }}>{error}</div>}
-      <Table columns={columns} rows={creditors} emptyText="No creditors recorded yet." />
+      <Table columns={columns} rows={creditors} loading={listLoading} loadingText="Loading creditors…" emptyText="No creditors recorded yet." />
 
       {open && (
         <Modal

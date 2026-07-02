@@ -98,6 +98,70 @@ th {
 
 tr:hover td { background: #faf8f3; }
 
+/* ==========================================================================
+   Numeric type treatments
+   - Table cells / stat numbers / numeric inputs get a typewriter face,
+     since most numbers in the app are ledger-style figures.
+   - Document numbers (invoice/quote "No." column & the printed doc header)
+     get the cheque/MICR-style face and a bit of letter-spacing to read
+     like a stamped serial number.
+   ========================================================================== */
+td, .stat-value, input[type="number"] {
+  font-family: var(--font-typewriter);
+  font-variant-numeric: tabular-nums;
+}
+
+.font-typewriter {
+  font-family: var(--font-typewriter);
+  font-variant-numeric: tabular-nums;
+}
+
+.cheque-number {
+  font-family: var(--font-cheque);
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Inline spinner — for loading states inside cards, tables, and buttons,
+   not just the top-level page loader.
+   ========================================================================== */
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: -0.15em;
+}
+
+.spinner-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.spinner-block .spinner {
+  width: 18px;
+  height: 18px;
+  border-width: 2.5px;
+  color: var(--accent);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 1.4s; }
+}
+
 .btn {
   display: inline-flex;
   align-items: center;

@@ -7,9 +7,11 @@ export default function Sales() {
   const [sales, setSales] = useState([])
   const [stats, setStats] = useState(null)
   const [error, setError] = useState('')
+  const [listLoading, setListLoading] = useState(true)
 
   const load = () => {
-    api.get('/sales/').then(setSales).catch((e) => setError(e.message))
+    setListLoading(true)
+    api.get('/sales/').then(setSales).catch((e) => setError(e.message)).finally(() => setListLoading(false))
     api.get('/sales/stats/summary').then(setStats).catch(() => {})
   }
 
@@ -46,7 +48,7 @@ export default function Sales() {
           <div className="card metric-card"><div className="label">Average Sale</div><div className="value">TZS {stats.average_sale.toLocaleString()}</div></div>
         </div>
       )}
-      <Table columns={columns} rows={sales} />
+      <Table columns={columns} rows={sales} loading={listLoading} loadingText="Loading sales…" />
     </div>
   )
 }

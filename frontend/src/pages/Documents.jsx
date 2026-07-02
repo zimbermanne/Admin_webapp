@@ -4,6 +4,7 @@ import { apiUrl } from '../api-config.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
+import Spinner from '../components/Spinner.jsx'
 
 const emptyLine = () => ({ description: '', quantity: 1, unit_price: 0 })
 const emptyForm = () => ({
@@ -23,8 +24,12 @@ export default function Documents({ kind }) {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(emptyForm())
   const [pdfLoading, setPdfLoading] = useState(null)
+  const [listLoading, setListLoading] = useState(true)
 
-  const load = () => api.get(`/${kind}/`).then(setDocs).catch((e) => setError(e.message))
+  const load = () => {
+    setListLoading(true)
+    api.get(`/${kind}/`).then(setDocs).catch((e) => setError(e.message)).finally(() => setListLoading(false))
+  }
   useEffect(() => { load() }, [kind]) // eslint-disable-line
 
   const updateLine = (idx, field, value) => {
@@ -71,7 +76,7 @@ export default function Documents({ kind }) {
   }
 
   const columns = [
-    { key: 'no', header: 'No.', render: (r) => r[numberKey] },
+    { key: 'no', header: 'No.', render: (r) => <span className="cheque-number">{r[numberKey]}</span> },
     { key: 'created_at', header: 'Date', render: (r) => new Date(r.created_at).toLocaleString() },
     { key: 'customer_name', header: 'Customer' },
     { key: 'total', header: 'Total', render: (r) => `TZS ${r.total.toLocaleString()}` },
@@ -81,7 +86,7 @@ export default function Documents({ kind }) {
       render: (r) => (
         <div style={{ display: 'flex', gap: 6 }}>
           <button className="btn btn-outline" onClick={() => downloadPdf(r)} disabled={pdfLoading === r.id}>
-            {pdfLoading === r.id ? '…' : '⬇ PDF'}
+            {pdfLoading === r.id ? <Spinner inline /> : '⬇ PDF'}
           </button>
           {!isInvoice && !['accepted','rejected'].includes(r.status) && (
             <button className="btn btn-outline" onClick={() => convert(r.id)}>→ Invoice</button>
@@ -105,7 +110,8 @@ export default function Documents({ kind }) {
         </button>
       </div>
       {error && <div className="error-text" style={{ marginBottom: 12 }}>{error}</div>}
-      <Table columns={columns} rows={docs} emptyText={`No ${title.toLowerCase()} yet.`} />
+      <Table columns={columns} rows={docs} loading={listLoading} loadingText={`Loading ${title.toLowerCase()}…`}
+        emptyText={`No ${title.toLowerCase()} yet.`} />
 
       {open && (
         <Modal title={`New ${isInvoice ? 'Invoice' : 'Quotation'}`} onClose={() => setOpen(false)}

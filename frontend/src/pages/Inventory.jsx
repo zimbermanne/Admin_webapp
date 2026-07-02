@@ -16,8 +16,9 @@ export default function Inventory() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const [importing, setImporting] = useState(false)
+  const [listLoading, setListLoading] = useState(true)
 
-  const load = () => api.get('/inventory/').then(setItems).catch((e) => setError(e.message))
+  const load = () => { setListLoading(true); api.get('/inventory/').then(setItems).catch((e) => setError(e.message)).finally(() => setListLoading(false)) }
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const openNew = () => { setForm(empty); setEditing({}) }
@@ -114,7 +115,7 @@ export default function Inventory() {
 
       {error && <div className="error-text" style={{ marginBottom: 12 }}>{error}</div>}
 
-      <Table columns={columns} rows={items} />
+      <Table columns={columns} rows={items} loading={listLoading} loadingText="Loading inventory…" />
 
       {editing !== null && (
         <Modal

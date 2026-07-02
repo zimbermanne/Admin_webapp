@@ -51,6 +51,13 @@
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-body:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
+  /* Document/cheque numbering — blocky, machine-stamped feel like MICR
+     numbers printed along the bottom of a bank cheque. */
+  --font-cheque:      "Nova Mono", "Courier New", monospace;
+  /* General numeric data (amounts, quantities, dates, IDs) — struck-key
+     typewriter feel. */
+  --font-typewriter:  "Courier Prime", "Courier New", monospace;
+
   /* Type scale — modest 1.25 ratio, generous line-height */
   --text-xs:    0.75rem;   /* 12px — captions, badges */
   --text-sm:    0.8125rem; /* 13px — labels, secondary text */
