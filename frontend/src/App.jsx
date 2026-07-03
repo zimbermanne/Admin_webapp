@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
+import { useApi } from './hooks/useApi.js'
 import Sidebar, { NAV } from './components/Sidebar.jsx'
 import MobileTopBar from './components/MobileTopBar.jsx'
 import PageLoader from './components/PageLoader.jsx'
@@ -36,15 +37,23 @@ function pageTitle(pathname) {
 function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+  const { user } = useAuth()
+  const api = useApi()
+  const [company, setCompany] = useState(null)
+
+  useEffect(() => {
+    api.get('/accounts/company-info').then(setCompany).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="app-shell">
-      <MobileTopBar title={pageTitle(location.pathname)} open={mobileOpen} onToggle={() => setMobileOpen((o) => !o)} />
+      <MobileTopBar title={pageTitle(location.pathname)} open={mobileOpen} onToggle={() => setMobileOpen((o) => !o)} accountName={company?.name} accountRank={user?.role} />
       <div className={`mobile-backdrop ${mobileOpen ? 'open' : ''}`} onClick={() => setMobileOpen(false)} />
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div className="main-content">
         <div className="desktop-topbar">
-          <Clock />
+          <Clock accountName={company?.name} accountRank={user?.role} />
         </div>
         {children}
       </div>

@@ -554,7 +554,11 @@ label {
   pointer-events: none;
 }
 
-.reminders-segment, .clock-segment, .clock-divider {
+.clock-bar-wide {
+  width: min(760px, 100%);
+}
+
+.reminders-segment, .clock-segment, .clock-divider, .account-segment {
   position: relative;
   z-index: 1;
 }
@@ -591,6 +595,28 @@ label {
   padding: 2px 8px;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.account-segment {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.account-chip {
+  font-family: var(--font-typewriter);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: #d8b9a8;
+  opacity: 0.85;
+}
+
+.account-chip strong {
+  color: #ffb28f;
+  font-weight: 700;
 }
 
 .clock-divider {
@@ -632,7 +658,8 @@ label {
 }
 
 .mobile-topbar .reminders-segment,
-.mobile-topbar .clock-divider {
+.mobile-topbar .clock-divider,
+.mobile-topbar .account-segment {
   display: none;
 }
 

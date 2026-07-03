@@ -8,6 +8,13 @@ function isoWeek(d) {
   return Math.ceil((((date - yearStart) / 86400000) + 1) / 7)
 }
 
+const RANK_LABELS = {
+  superadmin: 'Superadmin',
+  admin: 'Admin',
+  manager: 'Manager',
+  employee: 'Employee',
+}
+
 /**
  * Topbar clock/reminders bar.
  *
@@ -15,8 +22,11 @@ function isoWeek(d) {
  * (due invoices, low stock, follow-ups, etc.) can just pass items in here.
  * With none supplied it shows a quiet placeholder so the bar still reads
  * as "reserved for reminders" rather than empty dead space.
+ *
+ * `accountName`/`accountRank` render as a third segment (Account: X · Rank: Y)
+ * so the bar doubles as a quick "who am I logged in as" indicator.
  */
-export default function Clock({ reminders = [] }) {
+export default function Clock({ reminders = [], accountName, accountRank }) {
   const [now, setNow] = useState(new Date())
 
   useEffect(() => {
@@ -29,9 +39,10 @@ export default function Clock({ reminders = [] }) {
   const week = isoWeek(now)
   const year = now.getFullYear()
   const day = now.getDate()
+  const rankLabel = accountRank ? (RANK_LABELS[accountRank] || accountRank) : null
 
   return (
-    <div className="clock-bar" title={now.toString()}>
+    <div className="clock-bar clock-bar-wide" title={now.toString()}>
       <div className="reminders-segment">
         {reminders.length === 0 ? (
           <span className="reminders-placeholder">No reminders</span>
@@ -41,6 +52,15 @@ export default function Clock({ reminders = [] }) {
           ))
         )}
       </div>
+      {(accountName || rankLabel) && (
+        <>
+          <div className="clock-divider" />
+          <div className="account-segment">
+            {accountName && <span className="account-chip">Account name: <strong>{accountName}</strong></span>}
+            {rankLabel && <span className="account-chip">Account rank: <strong>{rankLabel}</strong></span>}
+          </div>
+        </>
+      )}
       <div className="clock-divider" />
       <div className="clock-segment">
         <div className="clock-time">{time}</div>
