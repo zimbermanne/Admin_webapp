@@ -64,8 +64,6 @@ class AccountCreate(BaseModel):
     business_type: Optional[str] = "retail"
     region: Optional[str] = ""
     district: Optional[str] = ""
-    country: Optional[str] = ""
-    currency: Optional[str] = ""
     street_address: Optional[str] = ""
     phone: Optional[str] = ""
     email: Optional[str] = ""
@@ -83,9 +81,6 @@ class AccountUpdate(BaseModel):
     business_type: Optional[str] = None
     region: Optional[str] = None
     district: Optional[str] = None
-    country: Optional[str] = None
-    currency: Optional[str] = None
-    country_confirmed: Optional[bool] = None
     street_address: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
@@ -109,9 +104,6 @@ class AccountOut(BaseModel):
     business_type: str
     region: str
     district: str
-    country: str
-    currency: str
-    country_confirmed: bool
     street_address: str
     phone: str
     email: str
@@ -214,11 +206,7 @@ class CheckoutResponse(BaseModel):
 
 # ---------- Purchases ----------
 class PurchaseCreate(BaseModel):
-    item_id: Optional[int] = None       # pick an existing inventory item to restock
-    item_name: Optional[str] = None     # required if item_id is not given (new item, or legacy free-text)
-    category: Optional[str] = "General"     # used only when creating a brand-new item
-    unit: Optional[str] = "pcs"             # used only when creating a brand-new item
-    selling_price: Optional[float] = None   # used only when creating a brand-new item
+    item_name: str
     supplier: Optional[str] = ""
     quantity: float = 1
     unit_cost: float = 0
@@ -227,7 +215,6 @@ class PurchaseCreate(BaseModel):
 class PurchaseOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    item_id: Optional[int]
     item_name: str
     supplier: str
     quantity: float
@@ -253,29 +240,11 @@ class ExpenseOut(BaseModel):
 
 
 # ---------- Ledgers ----------
-class DebtorItemLine(BaseModel):
-    item_id: Optional[int] = None       # existing inventory item picked from the list
-    item_name: Optional[str] = None     # used only if item_id is not given
-    quantity: float = 1
-    unit_price: Optional[float] = None  # defaults to the inventory item's selling_price
-
-
-class CreditorItemLine(BaseModel):
-    item_id: Optional[int] = None       # existing inventory item to restock
-    item_name: Optional[str] = None     # name for a brand-new inventory item
-    category: Optional[str] = "General"
-    unit: Optional[str] = "pcs"
-    quantity: float = 1
-    unit_cost: Optional[float] = None       # defaults to the inventory item's cost_price
-    selling_price: Optional[float] = None   # only used when creating a brand-new item
-
-
 class DebtorCreate(BaseModel):
     name: str
     phone: Optional[str] = ""
     total_owed: float = 0
     note: Optional[str] = ""
-    items: Optional[List[DebtorItemLine]] = None
 
 
 class CreditorCreate(BaseModel):
@@ -283,17 +252,6 @@ class CreditorCreate(BaseModel):
     phone: Optional[str] = ""
     total_owed: float = 0
     note: Optional[str] = ""
-    items: Optional[List[CreditorItemLine]] = None
-
-
-class LedgerItemOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    item_id: Optional[int]
-    item_name: str
-    quantity: float
-    unit_price: float
-    total: float
 
 
 class LedgerOut(BaseModel):
@@ -306,7 +264,6 @@ class LedgerOut(BaseModel):
     status: LedgerStatus
     note: str
     created_at: datetime
-    items: List[LedgerItemOut] = []
 
 
 class PaymentRequest(BaseModel):

@@ -15,7 +15,7 @@ export default function Register() {
   const [busy, setBusy] = useState(false)
 
   if (user) {
-    navigate('/', { replace: true })
+    navigate('/app', { replace: true })
     return null
   }
 
@@ -54,7 +54,7 @@ export default function Register() {
       }
       // Auto sign-in right after successful registration
       await login(username, password)
-      navigate('/', { replace: true })
+      navigate('/app', { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {

@@ -37,9 +37,6 @@ class Account(Base):
     business_type = Column(String(80), default="retail")
     region = Column(String(80), default="")
     district = Column(String(80), default="")
-    country = Column(String(80), default="")
-    currency = Column(String(10), default="")
-    country_confirmed = Column(Boolean, default=False)
     street_address = Column(String(255), default="")
     phone = Column(String(40), default="")
     email = Column(String(120), default="")
@@ -51,12 +48,6 @@ class Account(Base):
     is_suspended = Column(Boolean, default=False)
     onboarding_completed = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-
-    # Soft-delete: accounts are never destroyed immediately. "Deleting" marks
-    # them for deletion and locks logins; a superadmin (or an automated job)
-    # permanently purges them only after the grace period, via /purge below.
-    pending_deletion_at = Column(DateTime, nullable=True)
-    deleted_at = Column(DateTime, nullable=True)
 
     users = relationship("User", back_populates="account")
 
@@ -133,15 +124,12 @@ class Purchase(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
-    item_id = Column(Integer, ForeignKey("inventory_items.id"), nullable=True)
     item_name = Column(String(150))
     supplier = Column(String(150), default="")
     quantity = Column(Float, default=1)
     unit_cost = Column(Float, default=0)
     total = Column(Float, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
-
-    item = relationship("InventoryItem")
 
 
 class Expense(Base):
@@ -168,8 +156,6 @@ class Debtor(Base):
     note = Column(String(255), default="")
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    items = relationship("DebtorItem", back_populates="debtor", cascade="all, delete-orphan")
-
 
 class Creditor(Base):
     __tablename__ = "creditors"
@@ -183,53 +169,6 @@ class Creditor(Base):
     status = Column(Enum(LedgerStatus), default=LedgerStatus.unpaid)
     note = Column(String(255), default="")
     created_at = Column(DateTime, default=datetime.utcnow)
-
-    items = relationship("CreditorItem", back_populates="creditor", cascade="all, delete-orphan")
-
-
-class DebtorItem(Base):
-    """A line of goods given out on credit to a debtor (client). Recorded by
-    picking an inventory item instead of typing a free-text amount; stock is
-    decremented by `quantity` at the moment the debtor entry is created."""
-    __tablename__ = "debtor_items"
-
-    id = Column(Integer, primary_key=True, index=True)
-    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
-    debtor_id = Column(Integer, ForeignKey("debtors.id"), nullable=False, index=True)
-    item_id = Column(Integer, ForeignKey("inventory_items.id"), nullable=True)
-    item_name = Column(String(150), default="")
-    quantity = Column(Float, default=1)
-    unit_price = Column(Float, default=0)
-    total = Column(Float, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    debtor = relationship("Debtor", back_populates="items")
-    item = relationship("InventoryItem")
-
-
-class CreditorItem(Base):
-    """A line of goods taken on credit from a supplier (creditor). Recorded by
-    picking (or creating) an inventory item; stock is incremented by
-    `quantity` at the moment the creditor entry is created."""
-    __tablename__ = "creditor_items"
-
-    id = Column(Integer, primary_key=True, index=True)
-    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
-    creditor_id = Column(Integer, ForeignKey("creditors.id"), nullable=False, index=True)
-    item_id = Column(Integer, ForeignKey("inventory_items.id"), nullable=True)
-    item_name = Column(String(150), default="")
-    quantity = Column(Float, default=1)
-    unit_cost = Column(Float, default=0)
-    total = Column(Float, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    creditor = relationship("Creditor", back_populates="items")
-    item = relationship("InventoryItem")
-
-    @property
-    def unit_price(self):
-        """Alias so DebtorItem/CreditorItem share one output schema field name."""
-        return self.unit_cost
 
 
 class DocumentStatus(str, enum.Enum):

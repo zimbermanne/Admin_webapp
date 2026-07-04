@@ -29,55 +29,29 @@ def record_purchase(payload: PurchaseCreate, db: Session = Depends(get_db),
     account_id = get_account_filter(current_user)
     if account_id is None:
         raise HTTPException(status_code=403, detail="Superadmin cannot record purchases")
-
+    
     total = payload.unit_cost * payload.quantity
-
-    item = None
-    if payload.item_id is not None:
-        # Picked from the dropdown — restock this exact item, no name guessing.
-        item = db.query(InventoryItem).filter(
-            InventoryItem.id == payload.item_id, InventoryItem.account_id == account_id
-        ).first()
-        if not item:
-            raise HTTPException(status_code=404, detail="Inventory item not found")
-    elif payload.item_name:
-        # Either "+ New item" was used, or this is a legacy/free-text call
-        # (e.g. the batch importer). Try a name match first so re-imports of
-        # the same item don't create duplicates; otherwise create it fresh.
-        item = db.query(InventoryItem).filter(
-            InventoryItem.name == payload.item_name,
-            InventoryItem.account_id == account_id
-        ).first()
-        if not item:
-            item = InventoryItem(
-                account_id=account_id,
-                name=payload.item_name,
-                category=payload.category or "General",
-                unit=payload.unit or "pcs",
-                quantity=0,
-                cost_price=payload.unit_cost,
-                selling_price=payload.selling_price or 0,
-            )
-            db.add(item)
-            db.flush()  # get item.id
-    else:
-        raise HTTPException(status_code=400, detail="Pick an inventory item or provide a new item name")
-
     purchase = Purchase(
         account_id=account_id,
-        item_id=item.id,
-        item_name=item.name,
+        item_name=payload.item_name,
         supplier=payload.supplier or "",
         quantity=payload.quantity,
         unit_cost=payload.unit_cost,
         total=total,
     )
     db.add(purchase)
-    item.quantity += payload.quantity
+
+    # Increase stock if a matching inventory item exists in the same account
+    item = db.query(InventoryItem).filter(
+        InventoryItem.name == payload.item_name,
+        InventoryItem.account_id == account_id
+    ).first()
+    if item:
+        item.quantity += payload.quantity
 
     db.commit()
     db.refresh(purchase)
-    log_activity_for_user(db, current_user, "purchase_record", f"Purchased {payload.quantity} x {item.name}")
+    log_activity_for_user(db, current_user, "purchase_record", f"Purchased {payload.quantity} x {payload.item_name}")
     return purchase
 
 
@@ -116,35 +90,17 @@ async def batch_import(file: UploadFile = File(...), db: Session = Depends(get_d
     else:
         df = pd.read_excel(io.BytesIO(content))
 
-    # Two rows are only treated as "the same purchase" if every field matches
-    # exactly — same item, supplier, quantity and cost. Legitimate purchases
-    # of the same item from different suppliers (or at different quantities)
-    # are NOT duplicates and are still imported normally.
-    seen_rows = set()
-
     created = 0
-    skipped = 0
-    duplicate_rows = 0
     for _, row in df.iterrows():
         item_name = str(row.get("item_name", "")).strip()
         if not item_name:
-            skipped += 1
             continue
         quantity = float(row.get("quantity", 0) or 0)
         unit_cost = float(row.get("unit_cost", 0) or 0)
-        supplier = str(row.get("supplier", "")).strip()
-
-        row_key = (item_name.lower(), supplier.lower(), quantity, unit_cost)
-        if row_key in seen_rows:
-            skipped += 1
-            duplicate_rows += 1
-            continue
-        seen_rows.add(row_key)
-
         purchase = Purchase(
             account_id=account_id,
             item_name=item_name,
-            supplier=supplier,
+            supplier=str(row.get("supplier", "")).strip(),
             quantity=quantity,
             unit_cost=unit_cost,
             total=quantity * unit_cost,
@@ -156,14 +112,10 @@ async def batch_import(file: UploadFile = File(...), db: Session = Depends(get_d
         ).first()
         if item:
             item.quantity += quantity
-            purchase.item_id = item.id
         created += 1
     db.commit()
     log_activity_for_user(db, current_user, "purchase_batch_import", f"Imported {created} purchases")
-    response = {"created": created, "skipped": skipped}
-    if duplicate_rows:
-        response["duplicate_rows"] = f"Skipped {duplicate_rows} exact duplicate row(s) in the file"
-    return response
+    return {"created": created}
 
 
 @router.get("/export/spreadsheet")

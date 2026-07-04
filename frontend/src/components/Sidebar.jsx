@@ -3,46 +3,46 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 const NAV = [
-  { type: 'item', label: 'Home', icon: '🏠', path: '/' },
-  { type: 'item', label: 'Point of Sale', icon: '🧾', path: '/pos' },
+  { type: 'item', label: 'Home', icon: '🏠', path: '/app' },
+  { type: 'item', label: 'Point of Sale', icon: '🧾', path: '/app/pos' },
   {
     type: 'group', label: 'Sales', key: 'sales',
     children: [
-      { label: 'Sales History', icon: '📜', path: '/sales' },
-      { label: 'Customers', icon: '👥', path: '/customers' },
-      { label: 'Clients / Debtors', icon: '📒', path: '/debtors' },
+      { label: 'Sales History', icon: '📜', path: '/app/sales' },
+      { label: 'Customers', icon: '👥', path: '/app/customers' },
+      { label: 'Clients / Debtors', icon: '📒', path: '/app/debtors' },
     ],
   },
   {
     type: 'group', label: 'Purchases', key: 'purchases',
     children: [
-      { label: 'Purchases Ledger', icon: '📦', path: '/purchases' },
-      { label: 'Creditors Ledger', icon: '🏦', path: '/creditors' },
+      { label: 'Purchases Ledger', icon: '📦', path: '/app/purchases' },
+      { label: 'Creditors Ledger', icon: '🏦', path: '/app/creditors' },
     ],
   },
   {
     type: 'group', label: 'Proforma / Quotations', key: 'proforma',
     children: [
-      { label: 'Invoices', icon: '🧾', path: '/invoices' },
-      { label: 'Quotations / Estimates', icon: '📑', path: '/quotations' },
+      { label: 'Invoices', icon: '🧾', path: '/app/invoices' },
+      { label: 'Quotations / Estimates', icon: '📑', path: '/app/quotations' },
     ],
   },
   {
     type: 'group', label: 'Inventory', key: 'inventory',
     children: [
-      { label: 'Inventory Ledger', icon: '📋', path: '/inventory' },
+      { label: 'Inventory Ledger', icon: '📋', path: '/app/inventory' },
     ],
   },
   {
     type: 'group', label: 'Reports', key: 'reports',
     children: [
-      { label: 'Profit & Loss', icon: '📈', path: '/reports/profit-loss' },
-      { label: 'Financial Summary', icon: '💰', path: '/reports/financial-summary' },
+      { label: 'Profit & Loss', icon: '📈', path: '/app/reports/profit-loss' },
+      { label: 'Financial Summary', icon: '💰', path: '/app/reports/financial-summary' },
     ],
   },
-  { type: 'item', label: 'Expenses', icon: '💸', path: '/expenses' },
-  { type: 'item', label: 'Activity Logs', icon: '🕵️', path: '/activity', roles: ['manager', 'admin', 'superadmin'] },
-  { type: 'item', label: 'Settings', icon: '⚙️', path: '/settings' },
+  { type: 'item', label: 'Expenses', icon: '💸', path: '/app/expenses' },
+  { type: 'item', label: 'Activity Logs', icon: '🕵️', path: '/app/activity', roles: ['manager', 'admin', 'superadmin'] },
+  { type: 'item', label: 'Settings', icon: '⚙️', path: '/app/settings' },
 ]
 
 export default function Sidebar({ mobileOpen, onClose }) {

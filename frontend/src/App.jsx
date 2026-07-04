@@ -6,6 +6,7 @@ import Sidebar, { NAV } from './components/Sidebar.jsx'
 import MobileTopBar from './components/MobileTopBar.jsx'
 import PageLoader from './components/PageLoader.jsx'
 import Clock from './Clock.jsx'
+import Landing from './pages/Landing.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Onboarding from './pages/Onboarding.jsx'
@@ -121,7 +122,7 @@ function PrivateRoutes() {
         <Route path="/customers" element={<Customers />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/activity" element={<ActivityLogs />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>
     </Layout>
   )
@@ -131,9 +132,10 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/*" element={<PrivateRoutes />} />
+        <Route path="/app/*" element={<PrivateRoutes />} />
       </Routes>
     </AuthProvider>
   )

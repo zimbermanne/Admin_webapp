@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { useApi } from '../hooks/useApi.js'
-import { AFRICAN_COUNTRY_CURRENCIES, currencyForCountry } from '../data/africanCountryCurrencies.js'
 
 const STEPS = [
   { n: 1, label: 'Business basics' },
@@ -29,8 +28,6 @@ export default function Onboarding() {
     business_type: 'Retail shop',
     region: '',
     district: '',
-    country: '',
-    currency: '',
     street_address: '',
     phone: '',
     email: '',
@@ -53,8 +50,6 @@ export default function Onboarding() {
         tax_rate: account.tax_rate ?? f.tax_rate,
         invoice_prefix: account.invoice_prefix || f.invoice_prefix,
         payment_terms_days: account.payment_terms_days ?? f.payment_terms_days,
-        country: account.country || f.country,
-        currency: account.currency || f.currency,
       }))
     }
   }, [account])
@@ -62,11 +57,6 @@ export default function Onboarding() {
   const set = (field) => (e) => {
     const val = e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value
     setForm((f) => ({ ...f, [field]: val }))
-  }
-
-  const setCountry = (e) => {
-    const country = e.target.value
-    setForm((f) => ({ ...f, country, currency: currencyForCountry(country) || f.currency }))
   }
 
   // ---- Step 4: first inventory items ----
@@ -99,7 +89,6 @@ export default function Onboarding() {
       if (!form.owner_full_name.trim()) return 'Owner / representative full name is required.'
       if (form.business_structure === 'company' && !form.tin.trim()) return 'TIN is required for a registered company.'
       if (!form.region.trim() || !form.district.trim()) return 'Region and district are required.'
-      if (!form.country.trim()) return 'Country is required.'
       return ''
     }
     if (step === 2) {
@@ -258,19 +247,6 @@ export default function Onboarding() {
               <div className="form-row">
                 <label>District *</label>
                 <input value={form.district} onChange={set('district')} />
-              </div>
-              <div className="form-row">
-                <label>Country *</label>
-                <select value={form.country} onChange={setCountry}>
-                  <option value="">Select a country…</option>
-                  {AFRICAN_COUNTRY_CURRENCIES.map((c) => (
-                    <option key={c.country} value={c.country}>{c.country}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-row">
-                <label>Currency</label>
-                <input value={form.currency} readOnly placeholder="Auto-filled from country" />
               </div>
               <div className="form-row" style={{ gridColumn: '1 / -1' }}>
                 <label>Street / physical address</label>

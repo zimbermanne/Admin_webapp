@@ -12,7 +12,7 @@ export default function Login() {
   const [demoBusy, setDemoBusy] = useState(false)
 
   if (user) {
-    navigate('/', { replace: true })
+    navigate('/app', { replace: true })
     return null
   }
 
@@ -22,7 +22,7 @@ export default function Login() {
     setBusy(true)
     try {
       await login(username, password)
-      navigate('/', { replace: true })
+      navigate('/app', { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -35,7 +35,7 @@ export default function Login() {
     setDemoBusy(true)
     try {
       await loginAsDemo()
-      navigate('/', { replace: true })
+      navigate('/app', { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {

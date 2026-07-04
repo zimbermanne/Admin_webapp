@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { AFRICAN_COUNTRY_CURRENCIES, currencyForCountry } from '../data/africanCountryCurrencies.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { useApi } from '../hooks/useApi.js'
 import Modal from '../components/Modal.jsx'
@@ -200,25 +199,6 @@ export default function Settings() {
             <div className="form-row">
               <label>District</label>
               <input value={account.district || ''} onChange={(e) => setAccount({...account, district: e.target.value})} />
-            </div>
-            <div className="form-row">
-              <label>Country</label>
-              <select
-                value={account.country || ''}
-                onChange={(e) => {
-                  const country = e.target.value
-                  setAccount({ ...account, country, currency: currencyForCountry(country) || account.currency })
-                }}
-              >
-                <option value="">Select a country…</option>
-                {AFRICAN_COUNTRY_CURRENCIES.map((c) => (
-                  <option key={c.country} value={c.country}>{c.country}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-row">
-              <label>Currency</label>
-              <input value={account.currency || ''} readOnly placeholder="Auto-filled from country" />
             </div>
             <div className="form-row">
               <label>Street Address</label>

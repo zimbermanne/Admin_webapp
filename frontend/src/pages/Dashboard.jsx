@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useApi } from '../hooks/useApi.js'
-import { useAuth } from '../hooks/useAuth.jsx'
 
 function money(n) {
   return `TZS ${Number(n || 0).toLocaleString()}`
@@ -50,7 +48,6 @@ function CashflowChart({ series }) {
 
 export default function Dashboard() {
   const api = useApi()
-  const { account, user } = useAuth()
   const [daily, setDaily] = useState(null)
   const [inv, setInv] = useState(null)
   const [fin, setFin] = useState(null)
@@ -74,28 +71,11 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const needsCountryConfirm = user?.role === 'admin' && account && !account.country_confirmed
-
   return (
     <div className="page">
       <div className="page-header">
         <h1>Home</h1>
       </div>
-
-      {needsCountryConfirm && (
-        <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid var(--accent)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-          <div>
-            <strong>Confirm your country &amp; currency</strong>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              We've set your account to {account.country || 'Tanzania'} ({account.currency || 'TZS'}) by default —
-              please confirm this is correct so your invoices show the right currency.
-            </div>
-          </div>
-          <Link to="/settings" className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
-            Review in Settings
-          </Link>
-        </div>
-      )}
 
       {error && <div className="error-text">{error}</div>}
 

@@ -17,8 +17,6 @@ export default function Inventory() {
   const [form, setForm] = useState(empty)
   const [importing, setImporting] = useState(false)
   const [listLoading, setListLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [lowStockOnly, setLowStockOnly] = useState(false)
 
   const load = () => { setListLoading(true); api.get('/inventory/').then(setItems).catch((e) => setError(e.message)).finally(() => setListLoading(false)) }
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -37,8 +35,7 @@ export default function Inventory() {
       load()
       const skippedNote = data.skipped ? ` (${data.skipped} row${data.skipped === 1 ? '' : 's'} skipped)` : ''
       const dupNote = data.duplicate_skus ? `\n${data.duplicate_skus}` : ''
-      const dupNameNote = data.duplicate_names ? `\n${data.duplicate_names}` : ''
-      alert(`✅ Imported ${data.created} items successfully.${skippedNote}${dupNote}${dupNameNote}`)
+      alert(`✅ Imported ${data.created} items successfully.${skippedNote}${dupNote}`)
     } catch (e) { setError(e.message) }
     finally { setImporting(false); e.target.value = '' }
   }
@@ -81,21 +78,12 @@ export default function Inventory() {
   }
 
   const columns = [
-    { key: 'name', header: 'Name', sortable: true },
-    { key: 'category', header: 'Category', sortable: true },
+    { key: 'name', header: 'Name' },
+    { key: 'category', header: 'Category' },
+    { key: 'quantity', header: 'Qty', render: (r) => `${r.quantity} ${r.unit}` },
+    { key: 'selling_price', header: 'Price', render: (r) => `TZS ${r.selling_price.toLocaleString()}` },
     {
-      key: 'quantity', header: 'Qty', sortable: true,
-      render: (r) => `${r.quantity} ${r.unit}`,
-    },
-    {
-      key: 'selling_price', header: 'Price', sortable: true,
-      render: (r) => `TZS ${r.selling_price.toLocaleString()}`,
-    },
-    {
-      key: 'status', header: 'Status', sortable: true,
-      // Sort low-stock items to one end regardless of exact quantity —
-      // true (low stock) sorts before false when ascending.
-      sortValue: (r) => (r.quantity <= r.reorder_point ? 0 : 1),
+      key: 'status', header: 'Status',
       render: (r) => r.quantity <= r.reorder_point
         ? <span className="badge badge-unpaid">Low Stock</span>
         : <span className="badge badge-paid">OK</span>,
@@ -111,16 +99,6 @@ export default function Inventory() {
     },
   ]
 
-  const visibleItems = items.filter((r) => {
-    if (lowStockOnly && r.quantity > r.reorder_point) return false
-    if (search.trim()) {
-      const q = search.trim().toLowerCase()
-      const hay = `${r.name} ${r.category} ${r.sku || ''}`.toLowerCase()
-      if (!hay.includes(q)) return false
-    }
-    return true
-  })
-
   return (
     <div className="page">
       <div className="page-header">
@@ -135,26 +113,9 @@ export default function Inventory() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
-        <input
-          type="text"
-          placeholder="Search by name, category, or SKU…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ flex: '1 1 260px', maxWidth: 360 }}
-        />
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, whiteSpace: 'nowrap' }}>
-          <input type="checkbox" checked={lowStockOnly} onChange={(e) => setLowStockOnly(e.target.checked)} />
-          Low stock only
-        </label>
-        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-          {visibleItems.length} of {items.length} item{items.length === 1 ? '' : 's'} · click a column header to sort
-        </span>
-      </div>
-
       {error && <div className="error-text" style={{ marginBottom: 12 }}>{error}</div>}
 
-      <Table columns={columns} rows={visibleItems} loading={listLoading} loadingText="Loading inventory…" />
+      <Table columns={columns} rows={items} loading={listLoading} loadingText="Loading inventory…" />
 
       {editing !== null && (
         <Modal
@@ -167,21 +128,6 @@ export default function Inventory() {
             </>
           )}
         >
-          <div className="form-row">
-            <label>Existing Item</label>
-            <select
-              value=""
-              onChange={(e) => {
-                const picked = items.find((i) => String(i.id) === e.target.value)
-                if (picked) { setForm(picked); setEditing(picked) }
-              }}
-            >
-              <option value="">Select item to edit… (or type a new name below)</option>
-              {[...items].sort((a, b) => a.name.localeCompare(b.name)).map((i) => (
-                <option key={i.id} value={i.id}>{i.name} ({i.quantity} {i.unit} in stock)</option>
-              ))}
-            </select>
-          </div>
           <div className="form-row">
             <label>Name</label>
             <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />

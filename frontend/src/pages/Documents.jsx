@@ -80,11 +80,11 @@ export default function Documents({ kind }) {
   }
 
   const columns = [
-    { key: 'no', header: 'No.', render: (r) => <span className="cheque-number">{r[numberKey]}</span>, sortable: true, sortValue: (r) => r[numberKey] },
-    { key: 'created_at', header: 'Date', render: (r) => new Date(r.created_at).toLocaleString(), sortable: true },
-    { key: 'customer_name', header: 'Customer', sortable: true },
-    { key: 'total', header: 'Total', render: (r) => `TZS ${r.total.toLocaleString()}`, sortable: true },
-    { key: 'status', header: 'Status', render: (r) => <span className={`badge badge-${r.status}`}>{r.status}</span>, sortable: true },
+    { key: 'no', header: 'No.', render: (r) => <span className="cheque-number">{r[numberKey]}</span> },
+    { key: 'created_at', header: 'Date', render: (r) => new Date(r.created_at).toLocaleString() },
+    { key: 'customer_name', header: 'Customer' },
+    { key: 'total', header: 'Total', render: (r) => `TZS ${r.total.toLocaleString()}` },
+    { key: 'status', header: 'Status', render: (r) => <span className={`badge badge-${r.status}`}>{r.status}</span> },
     {
       key: 'actions', header: '',
       stopRowClick: true,

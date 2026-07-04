@@ -174,32 +174,13 @@ async def batch_import(file: UploadFile = File(...), db: Session = Depends(get_d
     }
     seen_skus = set()
 
-    # Separately guard against plain duplicate item names — a spreadsheet
-    # with no SKU column (or one where SKU is optional) can still repeat the
-    # same item across rows, which would otherwise silently create several
-    # near-identical inventory entries. Matched case-insensitively so "Sugar
-    # 1kg" and "sugar 1kg" count as the same item.
-    existing_names = {
-        n.strip().lower() for (n,) in db.query(InventoryItem.name)
-        .filter(InventoryItem.account_id == account_id)
-        .all()
-    }
-    seen_names = set()
-
     created = 0
     skipped = 0
     duplicate_skus = []
-    duplicate_names = []
     for _, row in df.iterrows():
         name = _safe_str(row.get("name"))
         if not name:
             skipped += 1
-            continue
-
-        name_key = name.strip().lower()
-        if name_key in existing_names or name_key in seen_names:
-            skipped += 1
-            duplicate_names.append(name)
             continue
 
         sku = _safe_str(row.get("sku")) or None
@@ -209,7 +190,6 @@ async def batch_import(file: UploadFile = File(...), db: Session = Depends(get_d
             continue
         if sku:
             seen_skus.add(sku)
-        seen_names.add(name_key)
 
         item = InventoryItem(
             account_id=account_id,
@@ -237,10 +217,6 @@ async def batch_import(file: UploadFile = File(...), db: Session = Depends(get_d
         preview = ", ".join(duplicate_skus[:5])
         more = f" and {len(duplicate_skus) - 5} more" if len(duplicate_skus) > 5 else ""
         response["duplicate_skus"] = f"Skipped duplicate SKU(s): {preview}{more}"
-    if duplicate_names:
-        preview = ", ".join(duplicate_names[:5])
-        more = f" and {len(duplicate_names) - 5} more" if len(duplicate_names) > 5 else ""
-        response["duplicate_names"] = f"Skipped repeated item name(s): {preview}{more}"
     return response
 
 
