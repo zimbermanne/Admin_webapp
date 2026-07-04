@@ -144,41 +144,133 @@ export default function Landing() {
       )}
 
       {/* ---- Manifesto ---- */}
-      <section className="landing-section landing-manifesto">
-        <h2>From Hustler to Empire Builder</h2>
-        <p className="landing-manifesto-lead">
-          You are not just a business owner or a group treasurer — you are an
-          architect of wealth. The difference between staying small and building
-          an empire is rarely effort alone. It's the clarity of your data.
-        </p>
-        <div className="landing-grid landing-grid-three">
-          <div className="landing-feature-card">
-            <div className="landing-feature-title">Stop the leaks</div>
-            <div className="landing-feature-text">
-              You work hard for your money — stop letting it slip through the cracks
-              of unrecorded expenses or untracked contributions.
+      {track === 'business' ? (
+        <section className="landing-section landing-manifesto">
+          <h2>From Hustler to Empire Builder</h2>
+          <p className="landing-manifesto-kicker">Manifesto for the Modern African Entrepreneur</p>
+
+          <p className="landing-manifesto-lead">
+            You are not just a business owner; you are an architect of wealth.
+            The difference between the hustler who stays small and the mogul
+            who builds an empire is not just hard work — it is the clarity of
+            their data.
+          </p>
+
+          <h3>The Secret of the Wealthy</h3>
+          <p className="landing-manifesto-body">
+            Wealthy entrepreneurs do not guess their profits; they measure them.
+          </p>
+          <p className="landing-manifesto-body">
+            When you record your transactions, you are not performing an
+            accounting chore; you are tracking your path to prosperity.
+          </p>
+          <p className="landing-manifesto-body">
+            Every sale entered is a piece of data that reveals your true
+            potential — your "window of optimization."
+          </p>
+
+          <h3>Your Path to Optimization</h3>
+          <div className="landing-grid landing-grid-three">
+            <div className="landing-feature-card">
+              <div className="landing-feature-title">Stop the leaks</div>
+              <div className="landing-feature-text">
+                You are working hard for your money; stop letting it slip
+                through the cracks of unrecorded expenses.
+              </div>
+            </div>
+            <div className="landing-feature-card">
+              <div className="landing-feature-title">Prove your worth</div>
+              <div className="landing-feature-text">
+                Banks and investors do not lend to those who keep their
+                records in their heads. They lend to those who can prove
+                their growth through clean, organized records.
+              </div>
+            </div>
+            <div className="landing-feature-card">
+              <div className="landing-feature-title">Master your growth</div>
+              <div className="landing-feature-text">
+                When you know exactly what is moving in your shop, you gain
+                the power to scale. You move from being a shopkeeper to
+                being a CEO.
+              </div>
             </div>
           </div>
-          <div className="landing-feature-card">
-            <div className="landing-feature-title">Prove your worth</div>
-            <div className="landing-feature-text">
-              Banks don't lend to records kept in someone's head. Clean, organized
-              history is how you prove growth — to a bank, or to your members.
+
+          <h3>The Call to Action</h3>
+          <p className="landing-manifesto-body">
+            Stop "hustling" in the dark. Use your data to turn on the lights.
+            Your empire is waiting to be built, one transaction at a time.
+          </p>
+          <p className="landing-manifesto-cta">
+            Start tracking your wealth with MoneyTracer today. Your future
+            self is already a mogul; it's time to start acting like one.
+          </p>
+        </section>
+      ) : (
+        <section className="landing-section landing-manifesto">
+          <h2>From Notebook to Trusted Institution</h2>
+          <p className="landing-manifesto-kicker">Manifesto for the Modern Community Organizer</p>
+
+          <p className="landing-manifesto-lead">
+            You are not just a treasurer; you are the architect of your
+            group's trust. The difference between a group that stays small
+            and a group that grows for generations is not just discipline —
+            it is the clarity of its records.
+          </p>
+
+          <h3>The Secret of Groups That Last</h3>
+          <p className="landing-manifesto-body">
+            Groups that last do not guess their savings; they measure them.
+          </p>
+          <p className="landing-manifesto-body">
+            When you record a contribution, you are not performing a chore
+            for the meeting; you are building the trust the whole group
+            stands on.
+          </p>
+          <p className="landing-manifesto-body">
+            Every contribution logged is a piece of data that reveals the
+            group's true strength — its "window of transparency."
+          </p>
+
+          <h3>Your Path to Trust</h3>
+          <div className="landing-grid landing-grid-three">
+            <div className="landing-feature-card">
+              <div className="landing-feature-title">Stop the disputes</div>
+              <div className="landing-feature-text">
+                Members are trusting you with their savings; stop letting
+                trust slip through the cracks of a lost notebook page.
+              </div>
+            </div>
+            <div className="landing-feature-card">
+              <div className="landing-feature-title">Prove your fairness</div>
+              <div className="landing-feature-text">
+                Members do not stay in groups they cannot verify. They stay
+                in groups where every contribution, payout, and loan is
+                visible and accounted for.
+              </div>
+            </div>
+            <div className="landing-feature-card">
+              <div className="landing-feature-title">Master your growth</div>
+              <div className="landing-feature-text">
+                When you know exactly what is moving through the group, you
+                gain the power to grow it. You move from record-keeper to
+                trusted institution.
+              </div>
             </div>
           </div>
-          <div className="landing-feature-card">
-            <div className="landing-feature-title">Master your growth</div>
-            <div className="landing-feature-text">
-              When you know exactly what's moving — in your shop or your group —
-              you gain the power to scale with confidence.
-            </div>
-          </div>
-        </div>
-        <p className="landing-manifesto-cta">
-          Whether you're tracking shop inventory or managing community savings,
-          MoneyTracer gives you the data to stop guessing and start growing.
-        </p>
-      </section>
+
+          <h3>The Call to Action</h3>
+          <p className="landing-manifesto-body">
+            Stop tracking trust in a notebook that can be lost or disputed.
+            Use your data to turn on the lights. Your group's future is
+            built one contribution at a time.
+          </p>
+          <p className="landing-manifesto-cta">
+            Start tracking your group's wealth with MoneyTracer today. The
+            institution your members deserve starts with today's meeting.
+          </p>
+        </section>
+      )}
 
       {/* ---- How it works ---- */}
       <section id="how-it-works" className="landing-section landing-section-alt">

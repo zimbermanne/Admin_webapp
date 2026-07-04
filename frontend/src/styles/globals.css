@@ -1439,6 +1439,30 @@ label {
   font-family: var(--font-display);
 }
 
+.landing-manifesto-kicker {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--accent-hover);
+  margin: -4px 0 24px;
+}
+
+.landing-manifesto h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  margin: 40px 0 16px;
+}
+
+.landing-manifesto-body {
+  max-width: 640px;
+  margin: 0 auto 14px;
+  color: var(--text-dark);
+  font-size: var(--text-base);
+  line-height: var(--leading-loose);
+  text-align: left;
+}
+
 .landing-manifesto-lead {
   max-width: 680px;
   margin: 0 auto 40px;
