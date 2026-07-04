@@ -41,6 +41,13 @@ _MIGRATIONS = {
         # "please confirm your country" dashboard nudge for legacy accounts.
         ("country_confirmed", "BOOLEAN", "false"),
     ],
+    "purchases": [
+        # Purchases used to restock inventory by fuzzy-matching the typed
+        # item_name string. New purchases record the exact inventory item
+        # picked from a dropdown instead; existing rows default to NULL
+        # (unlinked) since we can't safely guess which item they meant.
+        ("item_id", "INTEGER", None),
+    ],
 }
 
 

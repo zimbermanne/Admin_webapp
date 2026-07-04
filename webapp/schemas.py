@@ -214,7 +214,11 @@ class CheckoutResponse(BaseModel):
 
 # ---------- Purchases ----------
 class PurchaseCreate(BaseModel):
-    item_name: str
+    item_id: Optional[int] = None       # pick an existing inventory item to restock
+    item_name: Optional[str] = None     # required if item_id is not given (new item, or legacy free-text)
+    category: Optional[str] = "General"     # used only when creating a brand-new item
+    unit: Optional[str] = "pcs"             # used only when creating a brand-new item
+    selling_price: Optional[float] = None   # used only when creating a brand-new item
     supplier: Optional[str] = ""
     quantity: float = 1
     unit_cost: float = 0
@@ -223,6 +227,7 @@ class PurchaseCreate(BaseModel):
 class PurchaseOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    item_id: Optional[int]
     item_name: str
     supplier: str
     quantity: float

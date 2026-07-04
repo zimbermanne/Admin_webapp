@@ -29,29 +29,55 @@ def record_purchase(payload: PurchaseCreate, db: Session = Depends(get_db),
     account_id = get_account_filter(current_user)
     if account_id is None:
         raise HTTPException(status_code=403, detail="Superadmin cannot record purchases")
-    
+
     total = payload.unit_cost * payload.quantity
+
+    item = None
+    if payload.item_id is not None:
+        # Picked from the dropdown — restock this exact item, no name guessing.
+        item = db.query(InventoryItem).filter(
+            InventoryItem.id == payload.item_id, InventoryItem.account_id == account_id
+        ).first()
+        if not item:
+            raise HTTPException(status_code=404, detail="Inventory item not found")
+    elif payload.item_name:
+        # Either "+ New item" was used, or this is a legacy/free-text call
+        # (e.g. the batch importer). Try a name match first so re-imports of
+        # the same item don't create duplicates; otherwise create it fresh.
+        item = db.query(InventoryItem).filter(
+            InventoryItem.name == payload.item_name,
+            InventoryItem.account_id == account_id
+        ).first()
+        if not item:
+            item = InventoryItem(
+                account_id=account_id,
+                name=payload.item_name,
+                category=payload.category or "General",
+                unit=payload.unit or "pcs",
+                quantity=0,
+                cost_price=payload.unit_cost,
+                selling_price=payload.selling_price or 0,
+            )
+            db.add(item)
+            db.flush()  # get item.id
+    else:
+        raise HTTPException(status_code=400, detail="Pick an inventory item or provide a new item name")
+
     purchase = Purchase(
         account_id=account_id,
-        item_name=payload.item_name,
+        item_id=item.id,
+        item_name=item.name,
         supplier=payload.supplier or "",
         quantity=payload.quantity,
         unit_cost=payload.unit_cost,
         total=total,
     )
     db.add(purchase)
-
-    # Increase stock if a matching inventory item exists in the same account
-    item = db.query(InventoryItem).filter(
-        InventoryItem.name == payload.item_name,
-        InventoryItem.account_id == account_id
-    ).first()
-    if item:
-        item.quantity += payload.quantity
+    item.quantity += payload.quantity
 
     db.commit()
     db.refresh(purchase)
-    log_activity_for_user(db, current_user, "purchase_record", f"Purchased {payload.quantity} x {payload.item_name}")
+    log_activity_for_user(db, current_user, "purchase_record", f"Purchased {payload.quantity} x {item.name}")
     return purchase
 
 
@@ -112,6 +138,7 @@ async def batch_import(file: UploadFile = File(...), db: Session = Depends(get_d
         ).first()
         if item:
             item.quantity += quantity
+            purchase.item_id = item.id
         created += 1
     db.commit()
     log_activity_for_user(db, current_user, "purchase_batch_import", f"Imported {created} purchases")

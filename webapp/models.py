@@ -133,12 +133,15 @@ class Purchase(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    item_id = Column(Integer, ForeignKey("inventory_items.id"), nullable=True)
     item_name = Column(String(150))
     supplier = Column(String(150), default="")
     quantity = Column(Float, default=1)
     unit_cost = Column(Float, default=0)
     total = Column(Float, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    item = relationship("InventoryItem")
 
 
 class Expense(Base):
