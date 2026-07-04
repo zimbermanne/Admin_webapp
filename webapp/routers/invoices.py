@@ -47,6 +47,7 @@ def get_account_details(db: Session, account_id: int):
             "tin": account.tin,
             "tax_rate": account.tax_rate,
             "invoice_prefix": account.invoice_prefix,
+            "currency": account.currency or CURRENCY,
         }
     return None
 
@@ -186,7 +187,7 @@ def email_invoice(invoice_id: int, payload: EmailDocRequest, db: Session = Depen
     account = get_account_details(db, inv.account_id)
     buf = _render_pdf(inv, "INVOICE", account)
     company = (account or {}).get("name") or COMPANY_NAME
-    body = payload.message or f"Dear {inv.customer_name},\n\nPlease find attached Invoice {inv.invoice_no} for {CURRENCY} {inv.total:,.2f}.\n\nRegards,\n{company}"
+    body = payload.message or f"Dear {inv.customer_name},\n\nPlease find attached Invoice {inv.invoice_no} for {(account or {}).get('currency') or CURRENCY} {inv.total:,.2f}.\n\nRegards,\n{company}"
 
     try:
         send_email_with_attachment(
@@ -221,6 +222,7 @@ def _render_pdf(doc: Invoice, label: str, account: dict = None) -> io.BytesIO:
     biz_address = (account or {}).get("address") or COMPANY_ADDRESS
     biz_phone   = (account or {}).get("phone") or COMPANY_PHONE
     biz_email   = (account or {}).get("email") or COMPANY_EMAIL
+    doc_currency = (account or {}).get("currency") or CURRENCY
 
     buf = io.BytesIO()
     pdf = SimpleDocTemplate(buf, pagesize=A4,
@@ -256,7 +258,7 @@ def _render_pdf(doc: Invoice, label: str, account: dict = None) -> io.BytesIO:
     elems += [Paragraph("<br/>".join(bt), normal), Spacer(1,8*mm)]
 
     # Line items
-    rows = [["#", "Description", "Qty", f"Unit Price ({CURRENCY})", f"Total ({CURRENCY})"]]
+    rows = [["#", "Description", "Qty", f"Unit Price ({doc_currency})", f"Total ({doc_currency})"]]
     for i, ln in enumerate(doc.items, 1):
         rows.append([str(i), ln.description, f"{ln.quantity:g}",
                      f"{ln.unit_price:,.2f}", f"{ln.total:,.2f}"])
@@ -276,10 +278,10 @@ def _render_pdf(doc: Invoice, label: str, account: dict = None) -> io.BytesIO:
     elems += [t, Spacer(1,6*mm)]
 
     # Totals
-    tot_rows = [["Subtotal", f"{CURRENCY} {doc.subtotal:,.2f}"]]
-    if doc.tax_rate: tot_rows.append([f"VAT ({doc.tax_rate:g}%)", f"{CURRENCY} {doc.tax_amount:,.2f}"])
-    if doc.discount: tot_rows.append(["Discount", f"- {CURRENCY} {doc.discount:,.2f}"])
-    tot_rows.append(["Grand Total", f"{CURRENCY} {doc.total:,.2f}"])
+    tot_rows = [["Subtotal", f"{doc_currency} {doc.subtotal:,.2f}"]]
+    if doc.tax_rate: tot_rows.append([f"VAT ({doc.tax_rate:g}%)", f"{doc_currency} {doc.tax_amount:,.2f}"])
+    if doc.discount: tot_rows.append(["Discount", f"- {doc_currency} {doc.discount:,.2f}"])
+    tot_rows.append(["Grand Total", f"{doc_currency} {doc.total:,.2f}"])
     tt = Table(tot_rows, colWidths=[40*mm,36*mm], hAlign="RIGHT")
     tt.setStyle(TableStyle([
         ("ALIGN",(0,0),(-1,-1),"RIGHT"), ("FONTSIZE",(0,0),(-1,-1),10),

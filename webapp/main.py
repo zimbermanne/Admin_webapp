@@ -43,6 +43,12 @@ app.include_router(reminders.router)
 app.include_router(community.router)
 
 
+@app.on_event("startup")
+async def _start_scheduled_backups():
+    import asyncio
+    asyncio.create_task(backup.run_scheduled_backups())
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok", "version": "2.5.0"}

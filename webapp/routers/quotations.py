@@ -235,7 +235,7 @@ def _render_quotation_pdf(q: Quotation, account: Account = None) -> io.BytesIO:
         biz_address = os.getenv("COMPANY_ADDRESS", "Arusha, Tanzania")
         biz_phone   = os.getenv("COMPANY_PHONE", "")
         biz_email   = os.getenv("COMPANY_EMAIL", "")
-    CURRENCY = os.getenv("CURRENCY", "TZS")
+    CURRENCY = (account.currency if account and account.currency else os.getenv("CURRENCY", "TZS"))
 
     buf = io.BytesIO()
     pdf = SimpleDocTemplate(buf, pagesize=A4,

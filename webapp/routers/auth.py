@@ -69,7 +69,33 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     user = authenticate_user(db, payload.username, payload.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    
+
+    # Surface *why* a login can't proceed here, rather than issuing a token
+    # that will just fail opaquely on the next request (get_current_user).
+    if not user.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail="This account has been deactivated. Ask an admin to reactivate it.",
+        )
+    if user.role != RoleEnum.superadmin and user.account_id:
+        account = db.query(Account).filter(Account.id == user.account_id).first()
+        if account is None:
+            raise HTTPException(
+                status_code=403,
+                detail="This user is no longer linked to a valid business/community "
+                       "account. Contact support to reconnect it.",
+            )
+        if account.is_suspended:
+            raise HTTPException(
+                status_code=403,
+                detail="This account has been suspended. Please contact support.",
+            )
+    elif user.role != RoleEnum.superadmin and not user.account_id:
+        raise HTTPException(
+            status_code=403,
+            detail="This user isn't linked to any account. Contact support to reconnect it.",
+        )
+
     # Include account_id in JWT token
     token_data = {"sub": user.username, "role": user.role.value}
     if user.account_id:

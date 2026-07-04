@@ -37,6 +37,9 @@ class Account(Base):
     business_type = Column(String(80), default="retail")
     region = Column(String(80), default="")
     district = Column(String(80), default="")
+    country = Column(String(80), default="")
+    currency = Column(String(10), default="")
+    country_confirmed = Column(Boolean, default=False)
     street_address = Column(String(255), default="")
     phone = Column(String(40), default="")
     email = Column(String(120), default="")
@@ -48,6 +51,12 @@ class Account(Base):
     is_suspended = Column(Boolean, default=False)
     onboarding_completed = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Soft-delete: accounts are never destroyed immediately. "Deleting" marks
+    # them for deletion and locks logins; a superadmin (or an automated job)
+    # permanently purges them only after the grace period, via /purge below.
+    pending_deletion_at = Column(DateTime, nullable=True)
+    deleted_at = Column(DateTime, nullable=True)
 
     users = relationship("User", back_populates="account")
 

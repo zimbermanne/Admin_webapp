@@ -64,6 +64,8 @@ class AccountCreate(BaseModel):
     business_type: Optional[str] = "retail"
     region: Optional[str] = ""
     district: Optional[str] = ""
+    country: Optional[str] = ""
+    currency: Optional[str] = ""
     street_address: Optional[str] = ""
     phone: Optional[str] = ""
     email: Optional[str] = ""
@@ -81,6 +83,9 @@ class AccountUpdate(BaseModel):
     business_type: Optional[str] = None
     region: Optional[str] = None
     district: Optional[str] = None
+    country: Optional[str] = None
+    currency: Optional[str] = None
+    country_confirmed: Optional[bool] = None
     street_address: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
@@ -104,6 +109,9 @@ class AccountOut(BaseModel):
     business_type: str
     region: str
     district: str
+    country: str
+    currency: str
+    country_confirmed: bool
     street_address: str
     phone: str
     email: str
