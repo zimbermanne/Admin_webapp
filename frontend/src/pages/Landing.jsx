@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { HeroSection } from '@/components/ui/hero-section'
 
 const BUSINESS_FEATURES = [
   { icon: '🧾', title: 'Sales Tracking', text: 'Fast multi-item checkout with live stock validation, built for the counter.' },
@@ -63,28 +62,20 @@ export default function Landing() {
       </header>
 
       {/* ---- Dual-path hero ---- */}
-      <HeroSection
-        badge={{
-          text: 'Built for African SMEs & community groups',
-          action: { text: 'See how it works', href: '#how-it-works' },
-        }}
-        title="MoneyTracer: Your Wealth, Managed."
-        description="Whether you're building a business empire or organizing a community savings group, MoneyTracer gives you the clarity to scale. Stop hustling in the dark. Start optimizing."
-        actions={[
-          {
-            text: track === 'business' ? 'Set up my business' : 'Set up my group',
-            href: `/register?type=${track}`,
-            variant: 'default',
-          },
-          {
-            text: 'I already have an account',
-            href: '/login',
-            variant: 'outline',
-          },
-        ]}
-      />
+      <section className="landing-hero">
+        <div className="landing-hero-glow" aria-hidden="true" />
+        <div className="landing-hero-inner">
+          <div className="landing-hero-badge">
+            <span>Built for African SMEs &amp; community groups</span>
+          </div>
+          <h1>MoneyTracer: Your Wealth, Managed.</h1>
+          <p className="landing-hero-sub">
+            Whether you're building a business empire or organizing a community
+            savings group, MoneyTracer gives you the clarity to scale.
+            Stop hustling in the dark. Start optimizing.
+          </p>
+        </div>
 
-      <section className="landing-hero landing-hero-paths">
         <div className="landing-path-cards">
           <button
             className={`landing-path-card ${track === 'business' ? 'active' : ''}`}
@@ -111,6 +102,12 @@ export default function Landing() {
           </button>
         </div>
 
+        <div className="landing-hero-actions">
+          <Link to={`/register?type=${track}`} className="landing-btn-primary">
+            {track === 'business' ? 'Set up my business' : 'Set up my group'}
+          </Link>
+          <Link to="/login" className="landing-btn-secondary">I already have an account</Link>
+        </div>
       </section>
 
       {/* ---- Regional trust strip ---- */}

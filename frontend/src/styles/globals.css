@@ -1,52 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @import './design-tokens.css';
-
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --primary: 222 47% 11%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 222 47% 11%;
-    --radius: 0.5rem;
-
-    --brand: 27 96% 61%;
-    --brand-foreground: 31 97% 72%;
-  }
-
-  .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 11%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 213 27% 84%;
-
-    --brand: 31 97% 72%;
-    --brand-foreground: 27 96% 61%;
-  }
-}
-
-@layer utilities {
-  .delay-100 { animation-delay: 100ms; }
-  .delay-300 { animation-delay: 300ms; }
-  .delay-700 { animation-delay: 700ms; }
-  .delay-1000 { animation-delay: 1000ms; }
-}
 
 @font-face {
   font-family: "Modern Mono";
@@ -1177,13 +1129,51 @@ label {
 }
 
 .landing-hero {
+  position: relative;
   padding: 96px 24px 64px;
   text-align: center;
+  overflow: hidden;
+}
+
+.landing-hero-glow {
+  position: absolute;
+  top: -180px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 720px;
+  height: 420px;
+  max-width: 140vw;
+  background: radial-gradient(ellipse at center, rgba(193, 95, 60, 0.22) 0%, rgba(193, 95, 60, 0) 65%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .landing-hero-inner {
+  position: relative;
+  z-index: 1;
   max-width: 720px;
   margin: 0 auto;
+}
+
+.landing-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: landing-appear var(--duration-slow, 320ms) var(--ease) forwards;
+}
+
+.landing-hero-badge strong {
+  color: var(--accent-hover);
+  font-weight: 700;
 }
 
 .landing-hero h1 {
@@ -1191,6 +1181,12 @@ label {
   font-size: clamp(2rem, 5vw, var(--text-3xl));
   line-height: var(--leading-tight);
   margin: 0 0 20px;
+  background: linear-gradient(135deg, var(--text-dark) 30%, var(--accent-hover) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0;
+  animation: landing-appear-up 500ms var(--ease) 80ms forwards;
 }
 
 .landing-hero-sub {
@@ -1199,6 +1195,27 @@ label {
   line-height: var(--leading-loose);
   margin: 0 auto 32px;
   max-width: 560px;
+  opacity: 0;
+  animation: landing-appear-up 500ms var(--ease) 180ms forwards;
+}
+
+@keyframes landing-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes landing-appear-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-badge,
+  .landing-hero h1,
+  .landing-hero-sub {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 .landing-track-switch {
@@ -1232,6 +1249,15 @@ label {
   justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
+  opacity: 0;
+  animation: landing-appear-up 500ms var(--ease) 420ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-actions {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 .landing-btn-primary {
@@ -1242,10 +1268,14 @@ label {
   padding: 12px 24px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  display: inline-block;
 }
 
 .landing-btn-primary:hover {
   background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
 }
 
 .landing-btn-secondary {
@@ -1414,16 +1444,28 @@ label {
   padding: 24px;
   cursor: pointer;
   font-family: inherit;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  opacity: 0;
+  animation: landing-appear-up 500ms var(--ease) 320ms forwards;
 }
 
 .landing-path-card:hover {
   border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
 .landing-path-card.active {
   border-color: var(--accent);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-path-card {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 .landing-path-icon {
