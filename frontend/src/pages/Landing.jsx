@@ -87,6 +87,10 @@ export default function Landing() {
         </div>
       </section>
 
+      <section className="landing-preview">
+        <div className="landing-preview-inner" />
+      </section>
+
       {track === 'business' ? (
         <section id="features" className="landing-section">
           <h2>Everything a small business needs to track its money</h2>

@@ -1164,6 +1164,27 @@ label {
   max-width: 560px;
 }
 
+.landing-preview {
+  background-image: url('/images/dashboard-preview.png');
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.landing-preview-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  aspect-ratio: 16 / 9;
+}
+
+@media (max-width: 640px) {
+  .landing-preview-inner {
+    aspect-ratio: 4 / 3;
+  }
+}
+
 .landing-track-switch {
   display: inline-flex;
   background: var(--surface);
