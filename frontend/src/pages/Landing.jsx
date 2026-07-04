@@ -1,30 +1,22 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { HeroSection } from '@/components/ui/hero-section'
 
 const BUSINESS_FEATURES = [
-  { icon: '🧾', title: 'Sales Tracking', text: 'Fast multi-item checkout with live stock validation, built for the counter.' },
+  { icon: '🧾', title: 'Point of Sale', text: 'Fast multi-item checkout with live stock validation, built for the counter.' },
   { icon: '📦', title: 'Inventory', text: 'Track stock levels, batch import products, and get low-stock alerts before you run out.' },
-  { icon: '📑', title: 'Invoice Generation', text: 'Send professional invoices and quotes, and turn accepted quotes into sales.' },
+  { icon: '📑', title: 'Invoices & Quotations', text: 'Send professional invoices and quotes, and turn accepted quotes into sales.' },
   { icon: '📒', title: 'Debtors & Creditors', text: 'Know who owes you and who you owe, at a glance.' },
-  { icon: '📈', title: 'Loan-Ready Reports', text: 'Profit & loss and financial summaries you can show a bank to prove growth.' },
+  { icon: '📈', title: 'Reports', text: 'Profit & loss, financial summaries, and inventory valuation — always current.' },
   { icon: '🕵️', title: 'Activity Logs', text: 'Full audit trail of who did what, so nothing slips through unnoticed.' },
 ]
 
 const COMMUNITY_FEATURES = [
-  { icon: '👥', title: 'Group Contributions', text: 'Record every member\'s savings contribution and see the group total update instantly.' },
-  { icon: '🔄', title: 'Rotating Payouts', text: 'Track merry-go-round or dividend payouts fairly, with a full history per member.' },
-  { icon: '🏦', title: 'Loan Management', text: 'Issue loans to members from group savings and track repayments to the shilling.' },
-  { icon: '📊', title: 'Transparency Dashboard', text: 'One clear view of total savings, loans out, and group health — for every meeting.' },
-  { icon: '🔐', title: 'Treasurer-led Access', text: 'One recorder login runs the books; members are tracked by name and phone, no accounts needed.' },
-  { icon: '🤝', title: 'Works for any group', text: 'VICOBA, Vibati, Chama, Stokvel, Susu, Tontine — one flexible tool, whatever you call it.' },
-]
-
-const FAQS = [
-  { q: 'Is my data private?', a: 'Yes. Your records belong to you alone — your business or group\'s data is never shared or sold.' },
-  { q: 'Can I use it with a shaky connection?', a: 'Moneytracer is built with the realities of intermittent connectivity in mind, so it stays usable even when your signal isn\'t perfect.' },
-  { q: 'Is it hard to learn?', a: 'No. It\'s built for the phone in your pocket, and recording a sale or a contribution takes a few taps.' },
-  { q: 'Does it work for my currency and region?', a: 'Yes — Moneytracer is designed for the reality of African SMEs and community groups, in your local currency.' },
+  { icon: '👥', title: 'Member Management', text: 'Add members, assign co-recorders, and give members their own read-only login.' },
+  { icon: '💰', title: 'Contributions', text: 'Record every member\'s savings contribution and see the group total update instantly.' },
+  { icon: '🤝', title: 'Payouts', text: 'Track merry-go-round or dividend payouts fairly, with a full history per member.' },
+  { icon: '🏦', title: 'Group Loans', text: 'Issue loans to members from group savings and track repayments to the shilling.' },
+  { icon: '📊', title: 'Group Summary', text: 'One clear view of total savings, loans out, and group health — for every meeting.' },
+  { icon: '🔐', title: 'Role-based Access', text: 'Admins and recorders manage entries; members can always see their own records.' },
 ]
 
 function FeatureGrid({ features }) {
@@ -54,93 +46,58 @@ export default function Landing() {
           </div>
           <nav className="landing-nav">
             <a href="#features">Features</a>
-            <a href="#how-it-works">How it works</a>
-            <a href="#faq">FAQ</a>
+            <a href="#community">Community groups</a>
+            <a href="#pricing">Pricing</a>
             <Link to="/login" className="landing-nav-login">Log in</Link>
             <Link to="/register" className="landing-nav-cta">Get started</Link>
           </nav>
         </div>
       </header>
 
-      {/* ---- Dual-path hero ---- */}
-      <HeroSection
-        badge={{
-          text: 'Built for African SMEs & community groups',
-          action: { text: 'See how it works', href: '#how-it-works' },
-        }}
-        title="MoneyTracer: Your Wealth, Managed."
-        description="Whether you're building a business empire or organizing a community savings group, MoneyTracer gives you the clarity to scale. Stop hustling in the dark. Start optimizing."
-        actions={[
-          {
-            text: track === 'business' ? 'Set up my business' : 'Set up my group',
-            href: `/register?type=${track}`,
-            variant: 'default',
-          },
-          {
-            text: 'I already have an account',
-            href: '/login',
-            variant: 'outline',
-          },
-        ]}
-      />
+      <section className="landing-hero">
+        <div className="landing-hero-inner">
+          <h1>Money in, money out — always in view.</h1>
+          <p className="landing-hero-sub">
+            Moneytracer is the bookkeeping and finance tool for small businesses and
+            community savings groups. Track sales, stock, and expenses, or run your
+            chama's contributions and loans — all from one simple dashboard.
+          </p>
 
-      <section className="landing-hero landing-hero-paths">
-        <div className="landing-path-cards">
-          <button
-            className={`landing-path-card ${track === 'business' ? 'active' : ''}`}
-            onClick={() => setTrack('business')}
-          >
-            <div className="landing-path-icon">🏪</div>
-            <div className="landing-path-title">Scale Your Business</div>
-            <div className="landing-path-text">
-              Sales, inventory, invoicing, and loan-ready reports for SMEs and traders.
-            </div>
-            <span className="landing-path-tag">Business-Class</span>
-          </button>
+          <div className="landing-track-switch">
+            <button
+              className={track === 'business' ? 'active' : ''}
+              onClick={() => setTrack('business')}
+            >
+              I run a business
+            </button>
+            <button
+              className={track === 'community' ? 'active' : ''}
+              onClick={() => setTrack('community')}
+            >
+              I run a savings group
+            </button>
+          </div>
 
-          <button
-            className={`landing-path-card ${track === 'community' ? 'active' : ''}`}
-            onClick={() => setTrack('community')}
-          >
-            <div className="landing-path-icon">🌿</div>
-            <div className="landing-path-title">Organize Your Group</div>
-            <div className="landing-path-text">
-              Contributions, rotating payouts, and micro-loans for VICOBA, Vibati, and Chama groups.
-            </div>
-            <span className="landing-path-tag">Community Finance</span>
-          </button>
-        </div>
-
-      </section>
-
-      {/* ---- Regional trust strip ---- */}
-      <section className="landing-trust-strip">
-        <div className="landing-trust-item">
-          <span className="landing-trust-icon">📱</span>
-          Mobile-first — built for the phone in your pocket
-        </div>
-        <div className="landing-trust-item">
-          <span className="landing-trust-icon">🌍</span>
-          Built for African SMEs &amp; community groups, in your currency
-        </div>
-        <div className="landing-trust-item">
-          <span className="landing-trust-icon">🔒</span>
-          Your data is private and yours alone
+          <div className="landing-hero-actions">
+            <Link to={`/register?type=${track}`} className="landing-btn-primary">
+              {track === 'business' ? 'Set up my business' : 'Set up my savings group'}
+            </Link>
+            <Link to="/login" className="landing-btn-secondary">I already have an account</Link>
+          </div>
         </div>
       </section>
 
-      {/* ---- Features for the selected path ---- */}
       {track === 'business' ? (
         <section id="features" className="landing-section">
           <h2>Everything a small business needs to track its money</h2>
           <p className="landing-section-sub">
             From the till to the balance sheet, Moneytracer keeps your sales, stock,
-            and cash flow organized — and gives you records clean enough to show a bank.
+            and cash flow organized without spreadsheets.
           </p>
           <FeatureGrid features={BUSINESS_FEATURES} />
         </section>
       ) : (
-        <section id="features" className="landing-section">
+        <section id="community" className="landing-section">
           <h2>Built for chamas, table banking, and merry-go-rounds</h2>
           <p className="landing-section-sub">
             Stop tracking contributions in a notebook. Moneytracer gives your group
@@ -150,178 +107,36 @@ export default function Landing() {
         </section>
       )}
 
-      {/* ---- Manifesto ---- */}
-      {track === 'business' ? (
-        <section className="landing-section landing-manifesto">
-          <h2>From Hustler to Empire Builder</h2>
-          <p className="landing-manifesto-kicker">Manifesto for the Modern African Entrepreneur</p>
-
-          <p className="landing-manifesto-lead">
-            You are not just a business owner; you are an architect of wealth.
-            The difference between the hustler who stays small and the mogul
-            who builds an empire is not just hard work — it is the clarity of
-            their data.
-          </p>
-
-          <h3>The Secret of the Wealthy</h3>
-          <p className="landing-manifesto-body">
-            Wealthy entrepreneurs do not guess their profits; they measure them.
-          </p>
-          <p className="landing-manifesto-body">
-            When you record your transactions, you are not performing an
-            accounting chore; you are tracking your path to prosperity.
-          </p>
-          <p className="landing-manifesto-body">
-            Every sale entered is a piece of data that reveals your true
-            potential — your "window of optimization."
-          </p>
-
-          <h3>Your Path to Optimization</h3>
-          <div className="landing-grid landing-grid-three">
-            <div className="landing-feature-card">
-              <div className="landing-feature-title">Stop the leaks</div>
-              <div className="landing-feature-text">
-                You are working hard for your money; stop letting it slip
-                through the cracks of unrecorded expenses.
-              </div>
-            </div>
-            <div className="landing-feature-card">
-              <div className="landing-feature-title">Prove your worth</div>
-              <div className="landing-feature-text">
-                Banks and investors do not lend to those who keep their
-                records in their heads. They lend to those who can prove
-                their growth through clean, organized records.
-              </div>
-            </div>
-            <div className="landing-feature-card">
-              <div className="landing-feature-title">Master your growth</div>
-              <div className="landing-feature-text">
-                When you know exactly what is moving in your shop, you gain
-                the power to scale. You move from being a shopkeeper to
-                being a CEO.
-              </div>
-            </div>
-          </div>
-
-          <h3>The Call to Action</h3>
-          <p className="landing-manifesto-body">
-            Stop "hustling" in the dark. Use your data to turn on the lights.
-            Your empire is waiting to be built, one transaction at a time.
-          </p>
-          <p className="landing-manifesto-cta">
-            Start tracking your wealth with MoneyTracer today. Your future
-            self is already a mogul; it's time to start acting like one.
-          </p>
-        </section>
-      ) : (
-        <section className="landing-section landing-manifesto">
-          <h2>From Notebook to Trusted Institution</h2>
-          <p className="landing-manifesto-kicker">Manifesto for the Modern Community Organizer</p>
-
-          <p className="landing-manifesto-lead">
-            You are not just a treasurer; you are the architect of your
-            group's trust. The difference between a group that stays small
-            and a group that grows for generations is not just discipline —
-            it is the clarity of its records.
-          </p>
-
-          <h3>The Secret of Groups That Last</h3>
-          <p className="landing-manifesto-body">
-            Groups that last do not guess their savings; they measure them.
-          </p>
-          <p className="landing-manifesto-body">
-            When you record a contribution, you are not performing a chore
-            for the meeting; you are building the trust the whole group
-            stands on.
-          </p>
-          <p className="landing-manifesto-body">
-            Every contribution logged is a piece of data that reveals the
-            group's true strength — its "window of transparency."
-          </p>
-
-          <h3>Your Path to Trust</h3>
-          <div className="landing-grid landing-grid-three">
-            <div className="landing-feature-card">
-              <div className="landing-feature-title">Stop the disputes</div>
-              <div className="landing-feature-text">
-                Members are trusting you with their savings; stop letting
-                trust slip through the cracks of a lost notebook page.
-              </div>
-            </div>
-            <div className="landing-feature-card">
-              <div className="landing-feature-title">Prove your fairness</div>
-              <div className="landing-feature-text">
-                Members do not stay in groups they cannot verify. They stay
-                in groups where every contribution, payout, and loan is
-                visible and accounted for.
-              </div>
-            </div>
-            <div className="landing-feature-card">
-              <div className="landing-feature-title">Master your growth</div>
-              <div className="landing-feature-text">
-                When you know exactly what is moving through the group, you
-                gain the power to grow it. You move from record-keeper to
-                trusted institution.
-              </div>
-            </div>
-          </div>
-
-          <h3>The Call to Action</h3>
-          <p className="landing-manifesto-body">
-            Stop tracking trust in a notebook that can be lost or disputed.
-            Use your data to turn on the lights. Your group's future is
-            built one contribution at a time.
-          </p>
-          <p className="landing-manifesto-cta">
-            Start tracking your group's wealth with MoneyTracer today. The
-            institution your members deserve starts with today's meeting.
-          </p>
-        </section>
-      )}
-
-      {/* ---- How it works ---- */}
-      <section id="how-it-works" className="landing-section landing-section-alt">
-        <h2>The 3-click promise</h2>
+      <section className="landing-section landing-section-alt">
+        <h2>One account, either way</h2>
         <p className="landing-section-sub">
-          No jargon, no complicated setup. Most accounting software is built for
-          accountants — MoneyTracer is built for you.
+          Choose a business account or a community account when you sign up — the
+          dashboard, roles, and reports adapt to fit.
         </p>
-        <div className="landing-steps">
-          <div className="landing-step">
-            <div className="landing-step-number">1</div>
-            <div className="landing-step-title">Choose your path</div>
-            <div className="landing-step-text">Business or Savings Group — pick what fits, at sign-up.</div>
+        <div className="landing-grid landing-grid-two">
+          <div className="landing-feature-card">
+            <div className="landing-feature-icon">🏪</div>
+            <div className="landing-feature-title">Business accounts</div>
+            <div className="landing-feature-text">
+              POS, inventory, invoicing, and reports for shops, traders, and service
+              businesses of any size.
+            </div>
           </div>
-          <div className="landing-step">
-            <div className="landing-step-number">2</div>
-            <div className="landing-step-title">Quick setup</div>
-            <div className="landing-step-text">A short wizard asks only what's essential — no jargon.</div>
-          </div>
-          <div className="landing-step">
-            <div className="landing-step-number">3</div>
-            <div className="landing-step-title">Start tracking</div>
-            <div className="landing-step-text">Record a sale or a contribution and watch your dashboard update instantly.</div>
+          <div className="landing-feature-card">
+            <div className="landing-feature-icon">🌿</div>
+            <div className="landing-feature-title">Community accounts</div>
+            <div className="landing-feature-text">
+              Contributions, payouts, and group loans for savings groups and community
+              finance circles.
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="landing-section landing-cta-band">
+      <section id="pricing" className="landing-section landing-cta-band">
         <h2>Ready to get your finances in order?</h2>
         <p className="landing-section-sub">Create an account in minutes. No spreadsheet required.</p>
         <Link to={`/register?type=${track}`} className="landing-btn-primary">Get started free</Link>
-      </section>
-
-      {/* ---- FAQ / trust ---- */}
-      <section id="faq" className="landing-section landing-faq">
-        <h2>Frequently asked</h2>
-        <div className="landing-faq-list">
-          {FAQS.map((f) => (
-            <div className="landing-faq-item" key={f.q}>
-              <div className="landing-faq-q">{f.q}</div>
-              <div className="landing-faq-a">{f.a}</div>
-            </div>
-          ))}
-        </div>
       </section>
 
       <footer className="landing-footer">
