@@ -6,7 +6,21 @@ const AuthContext = createContext(null)
 const TOKEN_KEY = 'zr_token'
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) || null)
+  const [token, setToken] = useState(() => {
+    // Support staff "login as" links from the superadmin panel arrive as
+    // ?impersonate=<token>. Pick it up once, store it like a normal
+    // session, then scrub it from the URL so it isn't left visible/bookmarked.
+    const params = new URLSearchParams(window.location.search)
+    const impersonateToken = params.get('impersonate')
+    if (impersonateToken) {
+      sessionStorage.setItem(TOKEN_KEY, impersonateToken)
+      params.delete('impersonate')
+      const cleanUrl = window.location.pathname + (params.toString() ? `?${params}` : '') + window.location.hash
+      window.history.replaceState({}, '', cleanUrl)
+      return impersonateToken
+    }
+    return sessionStorage.getItem(TOKEN_KEY) || null
+  })
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [account, setAccount] = useState(null)

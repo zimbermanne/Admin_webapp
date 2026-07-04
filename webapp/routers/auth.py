@@ -7,7 +7,7 @@ from models import User, RoleEnum, Account, AccountType
 from schemas import UserCreate, UserOut, LoginRequest, Token, ChangePasswordRequest, AccountCreate
 from auth import (
     hash_password, authenticate_user, create_access_token,
-    get_current_user, require_admin,
+    get_current_user, require_admin, require_superadmin,
 )
 from activity import log_activity_for_user
 
@@ -78,6 +78,28 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     token = create_access_token(token_data)
     log_activity_for_user(db, user, "login", "User logged in")
     return Token(access_token=token, user=user)
+
+
+@router.post("/impersonate/{user_id}", response_model=Token)
+def impersonate(user_id: int, superadmin: User = Depends(require_superadmin), db: Session = Depends(get_db)):
+    """Superadmin-only: issue a token for another user without their password,
+    so support staff can log into a tenant account to help troubleshoot.
+    Every use is logged against both the superadmin and the target account
+    for audit purposes — this is a sensitive capability."""
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    if target.role == RoleEnum.superadmin:
+        raise HTTPException(status_code=403, detail="Cannot impersonate another superadmin")
+
+    token_data = {"sub": target.username, "role": target.role.value, "impersonated_by": superadmin.username}
+    if target.account_id:
+        token_data["account_id"] = target.account_id
+    token = create_access_token(token_data, expires_minutes=30)  # short-lived support session
+
+    log_activity_for_user(db, superadmin, "impersonate_start", f"Logged in as {target.username} (account {target.account_id})")
+    log_activity_for_user(db, target, "impersonated", f"Superadmin {superadmin.username} logged in as this user")
+    return Token(access_token=token, user=target)
 
 
 @router.get("/me", response_model=UserOut)
