@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 import { useApi } from './hooks/useApi.js'
-import Sidebar, { NAV } from './components/Sidebar.jsx'
+import Sidebar, { navFor } from './components/Sidebar.jsx'
 import MobileTopBar from './components/MobileTopBar.jsx'
 import PageLoader from './components/PageLoader.jsx'
 import Clock from './Clock.jsx'
@@ -10,7 +10,13 @@ import Landing from './pages/Landing.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Onboarding from './pages/Onboarding.jsx'
+import CommunityOnboarding from './pages/CommunityOnboarding.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import CommunityDashboard from './pages/CommunityDashboard.jsx'
+import Members from './pages/Members.jsx'
+import Contributions from './pages/Contributions.jsx'
+import Payouts from './pages/Payouts.jsx'
+import GroupLoans from './pages/GroupLoans.jsx'
 import POS from './pages/POS.jsx'
 import Inventory from './pages/Inventory.jsx'
 import Sales from './pages/Sales.jsx'
@@ -24,7 +30,8 @@ import Customers from './pages/Customers.jsx'
 import Settings from './pages/Settings.jsx'
 import ActivityLogs from './pages/ActivityLogs.jsx'
 
-function pageTitle(pathname) {
+function pageTitle(pathname, accountType) {
+  const NAV = navFor(accountType)
   for (const entry of NAV) {
     if (entry.type === 'item' && entry.path === pathname) return entry.label
     if (entry.type === 'group') {
@@ -38,7 +45,7 @@ function pageTitle(pathname) {
 function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, account } = useAuth()
   const api = useApi()
   const [company, setCompany] = useState(null)
   const [reminders, setReminders] = useState([])
@@ -65,7 +72,7 @@ function Layout({ children }) {
   return (
     <div className="app-shell">
       <MobileTopBar
-        title={pageTitle(location.pathname)}
+        title={pageTitle(location.pathname, account?.account_type)}
         open={mobileOpen}
         onToggle={() => setMobileOpen((o) => !o)}
         accountName={company?.name}
@@ -101,7 +108,26 @@ function PrivateRoutes() {
   // load before deciding, so we don't flash the dashboard first.
   if (user.role === 'admin') {
     if (accountLoading || account === null) return <PageLoader label="Preparing your account" />
-    if (!account.onboarding_completed) return <Onboarding />
+    if (!account.onboarding_completed) {
+      return account.account_type === 'community' ? <CommunityOnboarding /> : <Onboarding />
+    }
+  }
+
+  if (account?.account_type === 'community') {
+    return (
+      <Layout>
+        <Routes>
+          <Route path="/" element={<CommunityDashboard />} />
+          <Route path="/members" element={<Members />} />
+          <Route path="/contributions" element={<Contributions />} />
+          <Route path="/payouts" element={<Payouts />} />
+          <Route path="/loans" element={<GroupLoans />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/activity" element={<ActivityLogs />} />
+          <Route path="*" element={<Navigate to="/app" replace />} />
+        </Routes>
+      </Layout>
+    )
   }
 
   return (

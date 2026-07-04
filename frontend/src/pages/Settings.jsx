@@ -178,7 +178,7 @@ export default function Settings() {
             </div>
             <div className="form-row">
               <label>Business Type</label>
-              <input value={account.business_type} onChange={(e) => setAccount({...account, business_type: e.target.value})} />
+              <input value={account.business_type || ''} onChange={(e) => setAccount({...account, business_type: e.target.value})} />
             </div>
             <div className="form-row">
               <label>TIN (Tax ID)</label>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-const NAV = [
+const NAV_BUSINESS = [
   { type: 'item', label: 'Home', icon: '🏠', path: '/app' },
   { type: 'item', label: 'Point of Sale', icon: '🧾', path: '/app/pos' },
   {
@@ -45,11 +45,26 @@ const NAV = [
   { type: 'item', label: 'Settings', icon: '⚙️', path: '/app/settings' },
 ]
 
+const NAV_COMMUNITY = [
+  { type: 'item', label: 'Home', icon: '🏠', path: '/app' },
+  { type: 'item', label: 'Members', icon: '👥', path: '/app/members' },
+  { type: 'item', label: 'Contributions', icon: '💰', path: '/app/contributions' },
+  { type: 'item', label: 'Payouts', icon: '🤝', path: '/app/payouts' },
+  { type: 'item', label: 'Group Loans', icon: '🏦', path: '/app/loans' },
+  { type: 'item', label: 'Activity Logs', icon: '🕵️', path: '/app/activity', roles: ['manager', 'admin', 'superadmin'] },
+  { type: 'item', label: 'Settings', icon: '⚙️', path: '/app/settings' },
+]
+
+function navFor(accountType) {
+  return accountType === 'community' ? NAV_COMMUNITY : NAV_BUSINESS
+}
+
 export default function Sidebar({ mobileOpen, onClose }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, account } = useAuth()
   const [openGroups, setOpenGroups] = useState({})
+  const NAV = navFor(account?.account_type)
 
   useEffect(() => {
     NAV.forEach((entry) => {
@@ -58,7 +73,8 @@ export default function Sidebar({ mobileOpen, onClose }) {
         if (isActive) setOpenGroups((prev) => ({ ...prev, [entry.key]: true }))
       }
     })
-  }, [location.pathname])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, account?.account_type])
 
   const go = (path) => {
     navigate(path)
@@ -143,4 +159,4 @@ export default function Sidebar({ mobileOpen, onClose }) {
   )
 }
 
-export { NAV }
+export { NAV_BUSINESS, NAV_COMMUNITY, navFor }

@@ -1,11 +1,15 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { apiUrl } from '../api-config.js'
 
 export default function Register() {
   const { login, user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const initialType = searchParams.get('type') === 'community' ? 'community' : 'business'
+
+  const [accountType, setAccountType] = useState(initialType)
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -39,7 +43,7 @@ export default function Register() {
         res = await fetch(apiUrl('/api/auth/register'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password, full_name: fullName, email }),
+          body: JSON.stringify({ username, password, full_name: fullName, email, account_type: accountType }),
         })
       } catch {
         throw new Error('Could not reach the server. Check your connection or the API configuration.')
@@ -67,6 +71,32 @@ export default function Register() {
       <div className="login-card">
         <h1>Create Account</h1>
         <div className="sub">Join Moneytracer</div>
+
+        <div className="form-row">
+          <label>Account type</label>
+          <div className="account-type-switch">
+            <button
+              type="button"
+              className={accountType === 'business' ? 'active' : ''}
+              onClick={() => setAccountType('business')}
+            >
+              🏪 Business
+            </button>
+            <button
+              type="button"
+              className={accountType === 'community' ? 'active' : ''}
+              onClick={() => setAccountType('community')}
+            >
+              🌿 Savings Group
+            </button>
+          </div>
+          <div className="account-type-hint">
+            {accountType === 'business'
+              ? 'POS, inventory, invoicing, and reports for your shop or business.'
+              : 'Contributions, payouts, and group loans for your chama or savings group.'}
+          </div>
+        </div>
+
         <form onSubmit={submit}>
           <div className="form-row">
             <label>Full Name</label>
@@ -90,7 +120,7 @@ export default function Register() {
           </div>
           {error && <div className="error-text">{error}</div>}
           <button className="btn btn-primary" style={{ width: '100%', marginTop: 8 }} disabled={busy}>
-            {busy ? 'Creating account…' : 'Create Account'}
+            {busy ? 'Creating account…' : `Create ${accountType === 'community' ? 'Group' : 'Business'} Account`}
           </button>
         </form>
 

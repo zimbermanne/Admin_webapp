@@ -1048,8 +1048,14 @@ label {
    ========================================================================== */
 
 .landing-page {
+  position: relative;
   min-height: 100vh;
-  background: var(--cream);
+  background-color: var(--cream);
+  background-image:
+    radial-gradient(ellipse 900px 500px at 50% 0%, rgba(193, 95, 60, 0.10) 0%, rgba(193, 95, 60, 0) 60%),
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22160%22%20height%3D%22160%22%20viewBox%3D%220%200%20160%20160%22%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23C15F3C%22%20stroke-width%3D%221.5%22%20opacity%3D%220.16%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M80%2010%20L110%2040%20L80%2070%20L50%2040%20Z%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M0%2090%20L30%20120%20L0%20150%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M160%2090%20L130%20120%20L160%20150%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2280%22%20cy%3D%22120%22%20r%3D%2210%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M60%20130%20L100%20130%20M80%20110%20L80%20150%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: auto, 160px 160px;
   color: var(--text-dark);
   font-family: var(--font-body);
 }
@@ -1129,23 +1135,13 @@ label {
 }
 
 .landing-hero {
-  position: relative;
   padding: 96px 24px 64px;
   text-align: center;
-  background-image:
-    linear-gradient(180deg, rgba(20, 24, 20, 0.72) 0%, rgba(20, 24, 20, 0.82) 55%, rgba(20, 24, 20, 0.92) 100%),
-    url('/images/hero-bg.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  color: #fff;
 }
 
 .landing-hero-inner {
   max-width: 720px;
   margin: 0 auto;
-  position: relative;
-  z-index: 1;
 }
 
 .landing-hero h1 {
@@ -1153,12 +1149,11 @@ label {
   font-size: clamp(2rem, 5vw, var(--text-3xl));
   line-height: var(--leading-tight);
   margin: 0 0 20px;
-  color: #fff;
 }
 
 .landing-hero-sub {
   font-size: var(--text-md);
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-muted);
   line-height: var(--leading-loose);
   margin: 0 auto 32px;
   max-width: 560px;
@@ -1212,7 +1207,7 @@ label {
 }
 
 .landing-btn-secondary {
-  color: #fff;
+  color: var(--text-dark);
   text-decoration: none;
   font-weight: 600;
   padding: 12px 24px;
@@ -1327,4 +1322,35 @@ label {
   .landing-grid-two {
     grid-template-columns: 1fr;
   }
+}
+
+/* Account type switch on the register form */
+.account-type-switch {
+  display: flex;
+  gap: 8px;
+}
+
+.account-type-switch button {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.account-type-switch button.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+.account-type-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 6px;
+  line-height: var(--leading-normal);
 }
