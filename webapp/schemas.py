@@ -248,11 +248,29 @@ class ExpenseOut(BaseModel):
 
 
 # ---------- Ledgers ----------
+class DebtorItemLine(BaseModel):
+    item_id: Optional[int] = None       # existing inventory item picked from the list
+    item_name: Optional[str] = None     # used only if item_id is not given
+    quantity: float = 1
+    unit_price: Optional[float] = None  # defaults to the inventory item's selling_price
+
+
+class CreditorItemLine(BaseModel):
+    item_id: Optional[int] = None       # existing inventory item to restock
+    item_name: Optional[str] = None     # name for a brand-new inventory item
+    category: Optional[str] = "General"
+    unit: Optional[str] = "pcs"
+    quantity: float = 1
+    unit_cost: Optional[float] = None       # defaults to the inventory item's cost_price
+    selling_price: Optional[float] = None   # only used when creating a brand-new item
+
+
 class DebtorCreate(BaseModel):
     name: str
     phone: Optional[str] = ""
     total_owed: float = 0
     note: Optional[str] = ""
+    items: Optional[List[DebtorItemLine]] = None
 
 
 class CreditorCreate(BaseModel):
@@ -260,6 +278,17 @@ class CreditorCreate(BaseModel):
     phone: Optional[str] = ""
     total_owed: float = 0
     note: Optional[str] = ""
+    items: Optional[List[CreditorItemLine]] = None
+
+
+class LedgerItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    item_id: Optional[int]
+    item_name: str
+    quantity: float
+    unit_price: float
+    total: float
 
 
 class LedgerOut(BaseModel):
@@ -272,6 +301,7 @@ class LedgerOut(BaseModel):
     status: LedgerStatus
     note: str
     created_at: datetime
+    items: List[LedgerItemOut] = []
 
 
 class PaymentRequest(BaseModel):
