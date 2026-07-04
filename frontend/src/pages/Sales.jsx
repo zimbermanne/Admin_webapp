@@ -28,12 +28,12 @@ export default function Sales() {
   }
 
   const columns = [
-    { key: 'created_at', header: 'Date', render: (r) => new Date(r.created_at).toLocaleString() },
-    { key: 'item_name', header: 'Item' },
-    { key: 'quantity', header: 'Qty' },
-    { key: 'total', header: 'Total', render: (r) => `TZS ${r.total.toLocaleString()}` },
-    { key: 'payment_mode', header: 'Payment' },
-    { key: 'customer_name', header: 'Customer' },
+    { key: 'created_at', header: 'Date', render: (r) => new Date(r.created_at).toLocaleString(), sortable: true },
+    { key: 'item_name', header: 'Item', sortable: true },
+    { key: 'quantity', header: 'Qty', sortable: true },
+    { key: 'total', header: 'Total', render: (r) => `TZS ${r.total.toLocaleString()}`, sortable: true },
+    { key: 'payment_mode', header: 'Payment', sortable: true },
+    { key: 'customer_name', header: 'Customer', sortable: true },
     { key: 'actions', header: '', render: (r) => <button className="btn btn-danger" onClick={() => remove(r.id)}>Delete</button> },
   ]
 

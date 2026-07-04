@@ -28,23 +28,23 @@ export default function Customers() {
   }
 
   const customerColumns = [
-    { key: 'customer_name', header: 'Customer Name' },
-    { key: 'purchase_count', header: 'Purchases' },
-    { key: 'total_spent', header: 'Total Spent', render: (r) => `TZS ${r.total_spent.toLocaleString()}` },
-    { key: 'last_purchase', header: 'Last Seen', render: (r) => new Date(r.last_purchase).toLocaleString() },
+    { key: 'customer_name', header: 'Customer Name', sortable: true },
+    { key: 'purchase_count', header: 'Purchases', sortable: true },
+    { key: 'total_spent', header: 'Total Spent', render: (r) => `TZS ${r.total_spent.toLocaleString()}`, sortable: true },
+    { key: 'last_purchase', header: 'Last Seen', render: (r) => new Date(r.last_purchase).toLocaleString(), sortable: true },
     { key: 'actions', header: '', render: (r) => (
       <button className="btn btn-outline" onClick={() => viewPurchases(r)}>View History</button>
     )},
   ]
 
   const purchaseColumns = [
-    { key: 'created_at', header: 'Date & Time', render: (r) => new Date(r.created_at).toLocaleString() },
-    { key: 'item_name', header: 'Item' },
-    { key: 'quantity', header: 'Qty' },
-    { key: 'unit_price', header: 'Unit Price', render: (r) => `TZS ${r.unit_price.toLocaleString()}` },
-    { key: 'total', header: 'Total', render: (r) => `TZS ${r.total.toLocaleString()}` },
-    { key: 'payment_mode', header: 'Payment', render: (r) => <span className={`badge badge-${r.payment_mode}`}>{r.payment_mode.replace('_',' ')}</span> },
-    { key: 'receipt_no', header: 'Receipt #' },
+    { key: 'created_at', header: 'Date & Time', render: (r) => new Date(r.created_at).toLocaleString(), sortable: true },
+    { key: 'item_name', header: 'Item', sortable: true },
+    { key: 'quantity', header: 'Qty', sortable: true },
+    { key: 'unit_price', header: 'Unit Price', render: (r) => `TZS ${r.unit_price.toLocaleString()}`, sortable: true },
+    { key: 'total', header: 'Total', render: (r) => `TZS ${r.total.toLocaleString()}`, sortable: true },
+    { key: 'payment_mode', header: 'Payment', render: (r) => <span className={`badge badge-${r.payment_mode}`}>{r.payment_mode.replace('_',' ')}</span>, sortable: true },
+    { key: 'receipt_no', header: 'Receipt #', sortable: true },
   ]
 
   return (

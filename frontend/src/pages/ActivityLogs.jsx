@@ -119,10 +119,10 @@ export default function ActivityLogs() {
   const toggle = (i) => setExpanded((prev) => ({ ...prev, [i]: !prev[i] }))
 
   const rawColumns = [
-    { key: 'created_at', header: 'When', render: (r) => fmtTime(r.created_at) },
-    { key: 'username', header: 'Employee' },
-    { key: 'action', header: 'Action', render: (r) => actionLabel(r.action) },
-    { key: 'details', header: 'Details' },
+    { key: 'created_at', header: 'When', render: (r) => fmtTime(r.created_at), sortable: true },
+    { key: 'username', header: 'Employee', sortable: true },
+    { key: 'action', header: 'Action', render: (r) => actionLabel(r.action), sortable: true },
+    { key: 'details', header: 'Details', sortable: true },
   ]
 
   return (

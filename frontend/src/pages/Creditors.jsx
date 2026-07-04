@@ -48,12 +48,12 @@ export default function Creditors() {
   }
 
   const columns = [
-    { key: 'name', header: 'Supplier' },
-    { key: 'phone', header: 'Phone' },
-    { key: 'total_owed', header: 'Owed', render: (r) => `TZS ${r.total_owed.toLocaleString()}` },
-    { key: 'amount_paid', header: 'Paid', render: (r) => `TZS ${r.amount_paid.toLocaleString()}` },
-    { key: 'balance', header: 'Balance', render: (r) => `TZS ${(r.total_owed - r.amount_paid).toLocaleString()}` },
-    { key: 'status', header: 'Status', render: (r) => statusBadge(r.status) },
+    { key: 'name', header: 'Supplier', sortable: true },
+    { key: 'phone', header: 'Phone', sortable: true },
+    { key: 'total_owed', header: 'Owed', render: (r) => `TZS ${r.total_owed.toLocaleString()}`, sortable: true },
+    { key: 'amount_paid', header: 'Paid', render: (r) => `TZS ${r.amount_paid.toLocaleString()}`, sortable: true },
+    { key: 'balance', header: 'Balance', render: (r) => `TZS ${(r.total_owed - r.amount_paid).toLocaleString()}`, sortable: true, sortValue: (r) => r.total_owed - r.amount_paid },
+    { key: 'status', header: 'Status', render: (r) => statusBadge(r.status), sortable: true },
     {
       key: 'actions', header: '',
       render: (r) => r.status !== 'paid'

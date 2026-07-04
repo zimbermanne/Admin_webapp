@@ -44,10 +44,10 @@ export default function Expenses() {
   }
 
   const columns = [
-    { key: 'created_at', header: 'Date', render: (r) => new Date(r.created_at).toLocaleString() },
-    { key: 'category', header: 'Category' },
-    { key: 'description', header: 'Description' },
-    { key: 'amount', header: 'Amount', render: (r) => `TZS ${r.amount.toLocaleString()}` },
+    { key: 'created_at', header: 'Date', render: (r) => new Date(r.created_at).toLocaleString(), sortable: true },
+    { key: 'category', header: 'Category', sortable: true },
+    { key: 'description', header: 'Description', sortable: true },
+    { key: 'amount', header: 'Amount', render: (r) => `TZS ${r.amount.toLocaleString()}`, sortable: true },
     { key: 'actions', header: '', render: (r) => <button className="btn btn-danger" onClick={() => remove(r.id)}>Delete</button> },
   ]
 
