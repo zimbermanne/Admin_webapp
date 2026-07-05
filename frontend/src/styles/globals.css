@@ -1251,6 +1251,12 @@ label {
   margin: 0 auto;
 }
 
+.landing-grid-three {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 980px;
+  margin: 0 auto;
+}
+
 .landing-feature-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1314,6 +1320,10 @@ label {
     grid-template-columns: 1fr;
   }
   .landing-grid-two {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-grid-three {
     grid-template-columns: 1fr;
   }
 }

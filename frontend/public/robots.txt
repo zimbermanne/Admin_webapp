@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /pos
+Disallow: /sales
+Disallow: /purchases
+Disallow: /inventory
+Disallow: /reports
+Disallow: /expenses
+Disallow: /activity-logs
+Disallow: /settings
+Disallow: /login
+Disallow: /register
+Disallow: /onboarding
+
+Sitemap: https://moneytracer.up.railway.app/sitemap.xml

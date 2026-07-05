@@ -528,3 +528,86 @@ class CommunitySummary(BaseModel):
     total_loans_outstanding: float
     rotation_enabled: bool
     lending_enabled: bool
+
+
+# ---------------------------------------------------------------------------
+# Personal spending track
+# ---------------------------------------------------------------------------
+
+class SpendingCategoryCreate(BaseModel):
+    name: str
+    icon: str = ""
+    monthly_budget: float = 0
+
+
+class SpendingCategoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+    icon: str
+    monthly_budget: float
+    is_default: bool
+
+
+class SpendingTransactionCreate(BaseModel):
+    category_id: int
+    amount: float
+    note: str = ""
+    tag: Optional[str] = None  # "necessary" | "impulse", habit mode only
+
+
+class SpendingTransactionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    category_id: int
+    amount: float
+    note: str
+    tag: Optional[str]
+    spent_at: datetime
+
+
+class EnvelopeCategorySummary(BaseModel):
+    category_id: int
+    category_name: str
+    budget: float
+    spent: float
+    remaining: float
+
+
+class EnvelopeSummary(BaseModel):
+    categories: List[EnvelopeCategorySummary]
+    safe_to_spend_today: float
+
+
+class HabitSummary(BaseModel):
+    this_week_impulse_pct: float
+    last_week_impulse_pct: float
+    change_vs_last_week: float
+
+
+class SpendingGroupCreate(BaseModel):
+    name: str
+    goal_amount: float
+    target_date: Optional[datetime] = None
+
+
+class SpendingGroupOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+    goal_amount: float
+    target_date: Optional[datetime]
+    invite_code: str
+    created_at: datetime
+
+
+class SpendingGroupContributionCreate(BaseModel):
+    amount: float
+
+
+class SpendingGroupProgress(BaseModel):
+    total_saved: float
+    goal_amount: float
+    percent: float
+    member_count: int
+    members_on_track: int
