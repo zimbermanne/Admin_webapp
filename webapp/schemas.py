@@ -618,3 +618,35 @@ class SpendingGroupProgress(BaseModel):
     percent: float
     member_count: int
     members_on_track: int
+
+
+# ---------------------------------------------------------------------------
+# Smart tracking (rule-based, no external AI)
+# ---------------------------------------------------------------------------
+
+class CategorySuggestion(BaseModel):
+    category_id: Optional[int]
+    category_name: Optional[str]
+    confidence: str  # "high" | "low" | "none"
+
+
+class RecurringExpense(BaseModel):
+    category_id: int
+    category_name: str
+    typical_amount: float
+    typical_day_of_month: int
+    last_seen: datetime
+    occurrences: int
+
+
+class SpendingAlert(BaseModel):
+    type: str  # "spike" | "projected_overspend" | "small_leaks"
+    category_id: Optional[int] = None
+    category_name: Optional[str] = None
+    message: str
+    severity: str  # "info" | "warning"
+
+
+class SmartInsights(BaseModel):
+    alerts: List[SpendingAlert]
+    recurring: List[RecurringExpense]
