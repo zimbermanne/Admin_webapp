@@ -4,7 +4,7 @@ from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Enum
 )
 from sqlalchemy.orm import relationship
-from database import Base
+from database import Base, schema_args, fk_ref, SCHEMA_BUSINESS, SCHEMA_COMMUNITY, SCHEMA_PERSONAL
 
 
 class RoleEnum(str, enum.Enum):
@@ -84,6 +84,7 @@ class User(Base):
 
 class InventoryItem(Base):
     __tablename__ = "inventory_items"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
@@ -103,10 +104,11 @@ class InventoryItem(Base):
 
 class Sale(Base):
     __tablename__ = "sales"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
-    item_id = Column(Integer, ForeignKey("inventory_items.id"), nullable=True)
+    item_id = Column(Integer, ForeignKey(fk_ref("inventory_items.id", SCHEMA_BUSINESS)), nullable=True)
     item_name = Column(String(150))
     quantity = Column(Float, default=1)
     unit_price = Column(Float, default=0)
@@ -122,6 +124,7 @@ class Sale(Base):
 
 class Purchase(Base):
     __tablename__ = "purchases"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
@@ -135,6 +138,7 @@ class Purchase(Base):
 
 class Expense(Base):
     __tablename__ = "expenses"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
@@ -146,6 +150,7 @@ class Expense(Base):
 
 class Debtor(Base):
     __tablename__ = "debtors"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
@@ -160,6 +165,7 @@ class Debtor(Base):
 
 class Creditor(Base):
     __tablename__ = "creditors"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
@@ -183,6 +189,7 @@ class DocumentStatus(str, enum.Enum):
 
 class Invoice(Base):
     __tablename__ = "invoices"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
@@ -205,10 +212,11 @@ class Invoice(Base):
 
 class InvoiceItem(Base):
     __tablename__ = "invoice_items"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
-    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False)
+    invoice_id = Column(Integer, ForeignKey(fk_ref("invoices.id", SCHEMA_BUSINESS)), nullable=False)
     description = Column(String(255), default="")
     quantity = Column(Float, default=1)
     unit_price = Column(Float, default=0)
@@ -219,6 +227,7 @@ class InvoiceItem(Base):
 
 class Quotation(Base):
     __tablename__ = "quotations"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
@@ -242,10 +251,11 @@ class Quotation(Base):
 
 class QuotationItem(Base):
     __tablename__ = "quotation_items"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
-    quotation_id = Column(Integer, ForeignKey("quotations.id"), nullable=False)
+    quotation_id = Column(Integer, ForeignKey(fk_ref("quotations.id", SCHEMA_BUSINESS)), nullable=False)
     description = Column(String(255), default="")
     quantity = Column(Float, default=1)
     unit_price = Column(Float, default=0)
@@ -256,6 +266,7 @@ class QuotationItem(Base):
 
 class Reminder(Base):
     __tablename__ = "reminders"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True, index=True)
@@ -302,6 +313,7 @@ class GroupLoanStatus(str, enum.Enum):
 
 class SavingsGroup(Base):
     __tablename__ = "savings_groups"
+    __table_args__ = schema_args(SCHEMA_COMMUNITY)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, unique=True, index=True)
@@ -327,9 +339,10 @@ class SavingsGroup(Base):
 
 class GroupMember(Base):
     __tablename__ = "group_members"
+    __table_args__ = schema_args(SCHEMA_COMMUNITY)
 
     id = Column(Integer, primary_key=True, index=True)
-    group_id = Column(Integer, ForeignKey("savings_groups.id"), nullable=False, index=True)
+    group_id = Column(Integer, ForeignKey(fk_ref("savings_groups.id", SCHEMA_COMMUNITY)), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # set only if member has a login
     name = Column(String(150), nullable=False)
     age = Column(Integer, nullable=True)
@@ -344,10 +357,11 @@ class GroupMember(Base):
 
 class Contribution(Base):
     __tablename__ = "contributions"
+    __table_args__ = schema_args(SCHEMA_COMMUNITY)
 
     id = Column(Integer, primary_key=True, index=True)
-    group_id = Column(Integer, ForeignKey("savings_groups.id"), nullable=False, index=True)
-    member_id = Column(Integer, ForeignKey("group_members.id"), nullable=False, index=True)
+    group_id = Column(Integer, ForeignKey(fk_ref("savings_groups.id", SCHEMA_COMMUNITY)), nullable=False, index=True)
+    member_id = Column(Integer, ForeignKey(fk_ref("group_members.id", SCHEMA_COMMUNITY)), nullable=False, index=True)
     cycle_label = Column(String(40), default="")  # e.g. "2026-07" or "Cycle 3"
     amount = Column(Float, default=0)
     recorded_by = Column(String(80), default="")
@@ -359,10 +373,11 @@ class Contribution(Base):
 class Payout(Base):
     """Rotating pot payout — only meaningful when SavingsGroup.rotation_enabled."""
     __tablename__ = "payouts"
+    __table_args__ = schema_args(SCHEMA_COMMUNITY)
 
     id = Column(Integer, primary_key=True, index=True)
-    group_id = Column(Integer, ForeignKey("savings_groups.id"), nullable=False, index=True)
-    member_id = Column(Integer, ForeignKey("group_members.id"), nullable=False, index=True)
+    group_id = Column(Integer, ForeignKey(fk_ref("savings_groups.id", SCHEMA_COMMUNITY)), nullable=False, index=True)
+    member_id = Column(Integer, ForeignKey(fk_ref("group_members.id", SCHEMA_COMMUNITY)), nullable=False, index=True)
     cycle_label = Column(String(40), default="")
     amount = Column(Float, default=0)
     recorded_by = Column(String(80), default="")
@@ -375,10 +390,11 @@ class GroupLoan(Base):
     """Internal member borrowing from the group's pooled fund — only meaningful
     when SavingsGroup.lending_enabled. Distinct from the business-side bank Loan."""
     __tablename__ = "group_loans"
+    __table_args__ = schema_args(SCHEMA_COMMUNITY)
 
     id = Column(Integer, primary_key=True, index=True)
-    group_id = Column(Integer, ForeignKey("savings_groups.id"), nullable=False, index=True)
-    member_id = Column(Integer, ForeignKey("group_members.id"), nullable=False, index=True)
+    group_id = Column(Integer, ForeignKey(fk_ref("savings_groups.id", SCHEMA_COMMUNITY)), nullable=False, index=True)
+    member_id = Column(Integer, ForeignKey(fk_ref("group_members.id", SCHEMA_COMMUNITY)), nullable=False, index=True)
     principal = Column(Float, default=0)
     interest_rate = Column(Float, default=0)  # flat % applied once at issuance (simplest model for v1)
     balance = Column(Float, default=0)  # outstanding = principal*(1+interest_rate/100) - repayments
@@ -391,9 +407,10 @@ class GroupLoan(Base):
 
 class GroupLoanRepayment(Base):
     __tablename__ = "group_loan_repayments"
+    __table_args__ = schema_args(SCHEMA_COMMUNITY)
 
     id = Column(Integer, primary_key=True, index=True)
-    loan_id = Column(Integer, ForeignKey("group_loans.id"), nullable=False, index=True)
+    loan_id = Column(Integer, ForeignKey(fk_ref("group_loans.id", SCHEMA_COMMUNITY)), nullable=False, index=True)
     amount = Column(Float, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -415,6 +432,7 @@ class SpendingTag(str, enum.Enum):
 
 class SpendingCategory(Base):
     __tablename__ = "spending_categories"
+    __table_args__ = schema_args(SCHEMA_PERSONAL)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
@@ -429,10 +447,11 @@ class SpendingCategory(Base):
 
 class SpendingTransaction(Base):
     __tablename__ = "spending_transactions"
+    __table_args__ = schema_args(SCHEMA_PERSONAL)
 
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
-    category_id = Column(Integer, ForeignKey("spending_categories.id"), nullable=False, index=True)
+    category_id = Column(Integer, ForeignKey(fk_ref("spending_categories.id", SCHEMA_PERSONAL)), nullable=False, index=True)
     amount = Column(Float, nullable=False)
     note = Column(String(255), default="")
     tag = Column(Enum(SpendingTag), nullable=True)  # only set in habit mode
@@ -445,6 +464,7 @@ class SpendingGroup(Base):
     """A personal savings challenge shared between friends/family.
     Distinct from the community-track SavingsGroup (chama/table-banking)."""
     __tablename__ = "spending_groups"
+    __table_args__ = schema_args(SCHEMA_PERSONAL)
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
@@ -460,9 +480,10 @@ class SpendingGroup(Base):
 
 class SpendingGroupMember(Base):
     __tablename__ = "spending_group_members"
+    __table_args__ = schema_args(SCHEMA_PERSONAL)
 
     id = Column(Integer, primary_key=True, index=True)
-    group_id = Column(Integer, ForeignKey("spending_groups.id"), nullable=False, index=True)
+    group_id = Column(Integer, ForeignKey(fk_ref("spending_groups.id", SCHEMA_PERSONAL)), nullable=False, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
     joined_at = Column(DateTime, default=datetime.utcnow)
 
@@ -471,9 +492,10 @@ class SpendingGroupMember(Base):
 
 class SpendingGroupContribution(Base):
     __tablename__ = "spending_group_contributions"
+    __table_args__ = schema_args(SCHEMA_PERSONAL)
 
     id = Column(Integer, primary_key=True, index=True)
-    group_id = Column(Integer, ForeignKey("spending_groups.id"), nullable=False, index=True)
+    group_id = Column(Integer, ForeignKey(fk_ref("spending_groups.id", SCHEMA_PERSONAL)), nullable=False, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
     amount = Column(Float, default=0)
     contributed_at = Column(DateTime, default=datetime.utcnow)
