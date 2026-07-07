@@ -4,6 +4,8 @@ import { apiUrl } from '../api-config.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
+import SearchBar from '../components/SearchBar.jsx'
+import { useSearch } from '../hooks/useSearch.js'
 
 const empty = { name: '', sku: '', category: 'General', quantity: 0, unit: 'pcs', cost_price: 0, selling_price: 0, reorder_point: 5 }
 
@@ -99,6 +101,8 @@ export default function Inventory() {
     },
   ]
 
+  const { query, setQuery, filtered } = useSearch(items, ['name', 'sku', 'category'])
+
   return (
     <div className="page">
       <div className="page-header">
@@ -115,7 +119,11 @@ export default function Inventory() {
 
       {error && <div className="error-text" style={{ marginBottom: 12 }}>{error}</div>}
 
-      <Table columns={columns} rows={items} loading={listLoading} loadingText="Loading inventory…" />
+      <div style={{ display: 'flex', marginBottom: 14 }}>
+        <SearchBar value={query} onChange={setQuery} placeholder="Search by name, SKU, or category…" />
+      </div>
+
+      <Table columns={columns} rows={filtered} loading={listLoading} loadingText="Loading inventory…" emptyText={query ? 'No items match your search.' : 'No items yet.'} />
 
       {editing !== null && (
         <Modal

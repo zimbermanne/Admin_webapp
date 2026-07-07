@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useApi } from '../hooks/useApi.js'
+import { useSearch } from '../hooks/useSearch.js'
 import Table from '../components/Table.jsx'
+import SearchBar from '../components/SearchBar.jsx'
 
 export default function Sales() {
   const api = useApi()
@@ -34,8 +36,17 @@ export default function Sales() {
     { key: 'total', header: 'Total', render: (r) => `TZS ${r.total.toLocaleString()}` },
     { key: 'payment_mode', header: 'Payment' },
     { key: 'customer_name', header: 'Customer' },
+    { key: 'receipt_no', header: 'Receipt #' },
     { key: 'actions', header: '', render: (r) => <button className="btn btn-danger" onClick={() => remove(r.id)}>Delete</button> },
   ]
+
+  const { query, setQuery, filtered } = useSearch(sales, [
+    'customer_name',
+    'receipt_no',
+    'item_name',
+    (r) => new Date(r.created_at).toLocaleDateString(),
+    (r) => new Date(r.created_at).toLocaleString(),
+  ])
 
   return (
     <div className="page">
@@ -48,7 +59,10 @@ export default function Sales() {
           <div className="card metric-card"><div className="label">Average Sale</div><div className="value">TZS {stats.average_sale.toLocaleString()}</div></div>
         </div>
       )}
-      <Table columns={columns} rows={sales} loading={listLoading} loadingText="Loading sales…" />
+      <div style={{ display: 'flex', marginBottom: 14 }}>
+        <SearchBar value={query} onChange={setQuery} placeholder="Search by customer, date, or receipt #…" />
+      </div>
+      <Table columns={columns} rows={filtered} loading={listLoading} loadingText="Loading sales…" emptyText={query ? 'No sales match your search.' : 'No sales yet.'} />
     </div>
   )
 }

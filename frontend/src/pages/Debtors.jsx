@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useApi } from '../hooks/useApi.js'
 import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
+import SearchBar from '../components/SearchBar.jsx'
+import { useSearch } from '../hooks/useSearch.js'
 
 const empty = { name: '', phone: '', total_owed: 0, note: '' }
 
@@ -62,6 +64,8 @@ export default function Debtors() {
     },
   ]
 
+  const { query, setQuery, filtered } = useSearch(debtors, ['name', 'phone'])
+
   return (
     <div className="page">
       <div className="page-header">
@@ -69,7 +73,10 @@ export default function Debtors() {
         <button className="btn btn-primary" onClick={() => setOpen(true)}>+ Add Debtor</button>
       </div>
       {error && <div className="error-text" style={{ marginBottom: 12 }}>{error}</div>}
-      <Table columns={columns} rows={debtors} loading={listLoading} loadingText="Loading debtors…" emptyText="No debtors recorded yet." />
+      <div style={{ display: 'flex', marginBottom: 14 }}>
+        <SearchBar value={query} onChange={setQuery} placeholder="Search by name or phone…" />
+      </div>
+      <Table columns={columns} rows={filtered} loading={listLoading} loadingText="Loading debtors…" emptyText={query ? 'No debtors match your search.' : 'No debtors recorded yet.'} />
 
       {open && (
         <Modal

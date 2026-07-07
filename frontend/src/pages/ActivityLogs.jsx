@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useApi } from '../hooks/useApi.js'
+import { useSearch } from '../hooks/useSearch.js'
 import Table from '../components/Table.jsx'
+import SearchBar from '../components/SearchBar.jsx'
 
 const ACTION_LABELS = {
   login: 'Logged in',
@@ -114,7 +116,14 @@ export default function ActivityLogs() {
     [logs, userFilter]
   )
 
-  const sessions = useMemo(() => buildSessions(filteredLogs), [filteredLogs])
+  const { query, setQuery, filtered: searchedLogs } = useSearch(filteredLogs, [
+    'username',
+    'details',
+    (l) => actionLabel(l.action),
+    (l) => fmtTime(l.created_at),
+  ])
+
+  const sessions = useMemo(() => buildSessions(searchedLogs), [searchedLogs])
 
   const toggle = (i) => setExpanded((prev) => ({ ...prev, [i]: !prev[i] }))
 
@@ -175,11 +184,13 @@ export default function ActivityLogs() {
         </select>
 
         <button className="btn btn-outline" onClick={load}>↻ Refresh</button>
+
+        <SearchBar value={query} onChange={setQuery} placeholder="Search by employee, action, or details…" />
       </div>
 
       {loading && <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Loading…</div>}
 
-      {!loading && view === 'raw' && <Table columns={rawColumns} rows={filteredLogs} />}
+      {!loading && view === 'raw' && <Table columns={rawColumns} rows={searchedLogs} emptyText={query ? 'No log entries match your search.' : 'No activity yet.'} />}
 
       {!loading && view === 'sessions' && (
         sessions.length === 0

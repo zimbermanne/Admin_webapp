@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useApi } from '../hooks/useApi.js'
 import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
+import SearchBar from '../components/SearchBar.jsx'
+import { useSearch } from '../hooks/useSearch.js'
 
 const empty = { category: 'General', description: '', amount: 0 }
 
@@ -51,6 +53,12 @@ export default function Expenses() {
     { key: 'actions', header: '', render: (r) => <button className="btn btn-danger" onClick={() => remove(r.id)}>Delete</button> },
   ]
 
+  const { query, setQuery, filtered } = useSearch(expenses, [
+    'category',
+    'description',
+    (r) => new Date(r.created_at).toLocaleDateString(),
+  ])
+
   return (
     <div className="page">
       <div className="page-header">
@@ -64,7 +72,10 @@ export default function Expenses() {
           <div className="card metric-card"><div className="label">Total Amount</div><div className="value">TZS {stats.total_amount.toLocaleString()}</div></div>
         </div>
       )}
-      <Table columns={columns} rows={expenses} loading={listLoading} loadingText="Loading expenses…" />
+      <div style={{ display: 'flex', marginBottom: 14 }}>
+        <SearchBar value={query} onChange={setQuery} placeholder="Search by category, description, or date…" />
+      </div>
+      <Table columns={columns} rows={filtered} loading={listLoading} loadingText="Loading expenses…" emptyText={query ? 'No expenses match your search.' : 'No expenses yet.'} />
 
       {open && (
         <Modal

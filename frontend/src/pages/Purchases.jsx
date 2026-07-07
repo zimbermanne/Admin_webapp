@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useApi } from '../hooks/useApi.js'
 import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
+import SearchBar from '../components/SearchBar.jsx'
+import { useSearch } from '../hooks/useSearch.js'
 
 const empty = { item_name: '', supplier: '', quantity: 1, unit_cost: 0 }
 
@@ -52,6 +54,12 @@ export default function Purchases() {
     { key: 'actions', header: '', render: (r) => <button className="btn btn-danger" onClick={() => remove(r.id)}>Delete</button> },
   ]
 
+  const { query, setQuery, filtered } = useSearch(purchases, [
+    'item_name',
+    'supplier',
+    (r) => new Date(r.created_at).toLocaleDateString(),
+  ])
+
   return (
     <div className="page">
       <div className="page-header">
@@ -65,7 +73,10 @@ export default function Purchases() {
           <div className="card metric-card"><div className="label">Total Spent</div><div className="value">TZS {stats.total_spent.toLocaleString()}</div></div>
         </div>
       )}
-      <Table columns={columns} rows={purchases} loading={listLoading} loadingText="Loading purchases…" />
+      <div style={{ display: 'flex', marginBottom: 14 }}>
+        <SearchBar value={query} onChange={setQuery} placeholder="Search by item, supplier, or date…" />
+      </div>
+      <Table columns={columns} rows={filtered} loading={listLoading} loadingText="Loading purchases…" emptyText={query ? 'No purchases match your search.' : 'No purchases yet.'} />
 
       {open && (
         <Modal

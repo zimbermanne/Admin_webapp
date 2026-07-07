@@ -6,6 +6,8 @@ import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
 import Spinner from '../components/Spinner.jsx'
 import DocumentPreview from '../components/DocumentPreview.jsx'
+import SearchBar from '../components/SearchBar.jsx'
+import { useSearch } from '../hooks/useSearch.js'
 
 const emptyLine = () => ({ description: '', quantity: 1, unit_price: 0 })
 const emptyForm = () => ({
@@ -102,6 +104,12 @@ export default function Documents({ kind }) {
     },
   ]
 
+  const { query, setQuery, filtered } = useSearch(docs, [
+    'customer_name',
+    numberKey,
+    (r) => new Date(r.created_at).toLocaleDateString(),
+  ])
+
   const subtotal = form.items.reduce((s, l) => s + (Number(l.quantity)||0) * (Number(l.unit_price)||0), 0)
   const taxAmt   = subtotal * ((Number(form.tax_rate)||0) / 100)
   const total    = subtotal + taxAmt - (Number(form.discount)||0)
@@ -115,8 +123,11 @@ export default function Documents({ kind }) {
         </button>
       </div>
       {error && <div className="error-text" style={{ marginBottom: 12 }}>{error}</div>}
-      <Table columns={columns} rows={docs} loading={listLoading} loadingText={`Loading ${title.toLowerCase()}…`}
-        emptyText={`No ${title.toLowerCase()} yet.`} onRowClick={(row) => setPreviewDoc(row)} />
+      <div style={{ display: 'flex', marginBottom: 14 }}>
+        <SearchBar value={query} onChange={setQuery} placeholder="Search by customer, number, or date…" />
+      </div>
+      <Table columns={columns} rows={filtered} loading={listLoading} loadingText={`Loading ${title.toLowerCase()}…`}
+        emptyText={query ? `No ${title.toLowerCase()} match your search.` : `No ${title.toLowerCase()} yet.`} onRowClick={(row) => setPreviewDoc(row)} />
 
       {previewDoc && (
         <DocumentPreview kind={kind} doc={previewDoc} company={company} onClose={() => setPreviewDoc(null)} />
