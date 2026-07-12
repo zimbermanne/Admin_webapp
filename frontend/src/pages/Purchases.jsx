@@ -15,11 +15,13 @@ export default function Purchases() {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(empty)
   const [listLoading, setListLoading] = useState(true)
+  const [inventory, setInventory] = useState([])
 
   const load = () => {
     setListLoading(true)
     api.get('/purchases/').then(setPurchases).catch((e) => setError(e.message)).finally(() => setListLoading(false))
     api.get('/purchases/stats/summary').then(setStats).catch(() => {})
+    api.get('/inventory/').then(setInventory).catch(() => {})
   }
 
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -43,6 +45,15 @@ export default function Purchases() {
     } catch (e) {
       setError(e.message)
     }
+  }
+
+  const matchedItem = inventory.find(
+    (i) => i.name.trim().toLowerCase() === form.item_name.trim().toLowerCase()
+  )
+
+  const handleItemNameChange = (name) => {
+    const match = inventory.find((i) => i.name.trim().toLowerCase() === name.trim().toLowerCase())
+    setForm((f) => ({ ...f, item_name: name, unit_cost: match ? match.cost_price : f.unit_cost }))
   }
 
   const columns = [
@@ -87,7 +98,28 @@ export default function Purchases() {
             <button className="btn btn-primary" onClick={save}>Save</button>
           </>)}
         >
-          <div className="form-row"><label>Item Name</label><input value={form.item_name} onChange={(e) => setForm({ ...form, item_name: e.target.value })} /></div>
+          <div className="form-row">
+            <label>Item Name</label>
+            <input
+              list="purchase-inventory-options"
+              value={form.item_name}
+              onChange={(e) => handleItemNameChange(e.target.value)}
+              placeholder="Search existing stock or type a new item…"
+              autoComplete="off"
+            />
+            <datalist id="purchase-inventory-options">
+              {inventory.map((i) => (
+                <option key={i.id} value={i.name} />
+              ))}
+            </datalist>
+            {form.item_name.trim() && (
+              <div style={{ fontSize: 12, marginTop: 4, color: matchedItem ? 'var(--text-muted)' : 'var(--accent-hover)' }}>
+                {matchedItem
+                  ? `Existing item — current stock: ${matchedItem.quantity} ${matchedItem.unit || ''}. This purchase will add to it.`
+                  : 'New item — will be added to inventory when saved.'}
+              </div>
+            )}
+          </div>
           <div className="form-row"><label>Supplier</label><input value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} /></div>
           <div style={{ display: 'flex', gap: 10 }}>
             <div className="form-row" style={{ flex: 1 }}><label>Quantity</label><input type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} /></div>

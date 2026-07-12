@@ -41,13 +41,24 @@ def record_purchase(payload: PurchaseCreate, db: Session = Depends(get_db),
     )
     db.add(purchase)
 
-    # Increase stock if a matching inventory item exists in the same account
+    # Increase stock if a matching inventory item exists in the same account,
+    # otherwise create a new inventory item so purchases always keep stock in sync.
     item = db.query(InventoryItem).filter(
         InventoryItem.name == payload.item_name,
         InventoryItem.account_id == account_id
     ).first()
     if item:
         item.quantity += payload.quantity
+        item.cost_price = payload.unit_cost
+    else:
+        item = InventoryItem(
+            account_id=account_id,
+            name=payload.item_name,
+            quantity=payload.quantity,
+            cost_price=payload.unit_cost,
+            selling_price=payload.unit_cost,
+        )
+        db.add(item)
 
     db.commit()
     db.refresh(purchase)
@@ -112,6 +123,16 @@ async def batch_import(file: UploadFile = File(...), db: Session = Depends(get_d
         ).first()
         if item:
             item.quantity += quantity
+            item.cost_price = unit_cost
+        else:
+            item = InventoryItem(
+                account_id=account_id,
+                name=item_name,
+                quantity=quantity,
+                cost_price=unit_cost,
+                selling_price=unit_cost,
+            )
+            db.add(item)
         created += 1
     db.commit()
     log_activity_for_user(db, current_user, "purchase_batch_import", f"Imported {created} purchases")
