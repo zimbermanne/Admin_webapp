@@ -212,6 +212,17 @@ class PurchaseCreate(BaseModel):
     unit_cost: float = 0
 
 
+class PurchaseUpdate(BaseModel):
+    item_name: Optional[str] = None
+    supplier: Optional[str] = None
+    quantity: Optional[float] = None
+    unit_cost: Optional[float] = None
+
+
+class PurchaseMultiCreate(BaseModel):
+    items: List[PurchaseCreate]
+
+
 class PurchaseOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
