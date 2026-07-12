@@ -176,6 +176,7 @@ class SaleOut(BaseModel):
     item_name: str
     quantity: float
     unit_price: float
+    cost_price_at_sale: Optional[float] = None
     total: float
     payment_mode: PaymentMode
     customer_name: str
@@ -226,6 +227,7 @@ class PurchaseMultiCreate(BaseModel):
 class PurchaseOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    item_id: Optional[int] = None
     item_name: str
     supplier: str
     quantity: float

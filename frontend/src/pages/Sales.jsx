@@ -59,6 +59,22 @@ export default function Sales() {
           <div className="card metric-card"><div className="label">Average Sale</div><div className="value">TZS {stats.average_sale.toLocaleString()}</div></div>
         </div>
       )}
+      {stats && (stats.most_sold_item || stats.top_revenue_item) && (
+        <div className="card-grid">
+          <div className="card metric-card">
+            <div className="label">Most Sold Item</div>
+            <div className="value" style={{ fontSize: 16 }}>
+              {stats.most_sold_item ? `${stats.most_sold_item.item_name} (${stats.most_sold_item.quantity} sold)` : '—'}
+            </div>
+          </div>
+          <div className="card metric-card">
+            <div className="label">Top Revenue Item</div>
+            <div className="value" style={{ fontSize: 16 }}>
+              {stats.top_revenue_item ? `${stats.top_revenue_item.item_name} (TZS ${stats.top_revenue_item.revenue.toLocaleString()})` : '—'}
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ display: 'flex', marginBottom: 14 }}>
         <SearchBar value={query} onChange={setQuery} placeholder="Search by customer, date, or receipt #…" />
       </div>

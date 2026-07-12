@@ -24,35 +24,64 @@ def _scoped(query, model, account_id):
     return query.filter(model.account_id == account_id) if account_id is not None else query
 
 
+def _compute_core_financials(db: Session, account_id):
+    """Single source of truth for revenue/COGS/expenses/net profit, so every
+    report endpoint agrees on what 'net profit' means. Uses the cost snapshotted
+    at time of sale (cost_price_at_sale) when available, falling back to the
+    item's current cost_price for sales recorded before that column existed."""
+    sales = _scoped(db.query(Sale), Sale, account_id).all()
+    expenses = _scoped(db.query(Expense), Expense, account_id).all()
+
+    revenue_by_item = defaultdict(float)
+    cogs = 0.0
+    for s in sales:
+        revenue_by_item[s.item_name] += s.total
+        unit_cost = s.cost_price_at_sale
+        if unit_cost is None and s.item:
+            unit_cost = s.item.cost_price
+        if unit_cost:
+            cogs += unit_cost * s.quantity
+
+    expense_by_category = defaultdict(float)
+    for e in expenses:
+        expense_by_category[e.category] += e.amount
+
+    revenue = sum(revenue_by_item.values())
+    total_expenses = sum(expense_by_category.values())
+    gross_profit = revenue - cogs
+    net_profit = gross_profit - total_expenses
+
+    return {
+        "revenue": revenue,
+        "cogs": cogs,
+        "gross_profit": gross_profit,
+        "total_expenses": total_expenses,
+        "net_profit": net_profit,
+        "revenue_by_item": revenue_by_item,
+        "expense_by_category": expense_by_category,
+    }
+
+
 @router.get("/financial-summary")
 def financial_summary(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     account_id = get_account_filter(current_user)
-    sales = _scoped(db.query(Sale), Sale, account_id).all()
-    expenses = _scoped(db.query(Expense), Expense, account_id).all()
+    core = _compute_core_financials(db, account_id)
     purchases = _scoped(db.query(Purchase), Purchase, account_id).all()
-
-    revenue = sum(s.total for s in sales)
-    # COGS approximation: quantity sold * cost_price of the linked item
-    cogs = 0.0
-    for s in sales:
-        if s.item and s.item.cost_price:
-            cogs += s.item.cost_price * s.quantity
-    total_expenses = sum(e.amount for e in expenses)
     total_purchases = sum(p.total for p in purchases)
-    gross_profit = revenue - cogs
-    net_profit = gross_profit - total_expenses
 
     debtors = _scoped(db.query(Debtor), Debtor, account_id).all()
     creditors = _scoped(db.query(Creditor), Creditor, account_id).all()
     receivables = sum(d.total_owed - d.amount_paid for d in debtors)
     payables = sum(c.total_owed - c.amount_paid for c in creditors)
 
+    revenue = core["revenue"]
+    net_profit = core["net_profit"]
     return {
         "revenue": round(revenue, 2),
-        "cogs": round(cogs, 2),
-        "gross_profit": round(gross_profit, 2),
-        "gross_margin_pct": round((gross_profit / revenue * 100), 1) if revenue else 0,
-        "expenses": round(total_expenses, 2),
+        "cogs": round(core["cogs"], 2),
+        "gross_profit": round(core["gross_profit"], 2),
+        "gross_margin_pct": round((core["gross_profit"] / revenue * 100), 1) if revenue else 0,
+        "expenses": round(core["total_expenses"], 2),
         "purchases": round(total_purchases, 2),
         "net_profit": round(net_profit, 2),
         "net_margin_pct": round((net_profit / revenue * 100), 1) if revenue else 0,
@@ -117,26 +146,16 @@ def cashflow(months: int = 12, db: Session = Depends(get_db), current_user: User
 @router.get("/profit-loss")
 def profit_loss(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     account_id = get_account_filter(current_user)
-    sales = _scoped(db.query(Sale), Sale, account_id).all()
-    expenses = _scoped(db.query(Expense), Expense, account_id).all()
-
-    revenue_by_item = defaultdict(float)
-    for s in sales:
-        revenue_by_item[s.item_name] += s.total
-
-    expense_by_category = defaultdict(float)
-    for e in expenses:
-        expense_by_category[e.category] += e.amount
-
-    total_revenue = sum(revenue_by_item.values())
-    total_expenses = sum(expense_by_category.values())
+    core = _compute_core_financials(db, account_id)
 
     return {
-        "revenue_by_item": {k: round(v, 2) for k, v in revenue_by_item.items()},
-        "total_revenue": round(total_revenue, 2),
-        "expense_by_category": {k: round(v, 2) for k, v in expense_by_category.items()},
-        "total_expenses": round(total_expenses, 2),
-        "net_profit": round(total_revenue - total_expenses, 2),
+        "revenue_by_item": {k: round(v, 2) for k, v in core["revenue_by_item"].items()},
+        "total_revenue": round(core["revenue"], 2),
+        "cogs": round(core["cogs"], 2),
+        "expense_by_category": {k: round(v, 2) for k, v in core["expense_by_category"].items()},
+        "total_expenses": round(core["total_expenses"], 2),
+        "gross_profit": round(core["gross_profit"], 2),
+        "net_profit": round(core["net_profit"], 2),
     }
 
 

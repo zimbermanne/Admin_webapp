@@ -104,6 +104,7 @@ function BusinessDashboard() {
   const [inv, setInv] = useState(null)
   const [fin, setFin] = useState(null)
   const [cashflow, setCashflow] = useState(null)
+  const [salesStats, setSalesStats] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -112,12 +113,14 @@ function BusinessDashboard() {
       api.get('/inventory/metrics'),
       api.get('/reports/financial-summary'),
       api.get('/reports/cashflow?months=12'),
+      api.get('/sales/stats/summary'),
     ])
-      .then(([d, i, f, c]) => {
+      .then(([d, i, f, c, s]) => {
         setDaily(d)
         setInv(i)
         setFin(f)
         setCashflow(c)
+        setSalesStats(s)
       })
       .catch((e) => setError(e.message))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -166,6 +169,21 @@ function BusinessDashboard() {
         <div className="card metric-card">
           <div className="label">Total Revenue (All-time)</div>
           <div className="value">TZS {fin ? fin.revenue.toLocaleString() : '—'}</div>
+        </div>
+      </div>
+
+      <div className="card-grid">
+        <div className="card metric-card">
+          <div className="label">Most Sold Item (All-time)</div>
+          <div className="value" style={{ fontSize: 16 }}>
+            {salesStats?.most_sold_item ? `${salesStats.most_sold_item.item_name} (${salesStats.most_sold_item.quantity} sold)` : 'No sales yet'}
+          </div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Top Revenue Item (All-time)</div>
+          <div className="value" style={{ fontSize: 16 }}>
+            {salesStats?.top_revenue_item ? `${salesStats.top_revenue_item.item_name} (TZS ${salesStats.top_revenue_item.revenue.toLocaleString()})` : 'No sales yet'}
+          </div>
         </div>
       </div>
 

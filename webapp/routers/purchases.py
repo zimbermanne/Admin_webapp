@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 import pandas as pd
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -23,12 +24,18 @@ def get_account_filter(current_user: User):
     return current_user.account_id
 
 
-def _apply_inventory_for_purchase(db: Session, account_id: int, item_name: str, quantity: float, unit_cost: float):
-    """Add stock for a purchased item, creating the inventory item if it doesn't exist yet."""
-    item = db.query(InventoryItem).filter(
-        InventoryItem.name == item_name,
+def _find_item_by_name(db: Session, account_id: int, item_name: str):
+    """Case-insensitive lookup, matching how the frontend's item-name dropdown matches."""
+    return db.query(InventoryItem).filter(
+        func.lower(InventoryItem.name) == item_name.strip().lower(),
         InventoryItem.account_id == account_id
     ).first()
+
+
+def _apply_inventory_for_purchase(db: Session, account_id: int, item_name: str, quantity: float, unit_cost: float):
+    """Add stock for a purchased item, creating the inventory item if it doesn't exist yet.
+    Returns the resolved InventoryItem so the caller can link the purchase to it via item_id."""
+    item = _find_item_by_name(db, account_id, item_name)
     if item:
         item.quantity += quantity
         item.cost_price = unit_cost
@@ -41,14 +48,19 @@ def _apply_inventory_for_purchase(db: Session, account_id: int, item_name: str, 
             selling_price=unit_cost,
         )
         db.add(item)
+        db.flush()  # assign item.id so it can be linked immediately
+    return item
 
 
-def _reverse_inventory_for_purchase(db: Session, account_id: int, item_name: str, quantity: float):
-    """Undo the stock effect of a purchase, e.g. before editing it."""
-    item = db.query(InventoryItem).filter(
-        InventoryItem.name == item_name,
-        InventoryItem.account_id == account_id
-    ).first()
+def _reverse_inventory_for_purchase(db: Session, account_id: int, item_id, item_name: str, quantity: float):
+    """Undo the stock effect of a purchase, e.g. before editing it. Prefers the
+    stored item_id (stable even if the item was renamed since), falling back to
+    a name lookup for purchases recorded before item_id existed."""
+    item = None
+    if item_id:
+        item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
+    if not item:
+        item = _find_item_by_name(db, account_id, item_name)
     if item:
         item.quantity = max(0, item.quantity - quantity)
 
@@ -70,7 +82,8 @@ def record_purchase(payload: PurchaseCreate, db: Session = Depends(get_db),
         total=total,
     )
     db.add(purchase)
-    _apply_inventory_for_purchase(db, account_id, payload.item_name, payload.quantity, payload.unit_cost)
+    item = _apply_inventory_for_purchase(db, account_id, payload.item_name, payload.quantity, payload.unit_cost)
+    purchase.item_id = item.id
 
     db.commit()
     db.refresh(purchase)
@@ -101,7 +114,8 @@ def record_purchases_multi(payload: PurchaseMultiCreate, db: Session = Depends(g
             total=total,
         )
         db.add(purchase)
-        _apply_inventory_for_purchase(db, account_id, entry.item_name, entry.quantity, entry.unit_cost)
+        item = _apply_inventory_for_purchase(db, account_id, entry.item_name, entry.quantity, entry.unit_cost)
+        purchase.item_id = item.id
         created.append(purchase)
 
     if not created:
@@ -126,7 +140,7 @@ def update_purchase(purchase_id: int, payload: PurchaseUpdate, db: Session = Dep
         raise HTTPException(status_code=404, detail="Purchase not found")
 
     # Undo the stock effect of the original purchase before applying the edited one.
-    _reverse_inventory_for_purchase(db, purchase.account_id, purchase.item_name, purchase.quantity)
+    _reverse_inventory_for_purchase(db, purchase.account_id, purchase.item_id, purchase.item_name, purchase.quantity)
 
     if payload.item_name is not None and payload.item_name.strip():
         purchase.item_name = payload.item_name
@@ -138,7 +152,8 @@ def update_purchase(purchase_id: int, payload: PurchaseUpdate, db: Session = Dep
         purchase.unit_cost = payload.unit_cost
     purchase.total = purchase.quantity * purchase.unit_cost
 
-    _apply_inventory_for_purchase(db, purchase.account_id, purchase.item_name, purchase.quantity, purchase.unit_cost)
+    item = _apply_inventory_for_purchase(db, purchase.account_id, purchase.item_name, purchase.quantity, purchase.unit_cost)
+    purchase.item_id = item.id
 
     db.commit()
     db.refresh(purchase)
@@ -197,7 +212,8 @@ async def batch_import(file: UploadFile = File(...), db: Session = Depends(get_d
             total=quantity * unit_cost,
         )
         db.add(purchase)
-        _apply_inventory_for_purchase(db, account_id, item_name, quantity, unit_cost)
+        item = _apply_inventory_for_purchase(db, account_id, item_name, quantity, unit_cost)
+        purchase.item_id = item.id
         created += 1
     db.commit()
     log_activity_for_user(db, current_user, "purchase_batch_import", f"Imported {created} purchases")

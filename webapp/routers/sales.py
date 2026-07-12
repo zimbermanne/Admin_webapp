@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, date
+from collections import defaultdict
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -56,6 +57,7 @@ def record_sale(payload: SaleCreate, db: Session = Depends(get_db),
         item_name=item_name,
         quantity=payload.quantity,
         unit_price=unit_price,
+        cost_price_at_sale=item.cost_price if item else None,
         total=total,
         payment_mode=payload.payment_mode,
         customer_name=payload.customer_name or "Walk-in",
@@ -121,6 +123,7 @@ def checkout(payload: CheckoutRequest, db: Session = Depends(get_db),
             item_name=item.name,
             quantity=line.quantity,
             unit_price=price,
+            cost_price_at_sale=item.cost_price,
             total=total,
             payment_mode=payload.payment_mode,
             customer_name=payload.customer_name or "Walk-in",
@@ -174,11 +177,30 @@ def sales_stats(db: Session = Depends(get_db), current_user: User = Depends(get_
     sales = query.all()
     total_revenue = sum(s.total for s in sales)
     total_qty = sum(s.quantity for s in sales)
+
+    qty_by_item = defaultdict(float)
+    revenue_by_item = defaultdict(float)
+    for s in sales:
+        qty_by_item[s.item_name] += s.quantity
+        revenue_by_item[s.item_name] += s.total
+
+    most_sold_item = None
+    if qty_by_item:
+        name = max(qty_by_item, key=qty_by_item.get)
+        most_sold_item = {"item_name": name, "quantity": qty_by_item[name]}
+
+    top_revenue_item = None
+    if revenue_by_item:
+        name = max(revenue_by_item, key=revenue_by_item.get)
+        top_revenue_item = {"item_name": name, "revenue": round(revenue_by_item[name], 2)}
+
     return {
         "total_sales": len(sales),
         "total_revenue": round(total_revenue, 2),
         "total_quantity": total_qty,
         "average_sale": round(total_revenue / len(sales), 2) if sales else 0,
+        "most_sold_item": most_sold_item,
+        "top_revenue_item": top_revenue_item,
     }
 
 

@@ -104,6 +104,9 @@ export default function Reports({ view }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, marginTop: 10 }}>
               <span>Total Expenses</span><span>{money(data.total_expenses)}</span>
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, padding: '6px 0', marginTop: 6, borderTop: '1px solid #f0ece1' }}>
+              <span>Cost of Goods Sold</span><span>{money(data.cogs)}</span>
+            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, marginTop: 6, color: data.net_profit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
               <span>Net Profit</span><span>{money(data.net_profit)}</span>
             </div>
