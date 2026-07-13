@@ -1,4 +1,6 @@
 import os
+import secrets
+import warnings
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -11,7 +13,23 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import User, RoleEnum
 
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-me-in-prod-32chars")
+_env_secret = os.getenv("SECRET_KEY")
+if _env_secret:
+    SECRET_KEY = _env_secret
+else:
+    # No hardcoded fallback — that would mean every deployment without the env
+    # var set signs tokens with a value visible in the public repo, letting
+    # anyone forge valid logins. Instead, generate a random key for this
+    # process. Tokens won't survive a restart until SECRET_KEY is actually
+    # set in the environment (do this in Railway/production!).
+    SECRET_KEY = secrets.token_hex(32)
+    warnings.warn(
+        "SECRET_KEY is not set in the environment — using a random key for "
+        "this process only. All existing sessions will be invalidated on "
+        "every restart. Set SECRET_KEY as a persistent environment variable "
+        "before relying on this in production.",
+        RuntimeWarning,
+    )
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 

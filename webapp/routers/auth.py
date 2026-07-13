@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -10,12 +10,14 @@ from auth import (
     get_current_user, require_admin,
 )
 from activity import log_activity_for_user
+from rate_limit import limiter
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserOut)
-def register(payload: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/hour")
+def register(request: Request, payload: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == payload.username).first():
         raise HTTPException(status_code=400, detail="Username already exists")
 
@@ -76,7 +78,8 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
     user = authenticate_user(db, payload.username, payload.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -97,7 +100,8 @@ def me(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/demo-login", response_model=Token)
-def demo_login(db: Session = Depends(get_db)):
+@limiter.limit("20/hour")
+def demo_login(request: Request, db: Session = Depends(get_db)):
     """Instant login as a read-friendly demo account — no credentials required."""
     user = db.query(User).filter(User.username == "demo").first()
     if not user:
@@ -138,7 +142,9 @@ def demo_login(db: Session = Depends(get_db)):
 
 
 @router.put("/change-password")
+@limiter.limit("10/minute")
 def change_password(
+    request: Request,
     payload: ChangePasswordRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -155,7 +161,9 @@ def change_password(
 
 
 @router.post("/reset-password/{username}")
+@limiter.limit("10/minute")
 def reset_password(
+    request: Request,
     username: str,
     new_password: str = "changeme123",
     admin: User = Depends(require_admin),

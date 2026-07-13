@@ -1,11 +1,16 @@
 import os
+import warnings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.middleware import SlowAPIMiddleware
 
 from database import Base, engine, ensure_schemas
 import models  # noqa: F401 ensures models are registered before create_all
 from migrate import run_migrations
+from rate_limit import limiter
 from routers import auth, inventory, sales, purchases, expenses, ledgers, reports, users, activity, backup, agent, invoices, quotations, customers, accounts, reminders, community, personal, public
 
 ensure_schemas(engine)
@@ -14,13 +19,32 @@ run_migrations(engine)
 
 app = FastAPI(title="Moneytracer API", version="2.5.0")
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
 origins_env = os.getenv("ALLOWED_ORIGINS", "*")
 allowed_origins = [o.strip() for o in origins_env.split(",")] if origins_env != "*" else ["*"]
+
+# Auth in this app is a Bearer token sent in the Authorization header (see
+# auth.py / useAuth.jsx) — never cookies — so the browser doesn't need
+# credentialed CORS to make authenticated requests work. Wildcard origins
+# combined with allow_credentials=True is a known anti-pattern (and most
+# browsers reject that combination outright), so credentials are only
+# enabled once specific origins are configured via ALLOWED_ORIGINS.
+allow_credentials = allowed_origins != ["*"]
+if allowed_origins == ["*"]:
+    warnings.warn(
+        "ALLOWED_ORIGINS is not set — CORS is wide open (any origin can call "
+        "this API). Set ALLOWED_ORIGINS to your actual frontend domain(s) "
+        "(comma-separated) in production.",
+        RuntimeWarning,
+    )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

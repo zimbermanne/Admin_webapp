@@ -80,7 +80,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
   return (
     <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-brand">
-        <div className="brand-logo">Z</div>
+        <div className="brand-logo">M</div>
         <div className="brand-text">Moneytracer</div>
       </div>
 
