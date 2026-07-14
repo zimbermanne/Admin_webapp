@@ -3,6 +3,7 @@ import { useApi } from '../hooks/useApi.js'
 import { apiUrl } from '../api-config.js'
 import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
+import RowActionsMenu from '../components/RowActionsMenu.jsx'
 import SearchBar from '../components/SearchBar.jsx'
 import { useSearch } from '../hooks/useSearch.js'
 
@@ -89,10 +90,10 @@ export default function Inventory() {
     {
       key: 'actions', header: '',
       render: (r) => (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-outline" onClick={() => openEdit(r)}>Edit</button>
-          <button className="btn btn-danger" onClick={() => remove(r.id)}>Delete</button>
-        </div>
+        <RowActionsMenu items={[
+          { label: 'Edit', icon: '✎', onClick: () => openEdit(r) },
+          { label: 'Delete', icon: '✕', onClick: () => remove(r.id), danger: true },
+        ]} />
       ),
     },
   ]

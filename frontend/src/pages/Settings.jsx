@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth.jsx'
 import { useApi } from '../hooks/useApi.js'
 import Modal from '../components/Modal.jsx'
 import Table from '../components/Table.jsx'
+import RowActionsMenu from '../components/RowActionsMenu.jsx'
 
 export default function Settings() {
   const { user, logout } = useAuth()
@@ -107,23 +108,17 @@ export default function Settings() {
     { key: 'email', header: 'Email' },
     { key: 'role', header: 'Role', render: (u) => <span className={`badge badge-${u.role}`}>{u.role}</span> },
     { key: 'status', header: 'Status', render: (u) => (
-      <span style={{ color: u.is_active ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
+      <span className={`badge badge-${u.is_active ? 'active' : 'inactive'}`}>
         {u.is_active ? 'Active' : 'Inactive'}
       </span>
     )},
     { key: 'created_at', header: 'Joined', render: (u) => new Date(u.created_at).toLocaleDateString() },
     { key: 'actions', header: '', render: (u) => (
-      <div style={{ display: 'flex', gap: 6 }}>
-        <button className="btn btn-outline" onClick={() => { setResetTarget(u); setResetPwd(''); setResetMsg('') }}>
-          🔑 Reset Pwd
-        </button>
-        <button className="btn btn-outline" onClick={() => toggleActive(u)}>
-          {u.is_active ? 'Deactivate' : 'Activate'}
-        </button>
-        {u.username !== user.username && (
-          <button className="btn btn-danger" onClick={() => deleteUser(u.username)}>✕</button>
-        )}
-      </div>
+      <RowActionsMenu items={[
+        { label: 'Reset Password', icon: '🔑', onClick: () => { setResetTarget(u); setResetPwd(''); setResetMsg('') } },
+        { label: u.is_active ? 'Deactivate' : 'Activate', icon: u.is_active ? '⏸' : '▶', onClick: () => toggleActive(u) },
+        { label: 'Delete', icon: '✕', onClick: () => deleteUser(u.username), danger: true, hidden: u.username === user.username },
+      ]} />
     )},
   ]
 
