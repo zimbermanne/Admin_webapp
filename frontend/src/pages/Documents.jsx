@@ -3,8 +3,8 @@ import { useApi } from '../hooks/useApi.js'
 import { apiUrl } from '../api-config.js'
 import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
-import Spinner from '../components/Spinner.jsx'
 import DocumentPreview from '../components/DocumentPreview.jsx'
+import RowActionsMenu from '../components/RowActionsMenu.jsx'
 import SearchBar from '../components/SearchBar.jsx'
 import { useSearch } from '../hooks/useSearch.js'
 
@@ -125,32 +125,21 @@ export default function Documents({ kind }) {
       key: 'actions', header: '',
       stopRowClick: true,
       render: (r) => (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {isLocked(r) ? (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
+          {isLocked(r) && (
             <span title={`A ${r.status} ${isInvoice ? 'invoice' : 'quotation'} cannot be edited`}
-                  style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center' }}>
+                  style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               🔒 Locked
             </span>
-          ) : (
-            <button className="btn btn-outline" onClick={() => openEdit(r)}>✎ Edit</button>
           )}
-          <button className="btn btn-outline" onClick={() => downloadPdf(r)} disabled={pdfLoading === `${r.id}:pdf`}>
-            {pdfLoading === `${r.id}:pdf` ? <Spinner inline /> : '⬇ PDF'}
-          </button>
-          {isInvoice && (
-            <>
-              <button className="btn btn-outline" onClick={() => downloadPdf(r, 'packing-list', 'PackingList')} disabled={pdfLoading === `${r.id}:packing-list`}>
-                {pdfLoading === `${r.id}:packing-list` ? <Spinner inline /> : '📦 Packing List'}
-              </button>
-              <button className="btn btn-outline" onClick={() => downloadPdf(r, 'delivery-note', 'DeliveryNote')} disabled={pdfLoading === `${r.id}:delivery-note`}>
-                {pdfLoading === `${r.id}:delivery-note` ? <Spinner inline /> : '🚚 Delivery Note'}
-              </button>
-            </>
-          )}
-          {!isInvoice && !['accepted','rejected'].includes(r.status) && (
-            <button className="btn btn-outline" onClick={() => convert(r.id)}>→ Invoice</button>
-          )}
-          <button className="btn btn-danger" onClick={() => remove(r.id)}>✕</button>
+          <RowActionsMenu items={[
+            { label: 'Edit', icon: '✎', onClick: () => openEdit(r), hidden: isLocked(r) },
+            { label: pdfLoading === `${r.id}:pdf` ? 'Downloading…' : 'PDF', icon: '⬇', onClick: () => downloadPdf(r), disabled: pdfLoading === `${r.id}:pdf` },
+            { label: pdfLoading === `${r.id}:packing-list` ? 'Downloading…' : 'Packing List', icon: '📦', onClick: () => downloadPdf(r, 'packing-list', 'PackingList'), disabled: pdfLoading === `${r.id}:packing-list`, hidden: !isInvoice },
+            { label: pdfLoading === `${r.id}:delivery-note` ? 'Downloading…' : 'Delivery Note', icon: '🚚', onClick: () => downloadPdf(r, 'delivery-note', 'DeliveryNote'), disabled: pdfLoading === `${r.id}:delivery-note`, hidden: !isInvoice },
+            { label: 'Convert to Invoice', icon: '→', onClick: () => convert(r.id), hidden: isInvoice || ['accepted','rejected'].includes(r.status) },
+            { label: 'Delete', icon: '✕', onClick: () => remove(r.id), danger: true },
+          ]} />
         </div>
       ),
     },
