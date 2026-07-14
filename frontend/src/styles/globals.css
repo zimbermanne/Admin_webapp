@@ -228,6 +228,34 @@ input:focus, select:focus, textarea:focus {
   box-shadow: var(--neu-pressed), 0 0 0 3px var(--accent-soft);
 }
 
+/* Selects get a custom chevron (native arrows vary by browser/OS and don't
+   match the app's look) plus a touch more right padding so the arrow never
+   overlaps the selected text. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 34px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7' fill='none'%3E%3Cpath d='M1 1L5.5 5.5L10 1' stroke='%236B6258' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 11px 7px;
+}
+select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7' fill='none'%3E%3Cpath d='M1 1L5.5 5.5L10 1' stroke='%23C15F3C' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+/* Dropdown option list — most browsers only allow limited styling here,
+   but this keeps it on-palette where supported. */
+select option {
+  background: var(--surface);
+  color: var(--text-dark);
+}
+
 /* Checkboxes render as a neumorphic toggle switch rather than inheriting
    the generic full-width text-input styling above. */
 input[type="checkbox"] {
@@ -855,11 +883,12 @@ label {
 }
 
 .wizard-card {
-  background: #fff;
-  border-radius: 14px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
   padding: 32px;
   width: 640px;
   max-width: 100%;
+  box-shadow: var(--shadow-lg);
 }
 
 .wizard-steps {
@@ -879,18 +908,20 @@ label {
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
-  background: #f0ede6;
+  background: var(--surface);
   color: var(--text-muted);
   flex-shrink: 0;
+  box-shadow: var(--neu-raised-sm);
+  transition: background var(--duration) var(--ease), box-shadow var(--duration) var(--ease), color var(--duration) var(--ease);
 }
 
-.wizard-dot.active { background: var(--navy); color: #fff; }
-.wizard-dot.done { background: var(--success); color: #fff; }
+.wizard-dot.active { background: var(--accent); color: #fff; box-shadow: var(--neu-accent-raised); }
+.wizard-dot.done { background: var(--success); color: #fff; box-shadow: var(--neu-raised-sm); }
 
 .wizard-dot-line {
   width: 22px;
   height: 2px;
-  background: #e8e4dc;
+  background: var(--border);
   flex-shrink: 0;
 }
 
@@ -906,7 +937,7 @@ label {
   font-size: 11px;
   font-weight: 700;
   color: var(--warning);
-  background: #fdf3e0;
+  background: var(--warning-bg);
   padding: 2px 8px;
   border-radius: 999px;
   margin-left: 8px;
@@ -931,10 +962,11 @@ label {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: #faf9f6;
-  border: 1px solid #ece7dc;
-  border-radius: 8px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 13px;
+  box-shadow: var(--neu-raised-sm);
 }
 
 .wizard-mini-item .grow { flex: 1; }
