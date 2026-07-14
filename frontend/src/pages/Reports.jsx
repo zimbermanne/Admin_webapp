@@ -235,6 +235,7 @@ export default function Reports({ view }) {
   const [error, setError] = useState('')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
+  const [exporting, setExporting] = useState(false)
 
   const config = VIEW_CONFIG[view] || VIEW_CONFIG['financial-summary']
 
@@ -261,11 +262,42 @@ export default function Reports({ view }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view])
 
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      let endpoint = `/reports/export/${view}`
+      const params = new URLSearchParams()
+      if (config.dateFilter) {
+        if (start) params.set('start', start)
+        if (end) params.set('end', end)
+      }
+      if ([...params].length) endpoint += `?${params.toString()}`
+      const res = await api.get(endpoint)
+      // useApi returns the raw Response for non-JSON content types (xlsx)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${config.title.replace(/\s+/g, '_')}.xlsx`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const Component = config.Component
 
   return (
     <div className="page">
-      <div className="page-header"><h1>{config.title}</h1></div>
+      <div className="page-header">
+        <h1>{config.title}</h1>
+        <button className="btn btn-outline" onClick={handleExport} disabled={exporting || !data}>
+          {exporting ? 'Exporting…' : '⬇ Export Excel'}
+        </button>
+      </div>
 
       {config.dateFilter && (
         <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>

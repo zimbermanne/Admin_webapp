@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useApi } from '../hooks/useApi.js'
 import { apiUrl } from '../api-config.js'
-import { useAuth } from '../hooks/useAuth.jsx'
 
 function money(n) {
   return `TZS ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
@@ -9,7 +8,6 @@ function money(n) {
 
 export default function DocumentPreview({ kind, doc, company, onClose }) {
   const api = useApi()
-  const { token } = useAuth()
   const isInvoice = kind === 'invoices'
   const numberKey = isInvoice ? 'invoice_no' : 'quote_no'
   const label = isInvoice ? 'Invoice' : 'Quotation'
@@ -22,9 +20,7 @@ export default function DocumentPreview({ kind, doc, company, onClose }) {
   const [error, setError] = useState('')
 
   const fetchPdfBlob = async () => {
-    const res = await fetch(apiUrl(`/api/${kind}/${doc.id}/pdf`), {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const res = await fetch(apiUrl(`/api/${kind}/${doc.id}/pdf`), { credentials: 'include' })
     if (!res.ok) throw new Error('PDF generation failed')
     return res.blob()
   }

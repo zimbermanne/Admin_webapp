@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useApi } from '../hooks/useApi.js'
 import { apiUrl } from '../api-config.js'
-import { useAuth } from '../hooks/useAuth.jsx'
 import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
 import SearchBar from '../components/SearchBar.jsx'
@@ -11,7 +10,6 @@ const empty = { name: '', sku: '', category: 'General', quantity: 0, unit: 'pcs'
 
 export default function Inventory() {
   const api = useApi()
-  const { token } = useAuth()
   const fileRef = useRef()
   const [items, setItems] = useState([])
   const [error, setError] = useState('')
@@ -44,9 +42,7 @@ export default function Inventory() {
 
   const handleExport = async () => {
     try {
-      const res = await fetch(apiUrl('/api/inventory/export/spreadsheet'), {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch(apiUrl('/api/inventory/export/spreadsheet'), { credentials: 'include' })
       if (!res.ok) throw new Error('Export failed')
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)

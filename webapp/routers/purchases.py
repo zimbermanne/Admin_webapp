@@ -255,19 +255,3 @@ def get_purchase(purchase_id: int, db: Session = Depends(get_db), current_user: 
     if not purchase:
         raise HTTPException(status_code=404, detail="Purchase not found")
     return purchase
-
-
-@router.delete("/{purchase_id}")
-def delete_purchase(purchase_id: int, db: Session = Depends(get_db),
-                     current_user: User = Depends(require_manager_up)):
-    account_id = get_account_filter(current_user)
-    query = db.query(Purchase).filter(Purchase.id == purchase_id)
-    if account_id is not None:
-        query = query.filter(Purchase.account_id == account_id)
-    purchase = query.first()
-    if not purchase:
-        raise HTTPException(status_code=404, detail="Purchase not found")
-    db.delete(purchase)
-    db.commit()
-    log_activity_for_user(db, current_user, "purchase_delete", f"Deleted purchase {purchase_id}")
-    return {"detail": "Purchase deleted"}

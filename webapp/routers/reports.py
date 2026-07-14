@@ -1,17 +1,42 @@
 from datetime import datetime, date
 from typing import Optional
+import io
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
-from fastapi import APIRouter, Depends
+import pandas as pd
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Sale, Purchase, Expense, Debtor, Creditor, InventoryItem, User, LedgerStatus, RoleEnum
 from schemas import DebtorCreate, CreditorCreate, LedgerOut
 from auth import get_current_user
-from activity import log_activity
+from activity import log_activity, log_activity_for_user
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
+
+
+def _dict_to_excel(data: dict, title: str) -> io.BytesIO:
+    """Generic exporter: any report's dict response becomes a workbook —
+    scalar fields go on a Summary sheet, nested dicts/lists each get their
+    own sheet. Works across every report shape without bespoke code per type."""
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+        summary_rows = []
+        for key, value in data.items():
+            if isinstance(value, dict):
+                if value:
+                    pd.DataFrame(list(value.items()), columns=["Item", "Value"]).to_excel(
+                        writer, index=False, sheet_name=key[:31])
+            elif isinstance(value, list):
+                if value:
+                    pd.DataFrame(value).to_excel(writer, index=False, sheet_name=key[:31])
+            else:
+                summary_rows.append({"Field": key.replace("_", " ").title(), "Value": value})
+        pd.DataFrame(summary_rows).to_excel(writer, index=False, sheet_name="Summary")
+    buf.seek(0)
+    return buf
 
 
 def get_account_filter(current_user: User):
@@ -326,3 +351,45 @@ def add_creditor(payload: CreditorCreate, db: Session = Depends(get_db),
     db.refresh(creditor)
     log_activity(db, current_user.username, "creditor_add", f"Added creditor {creditor.name}")
     return creditor
+
+
+_EXPORTABLE_REPORTS = {
+    "financial-summary": "Financial Summary",
+    "profit-loss": "Profit and Loss",
+    "cashflow": "Cash Flow",
+    "debtors": "Debtors Report",
+    "creditors": "Creditors Report",
+    "inventory-valuation": "Inventory Valuation",
+}
+
+
+@router.get("/export/{report_type}")
+def export_report(report_type: str, start: Optional[date] = None, end: Optional[date] = None,
+                   months: int = 12, db: Session = Depends(get_db),
+                   current_user: User = Depends(get_current_user)):
+    """Export any of the report views as an Excel workbook. Reuses each
+    report's own endpoint function directly (not over HTTP) so the exported
+    numbers can never drift from what's shown on screen."""
+    if report_type not in _EXPORTABLE_REPORTS:
+        raise HTTPException(status_code=404, detail=f"Unknown report type '{report_type}'")
+
+    if report_type == "financial-summary":
+        data = financial_summary(start, end, db, current_user)
+    elif report_type == "profit-loss":
+        data = profit_loss(start, end, db, current_user)
+    elif report_type == "cashflow":
+        data = cashflow(months, db, current_user)
+    elif report_type == "debtors":
+        data = debtors_report(db, current_user)
+    elif report_type == "creditors":
+        data = creditors_report(db, current_user)
+    else:
+        data = inventory_valuation(db, current_user)
+
+    title = _EXPORTABLE_REPORTS[report_type]
+    buf = _dict_to_excel(data, title)
+    log_activity_for_user(db, current_user, "report_export", f"Exported {title} report")
+    filename = title.replace(" ", "_") + ".xlsx"
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(buf, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                              headers=headers)

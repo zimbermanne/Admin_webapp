@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useApi } from '../hooks/useApi.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -100,11 +101,13 @@ function CommunityDashboard() {
 
 function BusinessDashboard() {
   const api = useApi()
+  const navigate = useNavigate()
   const [daily, setDaily] = useState(null)
   const [inv, setInv] = useState(null)
   const [fin, setFin] = useState(null)
   const [cashflow, setCashflow] = useState(null)
   const [salesStats, setSalesStats] = useState(null)
+  const [lowStock, setLowStock] = useState([])
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -114,13 +117,15 @@ function BusinessDashboard() {
       api.get('/reports/financial-summary'),
       api.get('/reports/cashflow?months=12'),
       api.get('/sales/stats/summary'),
+      api.get('/inventory/low-stock/alerts'),
     ])
-      .then(([d, i, f, c, s]) => {
+      .then(([d, i, f, c, s, ls]) => {
         setDaily(d)
         setInv(i)
         setFin(f)
         setCashflow(c)
         setSalesStats(s)
+        setLowStock(ls)
       })
       .catch((e) => setError(e.message))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -133,6 +138,23 @@ function BusinessDashboard() {
       </div>
 
       {error && <div className="error-text">{error}</div>}
+
+      {lowStock.length > 0 && (
+        <div
+          onClick={() => navigate('/app/inventory')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+            background: '#fdf1e8', border: '1px solid var(--accent-soft)', color: 'var(--accent-hover)',
+            borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14,
+          }}
+        >
+          <span style={{ fontSize: 18 }}>⚠️</span>
+          <span>
+            <strong>{lowStock.length} item{lowStock.length > 1 ? 's' : ''}</strong> at or below reorder point
+            {lowStock.length <= 3 ? `: ${lowStock.map((i) => i.name).join(', ')}` : ''} — tap to review inventory.
+          </span>
+        </div>
+      )}
 
       <div className="card-grid">
         <div className="card metric-card">

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useApi } from '../hooks/useApi.js'
 import { apiUrl } from '../api-config.js'
-import { useAuth } from '../hooks/useAuth.jsx'
 import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
 import Spinner from '../components/Spinner.jsx'
@@ -18,7 +17,6 @@ const emptyForm = () => ({
 
 export default function Documents({ kind }) {
   const api = useApi()
-  const { token } = useAuth()
   const isInvoice = kind === 'invoices'
   const title = isInvoice ? 'Invoices' : 'Quotations / Proforma'
   const numberKey = isInvoice ? 'invoice_no' : 'quote_no'
@@ -76,9 +74,7 @@ export default function Documents({ kind }) {
     setPdfLoading(`${doc.id}:${variant}`)
     try {
       const path = variant === 'pdf' ? `/${kind}/${doc.id}/pdf` : `/${kind}/${doc.id}/${variant}/pdf`
-      const res = await fetch(apiUrl(`/api${path}`), {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch(apiUrl(`/api${path}`), { credentials: 'include' })
       if (!res.ok) throw new Error('PDF generation failed')
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
