@@ -373,6 +373,20 @@ class InvoiceOut(BaseModel):
     items: List[DocumentLineOut] = []
 
 
+class InvoiceUpdate(BaseModel):
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    customer_tin: Optional[str] = None
+    customer_vrn: Optional[str] = None
+    due_date: Optional[datetime] = None
+    po_number: Optional[str] = None
+    tax_rate: Optional[float] = None
+    discount: Optional[float] = None
+    notes: Optional[str] = None
+    items: Optional[List[DocumentLineIn]] = None
+
+
 class QuotationCreate(BaseModel):
     customer_name: str = "Walk-in"
     customer_phone: Optional[str] = ""
@@ -402,6 +416,17 @@ class QuotationOut(BaseModel):
     created_by: str
     created_at: datetime
     items: List[DocumentLineOut] = []
+
+
+class QuotationUpdate(BaseModel):
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    valid_days: Optional[int] = None
+    tax_rate: Optional[float] = None
+    discount: Optional[float] = None
+    notes: Optional[str] = None
+    items: Optional[List[DocumentLineIn]] = None
 
 
 class ReminderCreate(BaseModel):

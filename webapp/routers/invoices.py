@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Invoice, InvoiceItem, User, DocumentStatus, RoleEnum, Account
-from schemas import InvoiceCreate, InvoiceOut
+from schemas import InvoiceCreate, InvoiceUpdate, InvoiceOut
 from auth import get_current_user, require_manager_up
 from activity import log_activity_for_user
 from email_utils import send_email_with_attachment
@@ -128,6 +128,64 @@ def create_invoice(payload: InvoiceCreate, db: Session = Depends(get_db),
         ))
     db.commit(); db.refresh(invoice)
     log_activity_for_user(db, current_user, "invoice_create", f"Created {invoice.invoice_no}")
+    return invoice
+
+
+@router.put("/{invoice_id}", response_model=InvoiceOut)
+def update_invoice(invoice_id: int, payload: InvoiceUpdate, db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    account_id = get_account_filter(current_user)
+    q = db.query(Invoice).filter(Invoice.id == invoice_id)
+    if account_id is not None:
+        q = q.filter(Invoice.account_id == account_id)
+    invoice = q.first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    # A paid invoice is a closed accounting record — editing it after the
+    # fact would silently change numbers that have already been reconciled.
+    if invoice.status == DocumentStatus.paid:
+        raise HTTPException(status_code=400, detail="Paid invoices cannot be edited")
+
+    if payload.customer_name is not None: invoice.customer_name = payload.customer_name
+    if payload.customer_phone is not None: invoice.customer_phone = payload.customer_phone
+    if payload.customer_address is not None: invoice.customer_address = payload.customer_address
+    if payload.customer_tin is not None: invoice.customer_tin = payload.customer_tin
+    if payload.customer_vrn is not None: invoice.customer_vrn = payload.customer_vrn
+    if payload.due_date is not None: invoice.due_date = payload.due_date
+    if payload.po_number is not None: invoice.po_number = payload.po_number
+    if payload.notes is not None: invoice.notes = payload.notes
+
+    tax_rate = payload.tax_rate if payload.tax_rate is not None else invoice.tax_rate
+    discount = payload.discount if payload.discount is not None else invoice.discount
+
+    if payload.items is not None:
+        if not payload.items:
+            raise HTTPException(status_code=400, detail="Invoice must have at least one line item")
+        db.query(InvoiceItem).filter(InvoiceItem.invoice_id == invoice.id).delete()
+        for line in payload.items:
+            db.add(InvoiceItem(
+                account_id=invoice.account_id, invoice_id=invoice.id,
+                description=line.description, quantity=line.quantity, unit_price=line.unit_price,
+                total=round(line.quantity * line.unit_price, 2),
+            ))
+        db.flush()
+        subtotal, tax_amount, total = _calc_totals(payload.items, tax_rate, discount)
+    else:
+        # Items unchanged, but tax_rate/discount may have — recompute from
+        # the existing lines rather than trusting the stored subtotal.
+        existing_items = db.query(InvoiceItem).filter(InvoiceItem.invoice_id == invoice.id).all()
+        subtotal, tax_amount, total = _calc_totals(existing_items, tax_rate, discount)
+
+    invoice.tax_rate = tax_rate
+    invoice.discount = discount
+    invoice.subtotal = subtotal
+    invoice.tax_amount = tax_amount
+    invoice.total = total
+
+    db.commit()
+    db.refresh(invoice)
+    log_activity_for_user(db, current_user, "invoice_update", f"Edited {invoice.invoice_no}")
     return invoice
 
 

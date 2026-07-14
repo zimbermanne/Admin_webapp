@@ -29,6 +29,10 @@ export default function Documents({ kind }) {
   const [listLoading, setListLoading] = useState(true)
   const [previewDoc, setPreviewDoc] = useState(null)
   const [company, setCompany] = useState(null)
+  const [editingId, setEditingId] = useState(null)
+
+  const lockedStatuses = isInvoice ? ['paid'] : ['accepted', 'rejected', 'expired']
+  const isLocked = (doc) => lockedStatuses.includes(doc.status)
 
   const load = () => {
     setListLoading(true)
@@ -40,6 +44,26 @@ export default function Documents({ kind }) {
   const updateLine = (idx, field, value) => {
     const items = form.items.map((l, i) => i === idx ? { ...l, [field]: value } : l)
     setForm({ ...form, items })
+  }
+
+  const openEdit = (doc) => {
+    setEditingId(doc.id)
+    setForm({
+      customer_name: doc.customer_name || '',
+      customer_phone: doc.customer_phone || '',
+      customer_address: doc.customer_address || '',
+      customer_tin: doc.customer_tin || '',
+      customer_vrn: doc.customer_vrn || '',
+      due_date: doc.due_date ? doc.due_date.slice(0, 10) : '',
+      po_number: doc.po_number || '',
+      tax_rate: doc.tax_rate,
+      discount: doc.discount,
+      notes: doc.notes || '',
+      valid_days: 14,
+      items: doc.items.map((l) => ({ description: l.description, quantity: l.quantity, unit_price: l.unit_price })),
+    })
+    setError('')
+    setOpen(true)
   }
 
   const save = async () => {
@@ -55,8 +79,12 @@ export default function Documents({ kind }) {
         } : { valid_days }),
       }
       if (!payload.items.length) { setError('Add at least one line item'); return }
-      await api.post(`/${kind}/`, payload)
-      setOpen(false); setForm(emptyForm()); load()
+      if (editingId) {
+        await api.put(`/${kind}/${editingId}`, payload)
+      } else {
+        await api.post(`/${kind}/`, payload)
+      }
+      setOpen(false); setEditingId(null); setForm(emptyForm()); load()
     } catch (e) { setError(e.message) }
   }
 
@@ -98,6 +126,14 @@ export default function Documents({ kind }) {
       stopRowClick: true,
       render: (r) => (
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {isLocked(r) ? (
+            <span title={`A ${r.status} ${isInvoice ? 'invoice' : 'quotation'} cannot be edited`}
+                  style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center' }}>
+              🔒 Locked
+            </span>
+          ) : (
+            <button className="btn btn-outline" onClick={() => openEdit(r)}>✎ Edit</button>
+          )}
           <button className="btn btn-outline" onClick={() => downloadPdf(r)} disabled={pdfLoading === `${r.id}:pdf`}>
             {pdfLoading === `${r.id}:pdf` ? <Spinner inline /> : '⬇ PDF'}
           </button>
@@ -134,7 +170,7 @@ export default function Documents({ kind }) {
     <div className="page">
       <div className="page-header">
         <h1>{title}</h1>
-        <button className="btn btn-primary" onClick={() => { setForm(emptyForm()); setOpen(true) }}>
+        <button className="btn btn-primary" onClick={() => { setEditingId(null); setForm(emptyForm()); setOpen(true) }}>
           + New {isInvoice ? 'Invoice' : 'Quotation'}
         </button>
       </div>
@@ -150,10 +186,11 @@ export default function Documents({ kind }) {
       )}
 
       {open && (
-        <Modal title={`New ${isInvoice ? 'Invoice' : 'Quotation'}`} onClose={() => setOpen(false)}
+        <Modal title={editingId ? `Edit ${isInvoice ? 'Invoice' : 'Quotation'}` : `New ${isInvoice ? 'Invoice' : 'Quotation'}`}
+          onClose={() => { setOpen(false); setEditingId(null) }}
           footer={<>
-            <button className="btn btn-outline" onClick={() => setOpen(false)}>Cancel</button>
-            <button className="btn btn-primary" onClick={save}>Save</button>
+            <button className="btn btn-outline" onClick={() => { setOpen(false); setEditingId(null) }}>Cancel</button>
+            <button className="btn btn-primary" onClick={save}>{editingId ? 'Save Changes' : 'Save'}</button>
           </>}>
           <div className="form-row"><label>Customer Name *</label>
             <input value={form.customer_name} onChange={(e) => setForm({...form, customer_name: e.target.value})} /></div>
