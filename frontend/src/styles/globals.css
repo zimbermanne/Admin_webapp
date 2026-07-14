@@ -584,6 +584,7 @@ label {
   font-weight: 600;
   font-size: 18px;
   flex-shrink: 0;
+  box-shadow: var(--neu-accent-raised);
 }
 
 .login-brand-name {
@@ -1177,6 +1178,7 @@ label {
   align-items: center;
   justify-content: center;
   font-weight: 700;
+  box-shadow: var(--neu-accent-raised);
 }
 
 .landing-brand-name {
@@ -1210,10 +1212,16 @@ label {
   padding: 8px 16px;
   border-radius: var(--radius);
   font-weight: 600;
+  box-shadow: var(--neu-accent-raised);
+  transition: box-shadow var(--duration-fast) var(--ease);
 }
 
 .landing-nav-cta:hover {
   background: var(--accent-hover);
+}
+
+.landing-nav-cta:active {
+  box-shadow: var(--neu-accent-pressed);
 }
 
 .landing-hero {
@@ -1316,11 +1324,16 @@ label {
   font-weight: 600;
   padding: 12px 24px;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--neu-accent-raised);
+  transition: box-shadow var(--duration-fast) var(--ease);
 }
 
 .landing-btn-primary:hover {
   background: var(--accent-hover);
+}
+
+.landing-btn-primary:active {
+  box-shadow: var(--neu-accent-pressed);
 }
 
 .landing-btn-secondary {
@@ -1382,9 +1395,9 @@ label {
 
 .landing-feature-card {
   background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 24px;
+  box-shadow: var(--neu-raised);
 }
 
 .landing-feature-icon {
