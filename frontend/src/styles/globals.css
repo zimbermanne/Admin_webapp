@@ -1630,6 +1630,26 @@ label {
   text-decoration: underline;
 }
 
+.landing-app-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.landing-app-download:hover {
+  color: var(--text-dark);
+  text-decoration: underline;
+}
+
+.landing-app-download-icon {
+  font-size: 16px;
+}
+
 .landing-section {
   max-width: 1120px;
   margin: 0 auto;

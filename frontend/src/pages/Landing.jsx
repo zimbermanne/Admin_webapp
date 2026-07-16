@@ -103,6 +103,11 @@ export default function Landing() {
             </Link>
             <Link to="/login" className="landing-btn-secondary">I already have an account</Link>
           </div>
+
+          <a href="/downloads/moneytracer.apk" download className="landing-app-download">
+            <span className="landing-app-download-icon">⬇</span>
+            Download the Android app
+          </a>
         </div>
       </section>
 
@@ -248,6 +253,8 @@ export default function Landing() {
         <div className="landing-footer-links">
           <Link to="/login">Log in</Link>
           <Link to="/register">Sign up</Link>
+          <a href="https://instagram.com/zimbermanne_studios" target="_blank" rel="noopener noreferrer">Instagram</a>
+          <a href="https://facebook.com/moneytracer" target="_blank" rel="noopener noreferrer">Facebook</a>
         </div>
       </footer>
     </div>
