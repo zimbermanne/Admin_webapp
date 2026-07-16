@@ -41,21 +41,15 @@ button {
   position: fixed;
   inset: 0;
   z-index: -1;
-  /* Same dreamy gradient mesh as the Login screen and Landing hero, fixed
-     in place (not scrolling with page content) and kept subtle enough that
+  /* Sahel dusk illustration (baobabs + mudbrick mosque) fixed in place so it
+     doesn't scroll with page content, with a soft white wash over the top so
      dense dashboard/table content stays readable on top of it. */
   background:
-    radial-gradient(circle at 78% 28%, rgba(214, 128, 196, 0.4) 0%, rgba(214, 128, 196, 0) 42%),
-    radial-gradient(circle at 15% 12%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 38%),
-    radial-gradient(circle at 62% 62%, rgba(126, 108, 214, 0.28) 0%, rgba(126, 108, 214, 0) 45%),
-    radial-gradient(circle at 20% 80%, rgba(196, 120, 200, 0.3) 0%, rgba(196, 120, 200, 0) 40%),
-    linear-gradient(135deg, #cfe0f5 0%, #d9c8ee 45%, #c9b8e8 70%, #a9c2ec 100%);
-  background-size: 160% 160%, 160% 160%, 160% 160%, 160% 160%, 100% 100%;
-  animation: login-mesh-drift 24s ease-in-out infinite alternate;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .app-shell::before { animation: none; }
+    linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)),
+    url('../assets/hero-bg.jpg');
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
 }
 
 .main-content {
@@ -635,26 +629,14 @@ label {
   padding: var(--space-6);
   position: relative;
   overflow: hidden;
-  /* Soft, dreamy gradient mesh — a diagonal periwinkle-to-lavender base with
-     large, softly-blurred pink/blue/violet blobs layered on top. Built
-     entirely from CSS gradients (no image asset needed). */
+  /* Sahel dusk illustration (baobabs + mudbrick mosque), with a light
+     wash so the frosted-glass card stays legible against it. */
   background:
-    radial-gradient(circle at 78% 28%, rgba(214, 128, 196, 0.55) 0%, rgba(214, 128, 196, 0) 42%),
-    radial-gradient(circle at 15% 12%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 38%),
-    radial-gradient(circle at 62% 62%, rgba(126, 108, 214, 0.35) 0%, rgba(126, 108, 214, 0) 45%),
-    radial-gradient(circle at 20% 80%, rgba(196, 120, 200, 0.4) 0%, rgba(196, 120, 200, 0) 40%),
-    linear-gradient(135deg, #cfe0f5 0%, #d9c8ee 45%, #c9b8e8 70%, #a9c2ec 100%);
-  background-size: 160% 160%, 160% 160%, 160% 160%, 160% 160%, 100% 100%;
-  animation: login-mesh-drift 24s ease-in-out infinite alternate;
-}
-
-@keyframes login-mesh-drift {
-  0%   { background-position: 0% 0%, 100% 0%, 50% 100%, 0% 100%, 0% 0%; }
-  100% { background-position: 15% 10%, 85% 15%, 60% 85%, 10% 90%, 0% 0%; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .login-screen { animation: none; }
+    linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)),
+    url('../assets/hero-bg.jpg');
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
 }
 
 .login-brand {
@@ -1440,21 +1422,15 @@ label {
   text-align: center;
   position: relative;
   overflow: hidden;
-  /* Same dreamy gradient mesh as the login screen — kept to the hero rather
-     than the whole page, since Landing has long content below the fold
-     where this would hurt readability. */
+  /* Same Sahel dusk illustration as the login screen — kept to the hero
+     rather than the whole page, since Landing has long content below the
+     fold where this would hurt readability. */
   background:
-    radial-gradient(circle at 78% 22%, rgba(214, 128, 196, 0.5) 0%, rgba(214, 128, 196, 0) 42%),
-    radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 38%),
-    radial-gradient(circle at 60% 70%, rgba(126, 108, 214, 0.3) 0%, rgba(126, 108, 214, 0) 45%),
-    radial-gradient(circle at 22% 85%, rgba(196, 120, 200, 0.35) 0%, rgba(196, 120, 200, 0) 40%),
-    linear-gradient(135deg, #cfe0f5 0%, #d9c8ee 45%, #c9b8e8 70%, #a9c2ec 100%);
-  background-size: 160% 160%, 160% 160%, 160% 160%, 160% 160%, 100% 100%;
-  animation: login-mesh-drift 24s ease-in-out infinite alternate;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing-hero { animation: none; }
+    linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)),
+    url('../assets/hero-bg.jpg');
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
 }
 
 .landing-hero-inner {
