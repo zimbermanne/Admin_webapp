@@ -601,14 +601,29 @@ label {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--cream);
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 39px,
-    rgba(43, 38, 34, 0.028) 40px
-  );
   padding: var(--space-6);
+  position: relative;
+  overflow: hidden;
+  /* Soft, dreamy gradient mesh — a diagonal periwinkle-to-lavender base with
+     large, softly-blurred pink/blue/violet blobs layered on top. Built
+     entirely from CSS gradients (no image asset needed). */
+  background:
+    radial-gradient(circle at 78% 28%, rgba(214, 128, 196, 0.55) 0%, rgba(214, 128, 196, 0) 42%),
+    radial-gradient(circle at 15% 12%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 38%),
+    radial-gradient(circle at 62% 62%, rgba(126, 108, 214, 0.35) 0%, rgba(126, 108, 214, 0) 45%),
+    radial-gradient(circle at 20% 80%, rgba(196, 120, 200, 0.4) 0%, rgba(196, 120, 200, 0) 40%),
+    linear-gradient(135deg, #cfe0f5 0%, #d9c8ee 45%, #c9b8e8 70%, #a9c2ec 100%);
+  background-size: 160% 160%, 160% 160%, 160% 160%, 160% 160%, 100% 100%;
+  animation: login-mesh-drift 24s ease-in-out infinite alternate;
+}
+
+@keyframes login-mesh-drift {
+  0%   { background-position: 0% 0%, 100% 0%, 50% 100%, 0% 100%, 0% 0%; }
+  100% { background-position: 15% 10%, 85% 15%, 60% 85%, 10% 90%, 0% 0%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-screen { animation: none; }
 }
 
 .login-brand {
@@ -643,10 +658,12 @@ label {
 }
 
 .login-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 60px rgba(80, 60, 120, 0.18), var(--neu-raised);
   padding: var(--space-8) var(--space-8) var(--space-6);
   width: 380px;
   max-width: 90vw;
