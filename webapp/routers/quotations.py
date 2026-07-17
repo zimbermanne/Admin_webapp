@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Quotation, QuotationItem, Invoice, InvoiceItem, User, DocumentStatus, RoleEnum, Account
-from schemas import QuotationCreate, QuotationOut, InvoiceOut
+from schemas import QuotationCreate, QuotationUpdate, QuotationOut, InvoiceOut
 from auth import get_current_user, require_manager_up
 from activity import log_activity_for_user
 from email_utils import send_email_with_attachment
@@ -70,6 +70,61 @@ def create_quotation(payload: QuotationCreate, db: Session = Depends(get_db),
     return q
 
 
+@router.put("/{qid}", response_model=QuotationOut)
+def update_quotation(qid: int, payload: QuotationUpdate, db: Session = Depends(get_db),
+                      current_user: User = Depends(get_current_user)):
+    account_id = get_account_filter(current_user)
+    query = db.query(Quotation).filter(Quotation.id == qid)
+    if account_id is not None:
+        query = query.filter(Quotation.account_id == account_id)
+    q = query.first()
+    if not q:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+
+    # Accepted/rejected/expired quotations are a closed record of what was
+    # offered and how the customer responded — editing after the fact would
+    # rewrite that history.
+    if q.status in _QUOTATION_LOCKED_STATUSES:
+        raise HTTPException(status_code=400, detail=f"A {q.status.value} quotation cannot be edited")
+
+    if payload.customer_name is not None: q.customer_name = payload.customer_name
+    if payload.customer_phone is not None: q.customer_phone = payload.customer_phone
+    if payload.customer_address is not None: q.customer_address = payload.customer_address
+    if payload.notes is not None: q.notes = payload.notes
+    if payload.valid_days is not None:
+        q.valid_until = datetime.utcnow() + timedelta(days=payload.valid_days)
+
+    tax_rate = payload.tax_rate if payload.tax_rate is not None else q.tax_rate
+    discount = payload.discount if payload.discount is not None else q.discount
+
+    if payload.items is not None:
+        if not payload.items:
+            raise HTTPException(status_code=400, detail="Quotation must have at least one line item")
+        db.query(QuotationItem).filter(QuotationItem.quotation_id == q.id).delete()
+        for ln in payload.items:
+            db.add(QuotationItem(
+                account_id=q.account_id, quotation_id=q.id,
+                description=ln.description, quantity=ln.quantity, unit_price=ln.unit_price,
+                total=round(ln.quantity * ln.unit_price, 2),
+            ))
+        db.flush()
+        sub, tax, total = _calc(payload.items, tax_rate, discount)
+    else:
+        existing_items = db.query(QuotationItem).filter(QuotationItem.quotation_id == q.id).all()
+        sub, tax, total = _calc(existing_items, tax_rate, discount)
+
+    q.tax_rate = tax_rate
+    q.discount = discount
+    q.subtotal = sub
+    q.tax_amount = tax
+    q.total = total
+
+    db.commit()
+    db.refresh(q)
+    log_activity_for_user(db, current_user, "quotation_update", f"Edited {q.quote_no}")
+    return q
+
+
 @router.get("/", response_model=List[QuotationOut])
 def list_quotations(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     query = db.query(Quotation)
@@ -88,6 +143,9 @@ def get_quotation(qid: int, db: Session = Depends(get_db), current_user: User = 
     q = query.first()
     if not q: raise HTTPException(404, "Quotation not found")
     return q
+
+
+_QUOTATION_LOCKED_STATUSES = {DocumentStatus.accepted, DocumentStatus.rejected, DocumentStatus.expired}
 
 
 @router.patch("/{qid}/status", response_model=QuotationOut)
@@ -119,15 +177,25 @@ def convert_to_invoice(qid: int, db: Session = Depends(get_db),
     # Get account settings for invoice prefix
     account = db.query(Account).filter(Account.id == account_id).first()
     prefix = account.invoice_prefix if account else "INV"
-    
+
+    # Sequential, zero-padded numbering to match how create_invoice() numbers
+    # invoices directly — keeps the sequence consistent regardless of path.
+    existing_count = db.query(Invoice).filter(Invoice.account_id == account_id).count()
+    invoice_no = f"{prefix}-{existing_count + 1:04d}"
+    attempt = existing_count + 1
+    while db.query(Invoice).filter(Invoice.invoice_no == invoice_no).first() is not None:
+        attempt += 1
+        invoice_no = f"{prefix}-{attempt:04d}"
+
     inv = Invoice(
         account_id=account_id,
-        invoice_no=f"{prefix}-{uuid.uuid4().hex[:8].upper()}",
+        invoice_no=invoice_no,
         customer_name=q.customer_name, customer_phone=q.customer_phone,
         customer_address=q.customer_address, subtotal=q.subtotal,
         tax_rate=q.tax_rate, tax_amount=q.tax_amount, discount=q.discount,
         total=q.total, notes=q.notes, status=DocumentStatus.sent,
         created_by=current_user.username,
+        verify_token=uuid.uuid4().hex,
     )
     db.add(inv); db.flush()
     for ln in q.items:

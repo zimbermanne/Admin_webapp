@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 const BUSINESS_FEATURES = [
   { icon: '🧾', title: 'Point of Sale', text: 'Fast multi-item checkout with live stock validation, built for the counter.' },
@@ -19,8 +21,6 @@ const COMMUNITY_FEATURES = [
   { icon: '🔐', title: 'Role-based Access', text: 'Admins and recorders manage entries; members can always see their own records.' },
 ]
 
-<<<<<<< HEAD
-=======
 const PERSONAL_FEATURES = [
   { icon: '💸', title: 'Quick Expense Log', text: 'Add a spend in seconds — amount, category, done. No spreadsheets, no friction.' },
   { icon: '🧮', title: 'Envelope Budgets', text: 'Set a monthly budget per category and always know what\'s safe to spend today.' },
@@ -30,7 +30,6 @@ const PERSONAL_FEATURES = [
   { icon: '📉', title: 'Personal Insights', text: 'See where your money actually goes, and which weeks or categories creep up.' },
 ]
 
->>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
 function FeatureGrid({ features }) {
   return (
     <div className="landing-grid">
@@ -47,6 +46,7 @@ function FeatureGrid({ features }) {
 
 export default function Landing() {
   const [track, setTrack] = useState('business')
+  const { t } = useTranslation()
 
   return (
     <div className="landing-page">
@@ -57,11 +57,13 @@ export default function Landing() {
             <span className="landing-brand-name">Moneytracer</span>
           </div>
           <nav className="landing-nav">
-            <a href="#features">Features</a>
-            <a href="#community">Community groups</a>
-            <a href="#pricing">Pricing</a>
-            <Link to="/login" className="landing-nav-login">Log in</Link>
-            <Link to="/register" className="landing-nav-cta">Get started</Link>
+            <a href="#features">{t('landing.navFeatures')}</a>
+            <Link to="/download">{t('landing.navDownload')}</Link>
+            <a href="#about">{t('landing.navAbout')}</a>
+            <a href="#pricing">{t('landing.navPricing')}</a>
+            <Link to="/login" className="landing-nav-login">{t('landing.login')}</Link>
+            <Link to="/register" className="landing-nav-cta">{t('landing.getStarted')}</Link>
+            <LanguageSwitcher />
           </nav>
         </div>
       </header>
@@ -70,16 +72,10 @@ export default function Landing() {
         <div className="landing-hero-inner">
           <h1>Money in, money out — always in view.</h1>
           <p className="landing-hero-sub">
-<<<<<<< HEAD
-            Moneytracer is the bookkeeping and finance tool for small businesses and
-            community savings groups. Track sales, stock, and expenses, or run your
-            chama's contributions and loans — all from one simple dashboard.
-=======
             Moneytracer is the bookkeeping and finance tool for small businesses,
             community savings groups, and personal spending. Track sales and stock,
             run your chama's contributions, or manage your own budget — all from one
             simple dashboard.
->>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
           </p>
 
           <div className="landing-track-switch">
@@ -95,37 +91,31 @@ export default function Landing() {
             >
               I run a savings group
             </button>
-<<<<<<< HEAD
-=======
             <button
               className={track === 'personal' ? 'active' : ''}
               onClick={() => setTrack('personal')}
             >
               I track my own spending
             </button>
->>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
           </div>
 
           <div className="landing-hero-actions">
-            <Link to="/register" className="landing-btn-primary">
-<<<<<<< HEAD
-              {track === 'business' ? 'Set up my business' : 'Set up my savings group'}
-=======
+            <Link to={`/register?track=${track}`} className="landing-btn-primary">
               {track === 'business' && 'Set up my business'}
               {track === 'community' && 'Set up my savings group'}
               {track === 'personal' && 'Start tracking my spending'}
->>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
             </Link>
-            <Link to="/login" className="landing-btn-secondary">I already have an account</Link>
+            <Link to="/login" className="landing-btn-secondary">{t('landing.alreadyHaveAccount')}</Link>
           </div>
+
+          <Link to="/download" className="landing-app-download">
+            <span className="landing-app-download-icon">⬇</span>
+            Download the Android app
+          </Link>
         </div>
       </section>
 
-<<<<<<< HEAD
-      {track === 'business' ? (
-=======
       {track === 'business' && (
->>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
         <section id="features" className="landing-section">
           <h2>Everything a small business needs to track its money</h2>
           <p className="landing-section-sub">
@@ -134,13 +124,9 @@ export default function Landing() {
           </p>
           <FeatureGrid features={BUSINESS_FEATURES} />
         </section>
-<<<<<<< HEAD
-      ) : (
-=======
       )}
 
       {track === 'community' && (
->>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
         <section id="community" className="landing-section">
           <h2>Built for chamas, table banking, and merry-go-rounds</h2>
           <p className="landing-section-sub">
@@ -151,15 +137,6 @@ export default function Landing() {
         </section>
       )}
 
-<<<<<<< HEAD
-      <section className="landing-section landing-section-alt">
-        <h2>One account, either way</h2>
-        <p className="landing-section-sub">
-          Choose a business account or a community account when you sign up — the
-          dashboard, roles, and reports adapt to fit.
-        </p>
-        <div className="landing-grid landing-grid-two">
-=======
       {track === 'personal' && (
         <section id="personal" className="landing-section">
           <h2>Spend wisely, without the spreadsheets</h2>
@@ -179,7 +156,6 @@ export default function Landing() {
           dashboard, roles, and reports adapt to fit.
         </p>
         <div className="landing-grid landing-grid-three">
->>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
           <div className="landing-feature-card">
             <div className="landing-feature-icon">🏪</div>
             <div className="landing-feature-title">Business accounts</div>
@@ -196,8 +172,6 @@ export default function Landing() {
               finance circles.
             </div>
           </div>
-<<<<<<< HEAD
-=======
           <div className="landing-feature-card">
             <div className="landing-feature-icon">👛</div>
             <div className="landing-feature-title">Personal accounts</div>
@@ -206,21 +180,109 @@ export default function Landing() {
               wisely, on their own or with friends.
             </div>
           </div>
->>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
+        </div>
+      </section>
+
+      <section id="about" className="landing-section landing-about">
+        <div className="landing-about-grid">
+          <div className="landing-about-copy">
+            <h2>Built for the way money actually moves</h2>
+            <p>
+              Moneytracer started as a simple idea: the tools that help a shop owner,
+              a savings group treasurer, or someone budgeting their own salary
+              shouldn't require an accounting degree or a spreadsheet. Whether you're
+              running a hardware store, managing a chama's monthly contributions, or
+              just trying to see where your money goes, Moneytracer gives you one
+              clear, honest record you can trust.
+            </p>
+            <p>
+              We built it for African businesses and communities first — with
+              multi-currency support across the continent, offline-friendly workflows,
+              and pricing that makes sense for a small business, not a global
+              enterprise. No jargon, no bloated features you'll never use — just the
+              numbers that matter, always up to date.
+            </p>
+            <div className="landing-about-stats">
+              <div className="landing-about-stat">
+                <div className="landing-about-stat-value">54</div>
+                <div className="landing-about-stat-label">African countries supported</div>
+              </div>
+              <div className="landing-about-stat">
+                <div className="landing-about-stat-value">3</div>
+                <div className="landing-about-stat-label">Account types — business, community, personal</div>
+              </div>
+              <div className="landing-about-stat">
+                <div className="landing-about-stat-value">1</div>
+                <div className="landing-about-stat-label">Dashboard for everything you track</div>
+              </div>
+            </div>
+          </div>
+          <div className="landing-about-values">
+            <div className="landing-about-value-card">
+              <div className="landing-feature-icon">🎯</div>
+              <div className="landing-feature-title">Built to be simple</div>
+              <div className="landing-feature-text">
+                No training required. If you can use a phone, you can run your books
+                on Moneytracer from day one.
+              </div>
+            </div>
+            <div className="landing-about-value-card">
+              <div className="landing-feature-icon">🔒</div>
+              <div className="landing-feature-title">Your data, protected</div>
+              <div className="landing-feature-text">
+                Every account is isolated and secured, with a full activity log so you
+                always know who changed what.
+              </div>
+            </div>
+            <div className="landing-about-value-card">
+              <div className="landing-feature-icon">🌍</div>
+              <div className="landing-feature-title">Made for Africa</div>
+              <div className="landing-feature-text">
+                Local currencies, local realities — designed around how businesses and
+                communities here actually operate.
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       <section id="pricing" className="landing-section landing-cta-band">
         <h2>Ready to get your finances in order?</h2>
         <p className="landing-section-sub">Create an account in minutes. No spreadsheet required.</p>
-        <Link to="/register" className="landing-btn-primary">Get started free</Link>
+        <Link to={`/register?track=${track}`} className="landing-btn-primary">Get started free</Link>
+
+        <div className="landing-beta-notice">
+          <div className="landing-beta-badge">Beta</div>
+          <p>
+            Moneytracer is free to use for the first <strong>90 days</strong> while we're in active
+            development. During this phase you may see day-to-day changes, occasional bugs, or brief
+            downtime as we roll out improvements. We'll announce pricing plans well in advance of the
+            beta period ending.
+          </p>
+        </div>
+      </section>
+
+      <section className="landing-section landing-disclaimer">
+        <h2>Disclaimer</h2>
+        <div className="landing-disclaimer-text">
+          <p>
+            Moneytracer is currently in active development (beta). Use of the Service is subject to
+            our full Terms of Use and Disclaimer, which cover data loss, warranty limitations,
+            liability, and dispute resolution. Please read the complete terms before relying on the
+            Service for business, community, or personal financial records.
+          </p>
+          <Link to="/legal" className="landing-legal-link">Read the full Terms of Use & Disclaimer →</Link>
+          <p className="landing-disclaimer-note">Available in English, Français, Português, and Kiswahili.</p>
+        </div>
       </section>
 
       <footer className="landing-footer">
         <div>© {new Date().getFullYear()} Moneytracer.</div>
         <div className="landing-footer-links">
-          <Link to="/login">Log in</Link>
-          <Link to="/register">Sign up</Link>
+          <Link to="/login">{t('landing.logInLink')}</Link>
+          <Link to="/register">{t('landing.signUpLink')}</Link>
+          <a href="https://instagram.com/zimbermanne_studios" target="_blank" rel="noopener noreferrer">Instagram</a>
+          <a href="https://facebook.com/moneytracer" target="_blank" rel="noopener noreferrer">Facebook</a>
         </div>
       </footer>
     </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
+import PasswordInput from '../components/PasswordInput.jsx'
 
 export default function Login() {
   const { login, loginAsDemo, user } = useAuth()
@@ -47,7 +48,7 @@ export default function Login() {
     <div className="login-screen">
       <div style={{ width: '100%', maxWidth: 400 }}>
         <div className="login-brand">
-          <div className="login-brand-mark">Z</div>
+          <div className="login-brand-mark">M</div>
           <div className="login-brand-name">Moneytracer</div>
         </div>
 
@@ -61,7 +62,7 @@ export default function Login() {
             </div>
             <div className="form-row">
               <label>Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
             </div>
             {error && <div className="error-text">{error}</div>}
             <button className="btn btn-primary" style={{ width: '100%', marginTop: 8 }} disabled={busy}>

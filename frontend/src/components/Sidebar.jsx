@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
+import { useNavigationGuard } from '../hooks/useNavigationGuard.jsx'
 
 const NAV = [
   { type: 'item', label: 'Home', icon: '🏠', path: '/app' },
@@ -38,6 +39,10 @@ const NAV = [
     children: [
       { label: 'Profit & Loss', icon: '📈', path: '/app/reports/profit-loss' },
       { label: 'Financial Summary', icon: '💰', path: '/app/reports/financial-summary' },
+      { label: 'Cash Flow', icon: '💵', path: '/app/reports/cashflow' },
+      { label: 'Debtors Report', icon: '📒', path: '/app/reports/debtors' },
+      { label: 'Creditors Report', icon: '🏦', path: '/app/reports/creditors' },
+      { label: 'Inventory Valuation', icon: '📦', path: '/app/reports/inventory-valuation' },
     ],
   },
   { type: 'item', label: 'Expenses', icon: '💸', path: '/app/expenses' },
@@ -47,7 +52,7 @@ const NAV = [
 
 export default function Sidebar({ mobileOpen, onClose }) {
   const location = useLocation()
-  const navigate = useNavigate()
+  const { guardedNavigate } = useNavigationGuard()
   const { user, logout } = useAuth()
   const [openGroups, setOpenGroups] = useState({})
 
@@ -61,7 +66,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
   }, [location.pathname])
 
   const go = (path) => {
-    navigate(path)
+    guardedNavigate(path)
     onClose?.()
   }
 
@@ -75,7 +80,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
   return (
     <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-brand">
-        <div className="brand-logo">Z</div>
+        <div className="brand-logo">M</div>
         <div className="brand-text">Moneytracer</div>
       </div>
 

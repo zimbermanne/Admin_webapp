@@ -12,7 +12,7 @@ export default function MobileTopBar({
         <button className="hamburger" onClick={onToggle} aria-label="Toggle menu">
           {open ? '✕' : '☰'}
         </button>
-        <div className="brand-logo" style={{ width: 26, height: 26, fontSize: 13 }}>Z</div>
+        <div className="brand-logo" style={{ width: 26, height: 26, fontSize: 13 }}>M</div>
         <div style={{ fontWeight: 700, fontSize: 14, flex: 1 }}>{title}</div>
         <Clock showAccount={false} showReminders={false} />
       </div>

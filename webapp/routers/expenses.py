@@ -7,6 +7,7 @@ from models import Expense, User, RoleEnum
 from schemas import ExpenseCreate, ExpenseOut
 from auth import get_current_user, require_manager_up
 from activity import log_activity_for_user
+from ledger import post_expense_entry
 
 router = APIRouter(prefix="/api/expenses", tags=["expenses"])
 
@@ -31,6 +32,12 @@ def record_expense(payload: ExpenseCreate, db: Session = Depends(get_db),
     db.add(expense)
     db.commit()
     db.refresh(expense)
+    try:
+        post_expense_entry(db, account_id, expense, created_by=current_user.username)
+    except ValueError as e:
+        # Ledger posting failure shouldn't block the expense record itself,
+        # but it must not fail silently — surface it in the activity log.
+        log_activity_for_user(db, current_user, "ledger_post_failed", str(e))
     log_activity_for_user(db, current_user, "expense_record", f"Recorded expense {expense.amount} ({expense.category})")
     return expense
 

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useApi } from '../hooks/useApi.js'
 import Table from '../components/Table.jsx'
 import Modal from '../components/Modal.jsx'
+import SearchBar from '../components/SearchBar.jsx'
+import { useSearch } from '../hooks/useSearch.js'
 
 export default function Customers() {
   const api = useApi()
@@ -26,6 +28,8 @@ export default function Customers() {
       setPurchases([])
     } finally { setLoading(false) }
   }
+
+  const { query, setQuery, filtered: filteredCustomers } = useSearch(customers, ['customer_name'])
 
   const customerColumns = [
     { key: 'customer_name', header: 'Customer Name' },
@@ -63,7 +67,11 @@ export default function Customers() {
         </div>
       </div>
 
-      <Table columns={customerColumns} rows={customers} emptyText="No customer sales recorded yet." />
+      <div style={{ display: 'flex', marginBottom: 14 }}>
+        <SearchBar value={query} onChange={setQuery} placeholder="Search by customer name…" />
+      </div>
+
+      <Table columns={customerColumns} rows={filteredCustomers} emptyText={query ? 'No customers match your search.' : 'No customer sales recorded yet.'} />
 
       {selected && (
         <Modal title={`Purchase History — ${selected.customer_name}`} onClose={() => setSelected(null)}

@@ -3,13 +3,15 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 import pandas as pd
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Purchase, InventoryItem, User, RoleEnum
-from schemas import PurchaseCreate, PurchaseOut
+from schemas import PurchaseCreate, PurchaseUpdate, PurchaseMultiCreate, PurchaseOut
 from auth import get_current_user, require_manager_up
 from activity import log_activity_for_user
+from ledger import post_purchase_entry
 
 router = APIRouter(prefix="/api/purchases", tags=["purchases"])
 
@@ -23,13 +25,54 @@ def get_account_filter(current_user: User):
     return current_user.account_id
 
 
+def _find_item_by_name(db: Session, account_id: int, item_name: str):
+    """Case-insensitive lookup, matching how the frontend's item-name dropdown matches."""
+    return db.query(InventoryItem).filter(
+        func.lower(InventoryItem.name) == item_name.strip().lower(),
+        InventoryItem.account_id == account_id
+    ).first()
+
+
+def _apply_inventory_for_purchase(db: Session, account_id: int, item_name: str, quantity: float, unit_cost: float):
+    """Add stock for a purchased item, creating the inventory item if it doesn't exist yet.
+    Returns the resolved InventoryItem so the caller can link the purchase to it via item_id."""
+    item = _find_item_by_name(db, account_id, item_name)
+    if item:
+        item.quantity += quantity
+        item.cost_price = unit_cost
+    else:
+        item = InventoryItem(
+            account_id=account_id,
+            name=item_name,
+            quantity=quantity,
+            cost_price=unit_cost,
+            selling_price=unit_cost,
+        )
+        db.add(item)
+        db.flush()  # assign item.id so it can be linked immediately
+    return item
+
+
+def _reverse_inventory_for_purchase(db: Session, account_id: int, item_id, item_name: str, quantity: float):
+    """Undo the stock effect of a purchase, e.g. before editing it. Prefers the
+    stored item_id (stable even if the item was renamed since), falling back to
+    a name lookup for purchases recorded before item_id existed."""
+    item = None
+    if item_id:
+        item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
+    if not item:
+        item = _find_item_by_name(db, account_id, item_name)
+    if item:
+        item.quantity = max(0, item.quantity - quantity)
+
+
 @router.post("/", response_model=PurchaseOut)
 def record_purchase(payload: PurchaseCreate, db: Session = Depends(get_db),
                      current_user: User = Depends(require_manager_up)):
     account_id = get_account_filter(current_user)
     if account_id is None:
         raise HTTPException(status_code=403, detail="Superadmin cannot record purchases")
-    
+
     total = payload.unit_cost * payload.quantity
     purchase = Purchase(
         account_id=account_id,
@@ -40,18 +83,90 @@ def record_purchase(payload: PurchaseCreate, db: Session = Depends(get_db),
         total=total,
     )
     db.add(purchase)
-
-    # Increase stock if a matching inventory item exists in the same account
-    item = db.query(InventoryItem).filter(
-        InventoryItem.name == payload.item_name,
-        InventoryItem.account_id == account_id
-    ).first()
-    if item:
-        item.quantity += payload.quantity
+    item = _apply_inventory_for_purchase(db, account_id, payload.item_name, payload.quantity, payload.unit_cost)
+    purchase.item_id = item.id
 
     db.commit()
     db.refresh(purchase)
+    try:
+        post_purchase_entry(db, account_id, purchase, created_by=current_user.username)
+    except ValueError as e:
+        log_activity_for_user(db, current_user, "ledger_post_failed", str(e))
     log_activity_for_user(db, current_user, "purchase_record", f"Purchased {payload.quantity} x {payload.item_name}")
+    return purchase
+
+
+@router.post("/multi", response_model=List[PurchaseOut])
+def record_purchases_multi(payload: PurchaseMultiCreate, db: Session = Depends(get_db),
+                            current_user: User = Depends(require_manager_up)):
+    account_id = get_account_filter(current_user)
+    if account_id is None:
+        raise HTTPException(status_code=403, detail="Superadmin cannot record purchases")
+    if not payload.items:
+        raise HTTPException(status_code=400, detail="At least one item is required")
+
+    created = []
+    for entry in payload.items:
+        if not entry.item_name or not entry.item_name.strip():
+            continue
+        total = entry.unit_cost * entry.quantity
+        purchase = Purchase(
+            account_id=account_id,
+            item_name=entry.item_name,
+            supplier=entry.supplier or "",
+            quantity=entry.quantity,
+            unit_cost=entry.unit_cost,
+            total=total,
+        )
+        db.add(purchase)
+        item = _apply_inventory_for_purchase(db, account_id, entry.item_name, entry.quantity, entry.unit_cost)
+        purchase.item_id = item.id
+        created.append(purchase)
+
+    if not created:
+        raise HTTPException(status_code=400, detail="At least one valid item is required")
+
+    db.commit()
+    for purchase in created:
+        db.refresh(purchase)
+        try:
+            post_purchase_entry(db, account_id, purchase, created_by=current_user.username)
+        except ValueError as e:
+            log_activity_for_user(db, current_user, "ledger_post_failed", str(e))
+    log_activity_for_user(db, current_user, "purchase_record_multi", f"Recorded {len(created)} purchase items")
+    return created
+
+
+@router.put("/{purchase_id}", response_model=PurchaseOut)
+def update_purchase(purchase_id: int, payload: PurchaseUpdate, db: Session = Depends(get_db),
+                     current_user: User = Depends(require_manager_up)):
+    account_id = get_account_filter(current_user)
+    query = db.query(Purchase).filter(Purchase.id == purchase_id)
+    if account_id is not None:
+        query = query.filter(Purchase.account_id == account_id)
+    purchase = query.first()
+    if not purchase:
+        raise HTTPException(status_code=404, detail="Purchase not found")
+
+    # Undo the stock effect of the original purchase before applying the edited one.
+    _reverse_inventory_for_purchase(db, purchase.account_id, purchase.item_id, purchase.item_name, purchase.quantity)
+
+    if payload.item_name is not None and payload.item_name.strip():
+        purchase.item_name = payload.item_name
+    if payload.supplier is not None:
+        purchase.supplier = payload.supplier
+    if payload.quantity is not None:
+        purchase.quantity = payload.quantity
+    if payload.unit_cost is not None:
+        purchase.unit_cost = payload.unit_cost
+    purchase.total = purchase.quantity * purchase.unit_cost
+
+    item = _apply_inventory_for_purchase(db, purchase.account_id, purchase.item_name, purchase.quantity, purchase.unit_cost)
+    purchase.item_id = item.id
+
+    db.commit()
+    db.refresh(purchase)
+    log_activity_for_user(db, current_user, "purchase_update", f"Edited purchase {purchase_id}")
     return purchase
 
 
@@ -106,12 +221,8 @@ async def batch_import(file: UploadFile = File(...), db: Session = Depends(get_d
             total=quantity * unit_cost,
         )
         db.add(purchase)
-        item = db.query(InventoryItem).filter(
-            InventoryItem.name == item_name,
-            InventoryItem.account_id == account_id
-        ).first()
-        if item:
-            item.quantity += quantity
+        item = _apply_inventory_for_purchase(db, account_id, item_name, quantity, unit_cost)
+        purchase.item_id = item.id
         created += 1
     db.commit()
     log_activity_for_user(db, current_user, "purchase_batch_import", f"Imported {created} purchases")
@@ -153,19 +264,3 @@ def get_purchase(purchase_id: int, db: Session = Depends(get_db), current_user: 
     if not purchase:
         raise HTTPException(status_code=404, detail="Purchase not found")
     return purchase
-
-
-@router.delete("/{purchase_id}")
-def delete_purchase(purchase_id: int, db: Session = Depends(get_db),
-                     current_user: User = Depends(require_manager_up)):
-    account_id = get_account_filter(current_user)
-    query = db.query(Purchase).filter(Purchase.id == purchase_id)
-    if account_id is not None:
-        query = query.filter(Purchase.account_id == account_id)
-    purchase = query.first()
-    if not purchase:
-        raise HTTPException(status_code=404, detail="Purchase not found")
-    db.delete(purchase)
-    db.commit()
-    log_activity_for_user(db, current_user, "purchase_delete", f"Deleted purchase {purchase_id}")
-    return {"detail": "Purchase deleted"}

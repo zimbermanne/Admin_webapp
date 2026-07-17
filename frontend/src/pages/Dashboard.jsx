@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useApi } from '../hooks/useApi.js'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 function money(n) {
   return `TZS ${Number(n || 0).toLocaleString()}`
@@ -46,12 +48,66 @@ function CashflowChart({ series }) {
   )
 }
 
-export default function Dashboard() {
+function CommunityDashboard() {
   const api = useApi()
+  const [summary, setSummary] = useState(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    api.get('/community/summary')
+      .then(setSummary)
+      .catch((e) => setError(e.message))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1>Home</h1>
+      </div>
+
+      {error && <div className="error-text">{error}</div>}
+
+      <div className="card-grid">
+        <div className="card metric-card">
+          <div className="label">Members</div>
+          <div className="value">{summary ? summary.member_count : '—'}</div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Total Contributions (All-time)</div>
+          <div className="value">{summary ? money(summary.total_contributions) : '—'}</div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Total Payouts (All-time)</div>
+          <div className="value">{summary ? money(summary.total_payouts) : '—'}</div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Loans Outstanding</div>
+          <div className="value">{summary ? money(summary.total_loans_outstanding) : '—'}</div>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 20 }}>
+        <h3 style={{ marginTop: 0, marginBottom: 4 }}>Group features</h3>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          {summary?.rotation_enabled ? 'Merry-go-round payouts: enabled' : 'Merry-go-round payouts: not enabled'}
+          {' · '}
+          {summary?.lending_enabled ? 'Internal lending: enabled' : 'Internal lending: not enabled'}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BusinessDashboard() {
+  const api = useApi()
+  const navigate = useNavigate()
   const [daily, setDaily] = useState(null)
   const [inv, setInv] = useState(null)
   const [fin, setFin] = useState(null)
   const [cashflow, setCashflow] = useState(null)
+  const [salesStats, setSalesStats] = useState(null)
+  const [lowStock, setLowStock] = useState([])
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -60,12 +116,16 @@ export default function Dashboard() {
       api.get('/inventory/metrics'),
       api.get('/reports/financial-summary'),
       api.get('/reports/cashflow?months=12'),
+      api.get('/sales/stats/summary'),
+      api.get('/inventory/low-stock/alerts'),
     ])
-      .then(([d, i, f, c]) => {
+      .then(([d, i, f, c, s, ls]) => {
         setDaily(d)
         setInv(i)
         setFin(f)
         setCashflow(c)
+        setSalesStats(s)
+        setLowStock(ls)
       })
       .catch((e) => setError(e.message))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,6 +138,23 @@ export default function Dashboard() {
       </div>
 
       {error && <div className="error-text">{error}</div>}
+
+      {lowStock.length > 0 && (
+        <div
+          onClick={() => navigate('/app/inventory')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+            background: '#fdf1e8', border: '1px solid var(--accent-soft)', color: 'var(--accent-hover)',
+            borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14,
+          }}
+        >
+          <span style={{ fontSize: 18 }}>⚠️</span>
+          <span>
+            <strong>{lowStock.length} item{lowStock.length > 1 ? 's' : ''}</strong> at or below reorder point
+            {lowStock.length <= 3 ? `: ${lowStock.map((i) => i.name).join(', ')}` : ''} — tap to review inventory.
+          </span>
+        </div>
+      )}
 
       <div className="card-grid">
         <div className="card metric-card">
@@ -117,7 +194,28 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <div className="card-grid">
+        <div className="card metric-card">
+          <div className="label">Most Sold Item (All-time)</div>
+          <div className="value" style={{ fontSize: 16 }}>
+            {salesStats?.most_sold_item ? `${salesStats.most_sold_item.item_name} (${salesStats.most_sold_item.quantity} sold)` : 'No sales yet'}
+          </div>
+        </div>
+        <div className="card metric-card">
+          <div className="label">Top Revenue Item (All-time)</div>
+          <div className="value" style={{ fontSize: 16 }}>
+            {salesStats?.top_revenue_item ? `${salesStats.top_revenue_item.item_name} (TZS ${salesStats.top_revenue_item.revenue.toLocaleString()})` : 'No sales yet'}
+          </div>
+        </div>
+      </div>
+
       <CashflowChart series={cashflow?.series} />
     </div>
   )
+}
+
+export default function Dashboard() {
+  const { account } = useAuth()
+  if (account?.account_type === 'community') return <CommunityDashboard />
+  return <BusinessDashboard />
 }

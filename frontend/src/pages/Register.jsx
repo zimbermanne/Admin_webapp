@@ -1,11 +1,24 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { apiUrl } from '../api-config.js'
+import PasswordInput from '../components/PasswordInput.jsx'
+
+const TRACK_COPY = {
+  business: { heading: 'Set up your business account', sub: 'Track sales, stock, and invoices with Moneytracer' },
+  community: { heading: 'Set up your savings group', sub: 'Track contributions, loans, and payouts with Moneytracer' },
+  personal: { heading: 'Track your own spending', sub: 'Budgets, habits, and savings goals with Moneytracer' },
+}
 
 export default function Register() {
   const { login, user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const track = ['business', 'community', 'personal'].includes(searchParams.get('track'))
+    ? searchParams.get('track')
+    : 'business'
+  const copy = TRACK_COPY[track]
+
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -39,7 +52,7 @@ export default function Register() {
         res = await fetch(apiUrl('/api/auth/register'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password, full_name: fullName, email }),
+          body: JSON.stringify({ username, password, full_name: fullName, email, account_type: track }),
         })
       } catch {
         throw new Error('Could not reach the server. Check your connection or the API configuration.')
@@ -65,8 +78,8 @@ export default function Register() {
   return (
     <div className="login-screen">
       <div className="login-card">
-        <h1>Create Account</h1>
-        <div className="sub">Join Moneytracer</div>
+        <h1>{copy.heading}</h1>
+        <div className="sub">{copy.sub}</div>
         <form onSubmit={submit}>
           <div className="form-row">
             <label>Full Name</label>
@@ -82,11 +95,11 @@ export default function Register() {
           </div>
           <div className="form-row">
             <label>Password</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" />
           </div>
           <div className="form-row">
             <label>Confirm Password</label>
-            <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+            <PasswordInput value={confirm} onChange={(e) => setConfirm(e.target.value)} required autoComplete="new-password" />
           </div>
           {error && <div className="error-text">{error}</div>}
           <button className="btn btn-primary" style={{ width: '100%', marginTop: 8 }} disabled={busy}>

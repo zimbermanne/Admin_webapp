@@ -77,8 +77,10 @@ class AccountUpdate(BaseModel):
     business_structure: Optional[BusinessStructure] = None
     name: Optional[str] = None
     tin: Optional[str] = None
+    vrn: Optional[str] = None
     owner_full_name: Optional[str] = None
     business_type: Optional[str] = None
+    country: Optional[str] = None  # country name, as sent by the onboarding form; resolved to country_id server-side
     region: Optional[str] = None
     district: Optional[str] = None
     street_address: Optional[str] = None
@@ -88,6 +90,10 @@ class AccountUpdate(BaseModel):
     tax_rate: Optional[float] = None
     invoice_prefix: Optional[str] = None
     payment_terms_days: Optional[int] = None
+    bank_name: Optional[str] = None
+    bank_account_name: Optional[str] = None
+    bank_account_number: Optional[str] = None
+    bank_branch: Optional[str] = None
     is_active: Optional[bool] = None
     is_suspended: Optional[bool] = None
     onboarding_completed: Optional[bool] = None
@@ -100,8 +106,11 @@ class AccountOut(BaseModel):
     business_structure: BusinessStructure
     name: str
     tin: Optional[str]
+    vrn: Optional[str] = None
     owner_full_name: str
     business_type: str
+    country_id: Optional[int] = None
+    revenue_authority_id: Optional[int] = None
     region: str
     district: str
     street_address: str
@@ -111,6 +120,10 @@ class AccountOut(BaseModel):
     tax_rate: float
     invoice_prefix: str
     payment_terms_days: int
+    bank_name: Optional[str] = ""
+    bank_account_name: Optional[str] = ""
+    bank_account_number: Optional[str] = ""
+    bank_branch: Optional[str] = ""
     is_active: bool
     is_suspended: bool
     onboarding_completed: bool
@@ -176,6 +189,7 @@ class SaleOut(BaseModel):
     item_name: str
     quantity: float
     unit_price: float
+    cost_price_at_sale: Optional[float] = None
     total: float
     payment_mode: PaymentMode
     customer_name: str
@@ -212,9 +226,21 @@ class PurchaseCreate(BaseModel):
     unit_cost: float = 0
 
 
+class PurchaseUpdate(BaseModel):
+    item_name: Optional[str] = None
+    supplier: Optional[str] = None
+    quantity: Optional[float] = None
+    unit_cost: Optional[float] = None
+
+
+class PurchaseMultiCreate(BaseModel):
+    items: List[PurchaseCreate]
+
+
 class PurchaseOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    item_id: Optional[int] = None
     item_name: str
     supplier: str
     quantity: float
@@ -316,6 +342,10 @@ class InvoiceCreate(BaseModel):
     customer_name: str = "Walk-in"
     customer_phone: Optional[str] = ""
     customer_address: Optional[str] = ""
+    customer_tin: Optional[str] = ""
+    customer_vrn: Optional[str] = ""
+    due_date: Optional[datetime] = None
+    po_number: Optional[str] = ""
     tax_rate: float = 0
     discount: float = 0
     notes: Optional[str] = ""
@@ -329,6 +359,11 @@ class InvoiceOut(BaseModel):
     customer_name: str
     customer_phone: str
     customer_address: str
+    customer_tin: Optional[str] = ""
+    customer_vrn: Optional[str] = ""
+    due_date: Optional[datetime] = None
+    po_number: Optional[str] = ""
+    verify_token: Optional[str] = None
     subtotal: float
     tax_rate: float
     tax_amount: float
@@ -339,6 +374,20 @@ class InvoiceOut(BaseModel):
     created_by: str
     created_at: datetime
     items: List[DocumentLineOut] = []
+
+
+class InvoiceUpdate(BaseModel):
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    customer_tin: Optional[str] = None
+    customer_vrn: Optional[str] = None
+    due_date: Optional[datetime] = None
+    po_number: Optional[str] = None
+    tax_rate: Optional[float] = None
+    discount: Optional[float] = None
+    notes: Optional[str] = None
+    items: Optional[List[DocumentLineIn]] = None
 
 
 class QuotationCreate(BaseModel):
@@ -372,6 +421,17 @@ class QuotationOut(BaseModel):
     items: List[DocumentLineOut] = []
 
 
+class QuotationUpdate(BaseModel):
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    valid_days: Optional[int] = None
+    tax_rate: Optional[float] = None
+    discount: Optional[float] = None
+    notes: Optional[str] = None
+    items: Optional[List[DocumentLineIn]] = None
+
+
 class ReminderCreate(BaseModel):
     text: str
     due_at: Optional[datetime] = None
@@ -392,6 +452,7 @@ class CommunityGroupSetup(BaseModel):
     """Steps 1-3 of the community onboarding wizard, submitted together as one
     call once the account exists (mirrors the business onboarding pattern)."""
     name: str
+    registration_number: Optional[str] = ""
     group_type: Optional[str] = ""  # cultural label only: VICOBA, Vibati, Chama, etc.
     region: Optional[str] = ""
     district: Optional[str] = ""
@@ -406,6 +467,7 @@ class CommunityGroupSetup(BaseModel):
 
 class CommunityGroupUpdate(BaseModel):
     name: Optional[str] = None
+    registration_number: Optional[str] = None
     group_type: Optional[str] = None
     region: Optional[str] = None
     district: Optional[str] = None
@@ -422,6 +484,7 @@ class SavingsGroupOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     name: str
+    registration_number: str
     group_type: str
     region: str
     district: str
@@ -437,7 +500,9 @@ class SavingsGroupOut(BaseModel):
 
 class GroupMemberCreate(BaseModel):
     name: str
+    age: Optional[int] = None
     phone: Optional[str] = ""
+    group_role: str = "member"  # 'chairman' | 'treasurer' | 'secretary' | 'member'
     is_recorder: bool = False
 
 
@@ -445,7 +510,9 @@ class GroupMemberOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     name: str
+    age: Optional[int] = None
     phone: str
+    group_role: str
     is_recorder: bool
     has_login: bool = False
     joined_at: datetime
@@ -611,3 +678,35 @@ class SpendingGroupProgress(BaseModel):
     percent: float
     member_count: int
     members_on_track: int
+
+
+# ---------------------------------------------------------------------------
+# Smart tracking (rule-based, no external AI)
+# ---------------------------------------------------------------------------
+
+class CategorySuggestion(BaseModel):
+    category_id: Optional[int]
+    category_name: Optional[str]
+    confidence: str  # "high" | "low" | "none"
+
+
+class RecurringExpense(BaseModel):
+    category_id: int
+    category_name: str
+    typical_amount: float
+    typical_day_of_month: int
+    last_seen: datetime
+    occurrences: int
+
+
+class SpendingAlert(BaseModel):
+    type: str  # "spike" | "projected_overspend" | "small_leaks"
+    category_id: Optional[int] = None
+    category_name: Optional[str] = None
+    message: str
+    severity: str  # "info" | "warning"
+
+
+class SmartInsights(BaseModel):
+    alerts: List[SpendingAlert]
+    recurring: List[RecurringExpense]

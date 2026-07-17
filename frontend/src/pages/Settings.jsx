@@ -3,6 +3,8 @@ import { useAuth } from '../hooks/useAuth.jsx'
 import { useApi } from '../hooks/useApi.js'
 import Modal from '../components/Modal.jsx'
 import Table from '../components/Table.jsx'
+import RowActionsMenu from '../components/RowActionsMenu.jsx'
+import LanguageSwitcher from '../components/LanguageSwitcher.jsx'
 
 export default function Settings() {
   const { user, logout } = useAuth()
@@ -90,7 +92,20 @@ export default function Settings() {
     setAccountErr('')
     setAccountMsg('')
     try {
-      const updated = await api.put('/accounts/my-account', account)
+      // Only send the fields this form actually edits — the loaded account
+      // object also carries read-only fields (is_suspended, is_active,
+      // account_type, id, created_at...) that shouldn't be echoed back.
+      const {
+        name, tin, vrn, owner_full_name, business_type, region, district,
+        street_address, phone, email, tax_rate, invoice_prefix, payment_terms_days,
+        bank_name, bank_account_name, bank_account_number, bank_branch,
+      } = account
+      const payload = {
+        name, tin, vrn, owner_full_name, business_type, region, district,
+        street_address, phone, email, tax_rate, invoice_prefix, payment_terms_days,
+        bank_name, bank_account_name, bank_account_number, bank_branch,
+      }
+      const updated = await api.put('/accounts/my-account', payload)
       setAccount(updated)
       setAccountMsg('Account settings updated successfully!')
       setTimeout(() => setAccountMsg(''), 3000)
@@ -107,23 +122,17 @@ export default function Settings() {
     { key: 'email', header: 'Email' },
     { key: 'role', header: 'Role', render: (u) => <span className={`badge badge-${u.role}`}>{u.role}</span> },
     { key: 'status', header: 'Status', render: (u) => (
-      <span style={{ color: u.is_active ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
+      <span className={`badge badge-${u.is_active ? 'active' : 'inactive'}`}>
         {u.is_active ? 'Active' : 'Inactive'}
       </span>
     )},
     { key: 'created_at', header: 'Joined', render: (u) => new Date(u.created_at).toLocaleDateString() },
     { key: 'actions', header: '', render: (u) => (
-      <div style={{ display: 'flex', gap: 6 }}>
-        <button className="btn btn-outline" onClick={() => { setResetTarget(u); setResetPwd(''); setResetMsg('') }}>
-          🔑 Reset Pwd
-        </button>
-        <button className="btn btn-outline" onClick={() => toggleActive(u)}>
-          {u.is_active ? 'Deactivate' : 'Activate'}
-        </button>
-        {u.username !== user.username && (
-          <button className="btn btn-danger" onClick={() => deleteUser(u.username)}>✕</button>
-        )}
-      </div>
+      <RowActionsMenu items={[
+        { label: 'Reset Password', icon: '🔑', onClick: () => { setResetTarget(u); setResetPwd(''); setResetMsg('') } },
+        { label: u.is_active ? 'Deactivate' : 'Activate', icon: u.is_active ? '⏸' : '▶', onClick: () => toggleActive(u) },
+        { label: 'Delete', icon: '✕', onClick: () => deleteUser(u.username), danger: true, hidden: u.username === user.username },
+      ]} />
     )},
   ]
 
@@ -141,6 +150,18 @@ export default function Settings() {
           <button className="btn btn-danger" onClick={logout} style={{ marginTop: 8 }}>
             🚪 Log Out
           </button>
+        </div>
+
+        {/* Language preference card */}
+        <div className="card" style={{ flex: 1, minWidth: 280 }}>
+          <h3 style={{ marginTop: 0 }}>Language</h3>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
+            Choose your preferred language for the app. This is remembered on this device.
+          </div>
+          <div className="form-row">
+            <label>Display language</label>
+            <LanguageSwitcher />
+          </div>
         </div>
 
         {/* Change password card */}
@@ -185,6 +206,10 @@ export default function Settings() {
               <input value={account.tin || ''} onChange={(e) => setAccount({...account, tin: e.target.value})} />
             </div>
             <div className="form-row">
+              <label>VRN (VAT Reg. Number)</label>
+              <input value={account.vrn || ''} onChange={(e) => setAccount({...account, vrn: e.target.value})} />
+            </div>
+            <div className="form-row">
               <label>Phone</label>
               <input value={account.phone || ''} onChange={(e) => setAccount({...account, phone: e.target.value})} />
             </div>
@@ -215,6 +240,26 @@ export default function Settings() {
             <div className="form-row">
               <label>Payment Terms (days)</label>
               <input type="number" value={account.payment_terms_days} onChange={(e) => setAccount({...account, payment_terms_days: parseInt(e.target.value) || 7})} />
+            </div>
+          </div>
+
+          <div style={{ marginTop: 20, marginBottom: 12, fontWeight: 600 }}>🏦 Bank Details (shown on invoices)</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
+            <div className="form-row">
+              <label>Bank Name</label>
+              <input value={account.bank_name || ''} onChange={(e) => setAccount({...account, bank_name: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>Account Name</label>
+              <input value={account.bank_account_name || ''} onChange={(e) => setAccount({...account, bank_account_name: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>Account Number</label>
+              <input value={account.bank_account_number || ''} onChange={(e) => setAccount({...account, bank_account_number: e.target.value})} />
+            </div>
+            <div className="form-row">
+              <label>Branch</label>
+              <input value={account.bank_branch || ''} onChange={(e) => setAccount({...account, bank_branch: e.target.value})} />
             </div>
           </div>
           

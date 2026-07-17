@@ -3,18 +3,21 @@ import { useAuth } from './useAuth.jsx'
 import { apiUrl } from '../api-config.js'
 
 export function useApi() {
-  const { token, logout } = useAuth()
+  const { logout } = useAuth()
 
   const request = useCallback(async (path, options = {}) => {
     const headers = { ...(options.headers || {}) }
     if (!(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json'
     }
-    if (token) headers.Authorization = `Bearer ${token}`
 
     let res
     try {
-      res = await fetch(apiUrl(`/api${path}`), { ...options, headers })
+      // credentials: 'include' sends the httpOnly auth cookie set on login —
+      // the browser handles this automatically; there's no token in JS to
+      // attach manually (that's the point: nothing here is readable by an
+      // injected script).
+      res = await fetch(apiUrl(`/api${path}`), { ...options, headers, credentials: 'include' })
     } catch {
       throw new Error('Could not reach the server. Check your connection or the API configuration.')
     }
@@ -35,7 +38,7 @@ export function useApi() {
     const contentType = res.headers.get('content-type') || ''
     if (contentType.includes('application/json')) return res.json()
     return res
-  }, [token, logout])
+  }, [logout])
 
   return {
     get: (path) => request(path),

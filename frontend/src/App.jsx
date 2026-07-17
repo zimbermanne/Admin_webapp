@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
+import { NavigationGuardProvider } from './hooks/useNavigationGuard.jsx'
 import { useApi } from './hooks/useApi.js'
 import Sidebar, { NAV } from './components/Sidebar.jsx'
 import MobileTopBar from './components/MobileTopBar.jsx'
 import PageLoader from './components/PageLoader.jsx'
 import Clock from './Clock.jsx'
 import Landing from './pages/Landing.jsx'
+import Download from './pages/Download.jsx'
+import Legal from './pages/Legal.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Onboarding from './pages/Onboarding.jsx'
@@ -23,6 +26,7 @@ import Documents from './pages/Documents.jsx'
 import Customers from './pages/Customers.jsx'
 import Settings from './pages/Settings.jsx'
 import ActivityLogs from './pages/ActivityLogs.jsx'
+import VerifyDocument from './pages/VerifyDocument.jsx'
 
 function pageTitle(pathname) {
   for (const entry of NAV) {
@@ -117,6 +121,10 @@ function PrivateRoutes() {
         <Route path="/creditors" element={<Creditors />} />
         <Route path="/reports/profit-loss" element={<Reports view="profit-loss" />} />
         <Route path="/reports/financial-summary" element={<Reports view="financial-summary" />} />
+        <Route path="/reports/cashflow" element={<Reports view="cashflow" />} />
+        <Route path="/reports/debtors" element={<Reports view="debtors" />} />
+        <Route path="/reports/creditors" element={<Reports view="creditors" />} />
+        <Route path="/reports/inventory-valuation" element={<Reports view="inventory-valuation" />} />
         <Route path="/invoices" element={<Documents kind="invoices" />} />
         <Route path="/quotations" element={<Documents kind="quotations" />} />
         <Route path="/customers" element={<Customers />} />
@@ -131,12 +139,18 @@ function PrivateRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/app/*" element={<PrivateRoutes />} />
-      </Routes>
+      <NavigationGuardProvider>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/download" element={<Download />} />
+          <Route path="/legal" element={<Legal />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify/invoice/:id" element={<VerifyDocument kind="invoice" />} />
+          <Route path="/verify/receipt/:id" element={<VerifyDocument kind="receipt" />} />
+          <Route path="/app/*" element={<PrivateRoutes />} />
+        </Routes>
+      </NavigationGuardProvider>
     </AuthProvider>
   )
 }

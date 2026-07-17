@@ -25,8 +25,8 @@ require_recorder = require_manager_up
 
 def _member_out(m: GroupMember) -> GroupMemberOut:
     return GroupMemberOut(
-        id=m.id, name=m.name, phone=m.phone, is_recorder=m.is_recorder,
-        has_login=m.user_id is not None, joined_at=m.joined_at,
+        id=m.id, name=m.name, age=m.age, phone=m.phone, group_role=m.group_role,
+        is_recorder=m.is_recorder, has_login=m.user_id is not None, joined_at=m.joined_at,
     )
 
 
@@ -68,11 +68,10 @@ def setup_group(payload: CommunityGroupSetup, db: Session = Depends(get_db),
 
     # The registering admin is automatically the group's first recorder/member.
     recorder = GroupMember(group_id=group.id, user_id=admin.id, name=admin.full_name or admin.username,
-                            phone="", is_recorder=True)
+                            phone="", group_role="chairman", is_recorder=True)
     db.add(recorder)
 
     account.name = group.name
-    account.onboarding_completed = True
     db.commit()
     db.refresh(group)
     log_activity_for_user(db, admin, "community_setup", f"Set up savings group {group.name}")

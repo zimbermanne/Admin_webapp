@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useApi } from '../hooks/useApi.js'
+import { apiUrl } from '../api-config.js'
+import { useNavigationGuard } from '../hooks/useNavigationGuard.jsx'
 
 export default function POS() {
   const api = useApi()
@@ -12,11 +14,28 @@ export default function POS() {
   const [error, setError] = useState('')
   const [receipt, setReceipt] = useState(null)
   const [busy, setBusy] = useState(false)
+  const { setDirty, setDirtyMessage } = useNavigationGuard()
 
   useEffect(() => {
     api.get('/inventory/').then(setItems).catch((e) => setError(e.message))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Mark the sale as "in progress" as soon as there's at least one item in
+  // the cart, so navigating away (sidebar, back button, refresh, tab close)
+  // warns before the cart is silently lost.
+  useEffect(() => {
+    if (cart.length > 0) {
+      setDirtyMessage('You have items in this sale with prices set that haven\u2019t been checked out yet. Leaving this page now will delete the current sale.')
+      setDirty(true)
+    } else {
+      setDirty(false)
+    }
+    // Clear the guard when this page unmounts (e.g. after navigating away
+    // once confirmed) so it doesn't leak into other pages.
+    return () => setDirty(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart])
 
   const addToCart = (item) => {
     setCart((prev) => {
@@ -82,24 +101,16 @@ export default function POS() {
     <div className="page">
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <h1>Point of Sale</h1>
-        <div style={{ display: 'inline-flex', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+        <div className="mode-switch">
           <button
+            className={saleMode === 'pos' ? 'active' : ''}
             onClick={() => switchMode('pos')}
-            style={{
-              padding: '6px 14px', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer',
-              background: saleMode === 'pos' ? 'var(--accent)' : 'var(--surface)',
-              color: saleMode === 'pos' ? '#fff' : 'var(--text-muted)',
-            }}
           >
             🔒 POS (locked prices)
           </button>
           <button
+            className={saleMode === 'salesman' ? 'active' : ''}
             onClick={() => switchMode('salesman')}
-            style={{
-              padding: '6px 14px', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer',
-              background: saleMode === 'salesman' ? 'var(--accent)' : 'var(--surface)',
-              color: saleMode === 'salesman' ? '#fff' : 'var(--text-muted)',
-            }}
           >
             ✎ Salesman (editable prices)
           </button>
@@ -213,6 +224,14 @@ export default function POS() {
               ))}
               <div style={{ fontWeight: 700, marginTop: 8, borderTop: '1px solid #eee', paddingTop: 8 }}>
                 Total: TZS {receipt.total.toLocaleString()}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 14 }}>
+                <img
+                  src={apiUrl(`/api/public/qr/receipt/${receipt.receipt_no}.png`)}
+                  alt="Scan to verify receipt"
+                  width={110} height={110}
+                />
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Scan to verify receipt</div>
               </div>
             </div>
           )}
