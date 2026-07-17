@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Account, User, RoleEnum
+from models import Account, User, RoleEnum, Country, RevenueAuthority
 from schemas import AccountOut, AccountUpdate, AccountWithUsersOut
 from auth import require_superadmin, require_admin, get_current_user
 from activity import log_activity_for_user
@@ -62,6 +62,28 @@ def update_my_account(payload: AccountUpdate, db: Session = Depends(get_db),
     provided = payload.model_dump(exclude_unset=True)
     if "is_suspended" in provided and provided["is_suspended"] != account.is_suspended:
         raise HTTPException(status_code=403, detail="Cannot change suspension status")
+
+    # "country" isn't a real column — Account.country is a relationship to
+    # the Country table, so a plain setattr(account, "country", "Kenya")
+    # would try to assign a string where a Country object is expected and
+    # fail. Resolve it here instead: look up the Country by name, set the
+    # FK, and — the first time a country is set — default tax_rate from
+    # that country's revenue authority so users aren't left at 0%.
+    country_name = provided.pop("country", None)
+    if country_name:
+        country = db.query(Country).filter(Country.name == country_name).first()
+        if not country:
+            raise HTTPException(status_code=400, detail=f"Unknown country: {country_name}")
+        account.country_id = country.id
+
+        authority = db.query(RevenueAuthority).filter(RevenueAuthority.country_id == country.id).first()
+        if authority:
+            account.revenue_authority_id = authority.id
+            # Only auto-fill tax_rate if the user hasn't explicitly set one
+            # in this same request and the account doesn't already have a
+            # non-zero rate — don't clobber a manually-configured rate.
+            if "tax_rate" not in provided and not account.tax_rate:
+                account.tax_rate = authority.default_vat_rate or 0
 
     for field, value in provided.items():
         setattr(account, field, value)

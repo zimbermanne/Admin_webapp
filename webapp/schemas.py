@@ -80,6 +80,7 @@ class AccountUpdate(BaseModel):
     vrn: Optional[str] = None
     owner_full_name: Optional[str] = None
     business_type: Optional[str] = None
+    country: Optional[str] = None  # country name, as sent by the onboarding form; resolved to country_id server-side
     region: Optional[str] = None
     district: Optional[str] = None
     street_address: Optional[str] = None
@@ -108,6 +109,8 @@ class AccountOut(BaseModel):
     vrn: Optional[str] = None
     owner_full_name: str
     business_type: str
+    country_id: Optional[int] = None
+    revenue_authority_id: Optional[int] = None
     region: str
     district: str
     street_address: str
