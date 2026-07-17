@@ -189,5 +189,16 @@
     "deleted": "Supprimé avec succès",
     "updated": "Mis à jour avec succès",
     "created": "Créé avec succès"
+  },
+  "landing": {
+    "navFeatures": "Fonctionnalités",
+    "navDownload": "Télécharger l'appli",
+    "navAbout": "À propos",
+    "navPricing": "Tarifs",
+    "login": "Connexion",
+    "getStarted": "Commencer",
+    "alreadyHaveAccount": "J'ai déjà un compte",
+    "logInLink": "Connexion",
+    "signUpLink": "S'inscrire"
   }
 }

@@ -189,5 +189,16 @@
     "deleted": "تم الحذف بنجاح",
     "updated": "تم التحديث بنجاح",
     "created": "تم الإنشاء بنجاح"
+  },
+  "landing": {
+    "navFeatures": "الميزات",
+    "navDownload": "تحميل التطبيق",
+    "navAbout": "من نحن",
+    "navPricing": "الأسعار",
+    "login": "تسجيل الدخول",
+    "getStarted": "ابدأ الآن",
+    "alreadyHaveAccount": "لدي حساب بالفعل",
+    "logInLink": "تسجيل الدخول",
+    "signUpLink": "إنشاء حساب"
   }
 }

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 const STEPS = [
   {
@@ -39,6 +40,7 @@ export default function Download() {
             <a href="/#pricing">Pricing</a>
             <Link to="/login" className="landing-nav-login">Log in</Link>
             <Link to="/register" className="landing-nav-cta">Get started</Link>
+            <LanguageSwitcher />
           </nav>
         </div>
       </header>

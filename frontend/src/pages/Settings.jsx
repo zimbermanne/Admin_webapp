@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { useApi } from '../hooks/useApi.js'
-import { useTranslation } from 'react-i18next'
 import Modal from '../components/Modal.jsx'
 import Table from '../components/Table.jsx'
 import RowActionsMenu from '../components/RowActionsMenu.jsx'
+import LanguageSwitcher from '../components/LanguageSwitcher.jsx'
 
 export default function Settings() {
   const { user, logout } = useAuth()
   const api = useApi()
-  const { t, i18n } = useTranslation()
   const isAdmin = user?.role === 'admin'
   const isSuperadmin = user?.role === 'superadmin'
 
@@ -18,11 +17,6 @@ export default function Settings() {
   const [newPwd, setNewPwd] = useState('')
   const [pwdMsg, setPwdMsg] = useState('')
   const [pwdErr, setPwdErr] = useState('')
-
-  // Language preference
-  const [language, setLanguage] = useState(user?.preferred_language || 'en')
-  const [langMsg, setLangMsg] = useState('')
-  const [langErr, setLangErr] = useState('')
 
   // Account settings (for regular admins)
   const [account, setAccount] = useState(null)
@@ -56,16 +50,6 @@ export default function Settings() {
       await api.put('/auth/change-password', { old_password: oldPwd, new_password: newPwd })
       setPwdMsg('Password updated successfully.'); setOldPwd(''); setNewPwd('')
     } catch (e) { setPwdErr(e.message) }
-  }
-
-  const changeLanguage = async (e) => {
-    e.preventDefault(); setLangErr(''); setLangMsg('')
-    try {
-      await api.put('/users/me/language', { language })
-      i18n.changeLanguage(language)
-      setLangMsg('Language preference updated successfully.')
-      setTimeout(() => setLangMsg(''), 3000)
-    } catch (e) { setLangErr(e.message) }
   }
 
   const createUser = async () => {
@@ -154,61 +138,50 @@ export default function Settings() {
 
   return (
     <div className="page">
-      <div className="page-header"><h1>{t('settings.title')}</h1></div>
+      <div className="page-header"><h1>Settings</h1></div>
 
       <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 24 }}>
         {/* Profile card */}
         <div className="card" style={{ flex: 1, minWidth: 280 }}>
-          <h3 style={{ marginTop: 0 }}>{t('settings.profile')}</h3>
-          <div className="form-row"><label>{t('settings.username')}</label><input value={user?.username || ''} disabled /></div>
-          <div className="form-row"><label>{t('settings.fullName')}</label><input value={user?.full_name || ''} disabled /></div>
-          <div className="form-row"><label>{t('settings.role')}</label><input value={user?.role || ''} disabled /></div>
+          <h3 style={{ marginTop: 0 }}>My Profile</h3>
+          <div className="form-row"><label>Username</label><input value={user?.username || ''} disabled /></div>
+          <div className="form-row"><label>Full Name</label><input value={user?.full_name || ''} disabled /></div>
+          <div className="form-row"><label>Role</label><input value={user?.role || ''} disabled /></div>
           <button className="btn btn-danger" onClick={logout} style={{ marginTop: 8 }}>
-            🚪 {t('settings.logout')}
+            🚪 Log Out
           </button>
-        </div>
-
-        {/* Change password card */}
-        <div className="card" style={{ flex: 1, minWidth: 280 }}>
-          <h3 style={{ marginTop: 0 }}>{t('settings.changePassword')}</h3>
-          {user?.is_demo ? (
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              {t('settings.demoPassword')}
-            </div>
-          ) : (
-            <form onSubmit={changePassword}>
-              <div className="form-row"><label>{t('settings.currentPassword')}</label>
-                <input type="password" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} required /></div>
-              <div className="form-row"><label>{t('settings.newPassword')}</label>
-                <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required /></div>
-              {pwdErr && <div className="error-text">{pwdErr}</div>}
-              {pwdMsg && <div style={{ color:'var(--success)', fontSize:13, marginBottom:8 }}>{pwdMsg}</div>}
-              <button className="btn btn-primary">{t('settings.updatePassword')}</button>
-            </form>
-          )}
         </div>
 
         {/* Language preference card */}
         <div className="card" style={{ flex: 1, minWidth: 280 }}>
-          <h3 style={{ marginTop: 0 }}>{t('settings.languagePreference')}</h3>
-          <form onSubmit={changeLanguage}>
-            <div className="form-row">
-              <label>{t('settings.selectLanguage')}</label>
-              <select 
-                value={language} 
-                onChange={(e) => setLanguage(e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-              >
-                <option value="en">English</option>
-                <option value="fr">Français</option>
-                <option value="pt">Português</option>
-                <option value="sw">Kiswahili</option>
-              </select>
+          <h3 style={{ marginTop: 0 }}>Language</h3>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
+            Choose your preferred language for the app. This is remembered on this device.
+          </div>
+          <div className="form-row">
+            <label>Display language</label>
+            <LanguageSwitcher />
+          </div>
+        </div>
+
+        {/* Change password card */}
+        <div className="card" style={{ flex: 1, minWidth: 280 }}>
+          <h3 style={{ marginTop: 0 }}>Change Password</h3>
+          {user?.is_demo ? (
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              The demo account's password can't be changed.
             </div>
-            {langErr && <div className="error-text">{langErr}</div>}
-            {langMsg && <div style={{ color:'var(--success)', fontSize:13, marginBottom:8 }}>{langMsg}</div>}
-            <button className="btn btn-primary">{t('settings.selectLanguage')}</button>
-          </form>
+          ) : (
+            <form onSubmit={changePassword}>
+              <div className="form-row"><label>Current Password</label>
+                <input type="password" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} required /></div>
+              <div className="form-row"><label>New Password</label>
+                <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required /></div>
+              {pwdErr && <div className="error-text">{pwdErr}</div>}
+              {pwdMsg && <div style={{ color:'var(--success)', fontSize:13, marginBottom:8 }}>{pwdMsg}</div>}
+              <button className="btn btn-primary">Update Password</button>
+            </form>
+          )}
         </div>
       </div>
 

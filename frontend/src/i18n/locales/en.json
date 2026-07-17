@@ -189,5 +189,16 @@
     "deleted": "Deleted successfully",
     "updated": "Updated successfully",
     "created": "Created successfully"
+  },
+  "landing": {
+    "navFeatures": "Features",
+    "navDownload": "Download app",
+    "navAbout": "About us",
+    "navPricing": "Pricing",
+    "login": "Log in",
+    "getStarted": "Get started",
+    "alreadyHaveAccount": "I already have an account",
+    "logInLink": "Log in",
+    "signUpLink": "Sign up"
   }
 }

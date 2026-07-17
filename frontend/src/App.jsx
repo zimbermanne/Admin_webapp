@@ -3,8 +3,6 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 import { NavigationGuardProvider } from './hooks/useNavigationGuard.jsx'
 import { useApi } from './hooks/useApi.js'
-import { useTranslation } from 'react-i18next'
-import './i18n'
 import Sidebar, { NAV } from './components/Sidebar.jsx'
 import MobileTopBar from './components/MobileTopBar.jsx'
 import PageLoader from './components/PageLoader.jsx'
@@ -138,24 +136,10 @@ function PrivateRoutes() {
   )
 }
 
-function LanguageLoader() {
-  const { user } = useAuth()
-  const { i18n } = useTranslation()
-  
-  useEffect(() => {
-    if (user?.preferred_language) {
-      i18n.changeLanguage(user.preferred_language)
-    }
-  }, [user, i18n])
-  
-  return null
-}
-
 export default function App() {
   return (
     <AuthProvider>
       <NavigationGuardProvider>
-        <LanguageLoader />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/download" element={<Download />} />

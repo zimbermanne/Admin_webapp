@@ -2128,3 +2128,14 @@ label {
   justify-content: center;
   flex-shrink: 0;
 }
+
+.language-switcher {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dark);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}

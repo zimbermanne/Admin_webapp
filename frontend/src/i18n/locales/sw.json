@@ -189,5 +189,16 @@
     "deleted": "Imefutwa kwa mafanikio",
     "updated": "Imesasishwa kwa mafanikio",
     "created": "Imeundwa kwa mafanikio"
+  },
+  "landing": {
+    "navFeatures": "Vipengele",
+    "navDownload": "Pakua programu",
+    "navAbout": "Kuhusu sisi",
+    "navPricing": "Bei",
+    "login": "Ingia",
+    "getStarted": "Anza",
+    "alreadyHaveAccount": "Nina akaunti tayari",
+    "logInLink": "Ingia",
+    "signUpLink": "Jisajili"
   }
 }
