@@ -97,3 +97,17 @@ def delete_user(username: str, db: Session = Depends(get_db), admin: User = Depe
     db.delete(user); db.commit()
     log_activity_for_user(db, admin, "user_delete", f"Deleted user {username}")
     return {"detail": "User deleted"}
+
+
+@router.put("/me/language")
+def update_my_language(payload: dict, db: Session = Depends(get_db), 
+                      current_user: User = Depends(get_current_user)):
+    """Update current user's preferred language."""
+    language = payload.get("language", "en")
+    if language not in ["en", "fr", "pt", "sw"]:
+        raise HTTPException(400, "Invalid language code. Must be one of: en, fr, pt, sw")
+    
+    current_user.preferred_language = language
+    db.commit()
+    log_activity_for_user(db, current_user, "language_update", f"Updated language preference to {language}")
+    return {"detail": "Language preference updated", "language": language}

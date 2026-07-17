@@ -1,0 +1,179 @@
+{
+  "landing": {
+    "brand": {
+      "name": "Moneytracer"
+    },
+    "nav": {
+      "features": "Funcionalidades",
+      "download": "Baixar aplicativo",
+      "about": "Sobre nós",
+      "pricing": "Preços",
+      "login": "Entrar",
+      "getStarted": "Começar"
+    },
+    "hero": {
+      "title": "Dinheiro que entra, dinheiro que sai — sempre à vista.",
+      "subtitle": "Moneytracer é a ferramenta de contabilidade e finanças para pequenas empresas, grupos de poupança comunitários e gastos pessoais. Acompanhe vendas e estoque, gerencie as contribuições da sua chama, ou gerencie seu próprio orçamento — tudo de um painel simples.",
+      "trackBusiness": "Eu gerencio um negócio",
+      "trackCommunity": "Eu gerencio um grupo de poupança",
+      "trackPersonal": "Acompanho meus próprios gastos",
+      "setupBusiness": "Configurar meu negócio",
+      "setupCommunity": "Configurar meu grupo de poupança",
+      "setupPersonal": "Começar a acompanhar meus gastos",
+      "haveAccount": "Já tenho uma conta",
+      "downloadApp": "Baixar o aplicativo Android"
+    },
+    "features": {
+      "business": {
+        "title": "Tudo que uma pequena empresa precisa para acompanhar seu dinheiro",
+        "subtitle": "Do caixa ao balanço, Moneytracer mantém suas vendas, estoque e fluxo de caixa organizados sem planilhas."
+      },
+      "community": {
+        "title": "Construído para chamas, banco de mesa e rodas de dinheiro",
+        "subtitle": "Pare de acompanhar contribuições em um caderno. Moneytracer dá ao seu grupo um registro compartilhado e preciso que cada membro pode confiar."
+      },
+      "personal": {
+        "title": "Gaste com sabedoria, sem planilhas",
+        "subtitle": "Registre um gasto em segundos, veja o que é seguro gastar hoje, e construa melhores hábitos ao longo do tempo — do seu jeito, seja através de orçamentos, hábitos ou economizando com amigos."
+      },
+      "pos": {
+        "title": "Ponto de Venda",
+        "text": "Checkout rápido de múltiplos itens com validação de estoque em tempo real, construído para o balcão."
+      },
+      "inventory": {
+        "title": "Inventário",
+        "text": "Acompanhe níveis de estoque, importe produtos em lote e receba alertas de estoque baixo antes de acabar."
+      },
+      "invoices": {
+        "title": "Faturas & Orçamentos",
+        "text": "Envie faturas e orçamentos profissionais, e transforme orçamentos aceitos em vendas."
+      },
+      "debtors": {
+        "title": "Devedores & Credores",
+        "text": "Saiba quem lhe deve e a quem você deve, de um relance."
+      },
+      "reports": {
+        "title": "Relatórios",
+        "text": "Lucro e prejuízo, resumos financeiros e avaliação de inventário — sempre atualizados."
+      },
+      "activity": {
+        "title": "Logs de Atividade",
+        "text": "Rastreio completo de quem fez o quê, para que nada passe despercebido."
+      },
+      "members": {
+        "title": "Gestão de Membros",
+        "text": "Adicione membros, atribua co-registradores e dê aos membros seu próprio login somente leitura."
+      },
+      "contributions": {
+        "title": "Contribuições",
+        "text": "Registre a contribuição de poupança de cada membro e veja o total do grupo atualizar instantaneamente."
+      },
+      "payouts": {
+        "title": "Pagamentos",
+        "text": "Acompanhe pagamentos de roda de dinheiro ou dividendos de forma justa, com histórico completo por membro."
+      },
+      "loans": {
+        "title": "Empréstimos do Grupo",
+        "text": "Conceda empréstimos aos membros a partir das poupanças do grupo e acompanhe os reembolsos até o xelim."
+      },
+      "groupSummary": {
+        "title": "Resumo do Grupo",
+        "text": "Uma visão clara das poupanças totais, empréstimos ativos e saúde do grupo — para cada reunião."
+      },
+      "roles": {
+        "title": "Acesso por Função",
+        "text": "Administradores e registradores gerenciam entradas; membros podem sempre ver seus próprios registros."
+      },
+      "expenseLog": {
+        "title": "Registro de Despesas Rápido",
+        "text": "Adicione um gasto em segundos — valor, categoria, pronto. Sem planilhas, sem fricção."
+      },
+      "budgets": {
+        "title": "Orçamentos por Envelope",
+        "text": "Defina um orçamento mensal por categoria e saiba sempre o que é seguro gastar hoje."
+      },
+      "habits": {
+        "title": "Hábitos de Gasto",
+        "text": "Marque gastos como necessários ou impulsivos e veja seus hábitos melhorarem semana após semana."
+      },
+      "goals": {
+        "title": "Metas de Poupança",
+        "text": "Defina uma meta, acompanhe o progresso e mantenha-se motivado com uma linha de chegada visual clara."
+      },
+      "challenges": {
+        "title": "Desafios de Grupo",
+        "text": "Poupe junto com amigos em direção a uma meta compartilhada, com o progresso de todos à vista."
+      },
+      "insights": {
+        "title": "Insights Pessoais",
+        "text": "Veja para onde seu dinheiro realmente vai, e quais semanas ou categorias aumentam."
+      }
+    },
+    "accounts": {
+      "title": "Uma conta, de todas as formas que você precisa",
+      "subtitle": "Escolha uma conta de negócio, comunitária ou pessoal ao se inscrever — o painel, funções e relatórios se adaptam.",
+      "business": "Contas de Negócio",
+      "businessText": "PDV, inventário, faturação e relatórios para lojas, comerciantes e empresas de serviços de qualquer tamanho.",
+      "community": "Contas Comunitárias",
+      "communityText": "Contribuições, pagamentos e empréstimos de grupo para grupos de poupança e círculos financeiros comunitários.",
+      "personal": "Contas Pessoais",
+      "personalText": "Orçamentos, hábitos e metas de poupança para quem quer gastar mais sabiamente, sozinho ou com amigos."
+    },
+    "about": {
+      "title": "Construído para a forma como o dinheiro realmente circula",
+      "description1": "Moneytracer começou como uma ideia simples: as ferramentas que ajudam um dono de loja, um tesoureiro de grupo de poupança ou alguém fazendo o orçamento de seu próprio salário não deveriam exigir um diploma em contabilidade ou uma planilha. Seja você gerenciando uma loja de ferragens, as contribuições mensais de uma chama, ou apenas tentando ver para onde vai seu dinheiro, Moneytracer dá a você um registro claro e honesto em que pode confiar.",
+      "description2": "Nós o construímos primeiro para empresas e comunidades africanas — com suporte multi-moeda através do continente, fluxos de trabalho amigáveis offline, e preços que fazem sentido para uma pequena empresa, não uma empresa global. Sem jargão, sem recursos inflados que você nunca usará — apenas os números que importam, sempre atualizados.",
+      "countries": "Países africanos suportados",
+      "accountTypes": "Tipos de conta — negócio, comunitário, pessoal",
+      "dashboard": "Painel para tudo que você acompanha",
+      "simple": "Construído para ser simples",
+      "simpleText": "Nenhum treinamento necessário. Se você pode usar um telefone, pode gerenciar suas contas no Moneytracer desde o primeiro dia.",
+      "protected": "Seus dados, protegidos",
+      "protectedText": "Cada conta é isolada e protegida, com um log de atividade completo para que você sempre saiba quem mudou o quê.",
+      "africa": "Feito para a África",
+      "africaText": "Moedas locais, realidades locais — projetado em torno de como empresas e comunidades aqui realmente operam."
+    },
+    "cta": {
+      "title": "Pronto para colocar suas finanças em ordem?",
+      "subtitle": "Crie uma conta em minutos. Nenhuma planilha necessária.",
+      "button": "Começar gratuitamente",
+      "beta": "Beta",
+      "betaText": "Moneytracer é gratuito para usar durante os primeiros 90 dias enquanto estamos em desenvolvimento ativo. Durante esta fase você pode ver mudanças dia a dia, bugs ocasionais ou breves interrupções enquanto implantamos melhorias. Anunciaremos planos de preços com antecedência do fim do período beta."
+    },
+    "disclaimer": {
+      "title": "Aviso Legal",
+      "text": "Moneytracer está atualmente em desenvolvimento ativo (beta). O uso do Serviço está sujeito aos nossos Termos de Uso e Aviso Legal completos, que cobrem perda de dados, limitações de garantia, responsabilidade e resolução de disputas. Por favor, leia os termos completos antes de confiar no Serviço para registros financeiros de negócio, comunitários ou pessoais.",
+      "legalLink": "Ler os Termos de Uso & Aviso Legal completos →",
+      "languages": "Disponível em inglês, francês, português e kiswahili."
+    },
+    "footer": {
+      "copyright": "© {{year}} Moneytracer.",
+      "login": "Entrar",
+      "signup": "Inscrever-se"
+    },
+    "language": {
+      "select": "Idioma",
+      "en": "English",
+      "fr": "Français",
+      "pt": "Português",
+      "sw": "Kiswahili"
+    }
+  },
+  "settings": {
+    "title": "Configurações",
+    "profile": "Meu Perfil",
+    "username": "Nome de Usuário",
+    "fullName": "Nome Completo",
+    "role": "Função",
+    "logout": "Sair",
+    "changePassword": "Alterar Senha",
+    "currentPassword": "Senha Atual",
+    "newPassword": "Nova Senha",
+    "updatePassword": "Atualizar Senha",
+    "demoPassword": "A senha da conta demonstrativa não pode ser alterada.",
+    "businessSettings": "Configurações de Negócio",
+    "saveBusinessSettings": "Salvar Configurações de Negócio",
+    "languagePreference": "Preferência de Idioma",
+    "selectLanguage": "Selecione seu idioma preferido"
+  }
+}

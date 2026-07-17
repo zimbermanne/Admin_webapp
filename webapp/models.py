@@ -87,6 +87,7 @@ class User(Base):
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)  # nullable for superadmin
     is_active = Column(Boolean, default=True)
     is_demo = Column(Boolean, default=False)
+    preferred_language = Column(String(5), default="en")  # ISO 639-1 language code (en, fr, pt, sw)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     account = relationship("Account", back_populates="users")

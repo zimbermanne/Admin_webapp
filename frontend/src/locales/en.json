@@ -1,0 +1,179 @@
+{
+  "landing": {
+    "brand": {
+      "name": "Moneytracer"
+    },
+    "nav": {
+      "features": "Features",
+      "download": "Download app",
+      "about": "About us",
+      "pricing": "Pricing",
+      "login": "Log in",
+      "getStarted": "Get started"
+    },
+    "hero": {
+      "title": "Money in, money out — always in view.",
+      "subtitle": "Moneytracer is the bookkeeping and finance tool for small businesses, community savings groups, and personal spending. Track sales and stock, run your chama's contributions, or manage your own budget — all from one simple dashboard.",
+      "trackBusiness": "I run a business",
+      "trackCommunity": "I run a savings group",
+      "trackPersonal": "I track my own spending",
+      "setupBusiness": "Set up my business",
+      "setupCommunity": "Set up my savings group",
+      "setupPersonal": "Start tracking my spending",
+      "haveAccount": "I already have an account",
+      "downloadApp": "Download the Android app"
+    },
+    "features": {
+      "business": {
+        "title": "Everything a small business needs to track its money",
+        "subtitle": "From the till to the balance sheet, Moneytracer keeps your sales, stock, and cash flow organized without spreadsheets."
+      },
+      "community": {
+        "title": "Built for chamas, table banking, and merry-go-rounds",
+        "subtitle": "Stop tracking contributions in a notebook. Moneytracer gives your group a shared, accurate record every member can trust."
+      },
+      "personal": {
+        "title": "Spend wisely, without the spreadsheets",
+        "subtitle": "Log a spend in seconds, see what's safe to spend today, and build better habits over time — your way, whether that's budgets, habits, or saving with friends."
+      },
+      "pos": {
+        "title": "Point of Sale",
+        "text": "Fast multi-item checkout with live stock validation, built for the counter."
+      },
+      "inventory": {
+        "title": "Inventory",
+        "text": "Track stock levels, batch import products, and get low-stock alerts before you run out."
+      },
+      "invoices": {
+        "title": "Invoices & Quotations",
+        "text": "Send professional invoices and quotes, and turn accepted quotes into sales."
+      },
+      "debtors": {
+        "title": "Debtors & Creditors",
+        "text": "Know who owes you and who you owe, at a glance."
+      },
+      "reports": {
+        "title": "Reports",
+        "text": "Profit & loss, financial summaries, and inventory valuation — always current."
+      },
+      "activity": {
+        "title": "Activity Logs",
+        "text": "Full audit trail of who did what, so nothing slips through unnoticed."
+      },
+      "members": {
+        "title": "Member Management",
+        "text": "Add members, assign co-recorders, and give members their own read-only login."
+      },
+      "contributions": {
+        "title": "Contributions",
+        "text": "Record every member's savings contribution and see the group total update instantly."
+      },
+      "payouts": {
+        "title": "Payouts",
+        "text": "Track merry-go-round or dividend payouts fairly, with a full history per member."
+      },
+      "loans": {
+        "title": "Group Loans",
+        "text": "Issue loans to members from group savings and track repayments to the shilling."
+      },
+      "groupSummary": {
+        "title": "Group Summary",
+        "text": "One clear view of total savings, loans out, and group health — for every meeting."
+      },
+      "roles": {
+        "title": "Role-based Access",
+        "text": "Admins and recorders manage entries; members can always see their own records."
+      },
+      "expenseLog": {
+        "title": "Quick Expense Log",
+        "text": "Add a spend in seconds — amount, category, done. No spreadsheets, no friction."
+      },
+      "budgets": {
+        "title": "Envelope Budgets",
+        "text": "Set a monthly budget per category and always know what's safe to spend today."
+      },
+      "habits": {
+        "title": "Spending Habits",
+        "text": "Tag spends as necessary or impulse and watch your habits improve week over week."
+      },
+      "goals": {
+        "title": "Savings Goals",
+        "text": "Set a goal, track progress, and stay motivated with a clear visual finish line."
+      },
+      "challenges": {
+        "title": "Group Challenges",
+        "text": "Save together with friends toward a shared goal, with everyone's progress in view."
+      },
+      "insights": {
+        "title": "Personal Insights",
+        "text": "See where your money actually goes, and which weeks or categories creep up."
+      }
+    },
+    "accounts": {
+      "title": "One account, any way you need it",
+      "subtitle": "Choose a business, community, or personal account when you sign up — the dashboard, roles, and reports adapt to fit.",
+      "business": "Business accounts",
+      "businessText": "POS, inventory, invoicing, and reports for shops, traders, and service businesses of any size.",
+      "community": "Community accounts",
+      "communityText": "Contributions, payouts, and group loans for savings groups and community finance circles.",
+      "personal": "Personal accounts",
+      "personalText": "Budgets, habits, and savings goals for anyone who wants to spend more wisely, on their own or with friends."
+    },
+    "about": {
+      "title": "Built for the way money actually moves",
+      "description1": "Moneytracer started as a simple idea: the tools that help a shop owner, a savings group treasurer, or someone budgeting their own salary shouldn't require an accounting degree or a spreadsheet. Whether you're running a hardware store, managing a chama's monthly contributions, or just trying to see where your money goes, Moneytracer gives you one clear, honest record you can trust.",
+      "description2": "We built it for African businesses and communities first — with multi-currency support across the continent, offline-friendly workflows, and pricing that makes sense for a small business, not a global enterprise. No jargon, no bloated features you'll never use — just the numbers that matter, always up to date.",
+      "countries": "African countries supported",
+      "accountTypes": "Account types — business, community, personal",
+      "dashboard": "Dashboard for everything you track",
+      "simple": "Built to be simple",
+      "simpleText": "No training required. If you can use a phone, you can run your books on Moneytracer from day one.",
+      "protected": "Your data, protected",
+      "protectedText": "Every account is isolated and secured, with a full activity log so you always know who changed what.",
+      "africa": "Made for Africa",
+      "africaText": "Local currencies, local realities — designed around how businesses and communities here actually operate."
+    },
+    "cta": {
+      "title": "Ready to get your finances in order?",
+      "subtitle": "Create an account in minutes. No spreadsheet required.",
+      "button": "Get started free",
+      "beta": "Beta",
+      "betaText": "Moneytracer is free to use for the first 90 days while we're in active development. During this phase you may see day-to-day changes, occasional bugs, or brief downtime as we roll out improvements. We'll announce pricing plans well in advance of the beta period ending."
+    },
+    "disclaimer": {
+      "title": "Disclaimer",
+      "text": "Moneytracer is currently in active development (beta). Use of the Service is subject to our full Terms of Use and Disclaimer, which cover data loss, warranty limitations, liability, and dispute resolution. Please read the complete terms before relying on the Service for business, community, or personal financial records.",
+      "legalLink": "Read the full Terms of Use & Disclaimer →",
+      "languages": "Available in English, Français, Português, and Kiswahili."
+    },
+    "footer": {
+      "copyright": "© {{year}} Moneytracer.",
+      "login": "Log in",
+      "signup": "Sign up"
+    },
+    "language": {
+      "select": "Language",
+      "en": "English",
+      "fr": "Français",
+      "pt": "Português",
+      "sw": "Kiswahili"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "My Profile",
+    "username": "Username",
+    "fullName": "Full Name",
+    "role": "Role",
+    "logout": "Log Out",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "updatePassword": "Update Password",
+    "demoPassword": "The demo account's password can't be changed.",
+    "businessSettings": "Business Settings",
+    "saveBusinessSettings": "Save Business Settings",
+    "languagePreference": "Language Preference",
+    "selectLanguage": "Select your preferred language"
+  }
+}

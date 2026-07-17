@@ -1,0 +1,179 @@
+{
+  "landing": {
+    "brand": {
+      "name": "Moneytracer"
+    },
+    "nav": {
+      "features": "Fonctionnalités",
+      "download": "Télécharger l'application",
+      "about": "À propos",
+      "pricing": "Tarifs",
+      "login": "Connexion",
+      "getStarted": "Commencer"
+    },
+    "hero": {
+      "title": "Argent qui entre, argent qui sort — toujours en vue.",
+      "subtitle": "Moneytracer est l'outil de comptabilité et de finance pour les petites entreprises, les groupes d'épargne communautaires et les dépenses personnelles. Suivez vos ventes et vos stocks, gérez les contributions de votre chama, ou gérez votre propre budget — tout depuis un tableau de bord simple.",
+      "trackBusiness": "Je gère une entreprise",
+      "trackCommunity": "Je gère un groupe d'épargne",
+      "trackPersonal": "Je suis mes propres dépenses",
+      "setupBusiness": "Configurer mon entreprise",
+      "setupCommunity": "Configurer mon groupe d'épargne",
+      "setupPersonal": "Commencer à suivre mes dépenses",
+      "haveAccount": "J'ai déjà un compte",
+      "downloadApp": "Télécharger l'application Android"
+    },
+    "features": {
+      "business": {
+        "title": "Tout ce dont une petite entreprise a besoin pour suivre son argent",
+        "subtitle": "De la caisse enregistreuse au bilan, Moneytracer organise vos ventes, vos stocks et votre trésorerie sans feuilles de calcul."
+      },
+      "community": {
+        "title": "Conçu pour les chamas, la banque de table et les tontines",
+        "subtitle": "Arrêtez de suivre les contributions dans un carnet. Moneytracer donne à votre groupe un enregistrement partagé et précis que chaque membre peut confiance."
+      },
+      "personal": {
+        "title": "Dépensez judicieusement, sans feuilles de calcul",
+        "subtitle": "Enregistrez une dépense en quelques secondes, voyez ce qu'il est sûr de dépenser aujourd'hui, et développez de meilleures habitudes au fil du temps — à votre façon, que ce soit par des budgets, des habitudes ou des économies avec des amis."
+      },
+      "pos": {
+        "title": "Point de Vente",
+        "text": "Caisse rapide multi-articles avec validation de stock en temps réel, conçue pour le comptoir."
+      },
+      "inventory": {
+        "title": "Inventaire",
+        "text": "Suivez les niveaux de stock, importez des produits par lot et recevez des alertes de stock faible avant de manquer."
+      },
+      "invoices": {
+        "title": "Factures & Devis",
+        "text": "Envoyez des factures et devis professionnels, et transformez les devis acceptés en ventes."
+      },
+      "debtors": {
+        "title": "Débiteurs & Créanciers",
+        "text": "Sachez qui vous doit et à qui vous devez, d'un coup d'œil."
+      },
+      "reports": {
+        "title": "Rapports",
+        "text": "Profits et pertes, résumés financiers et valorisation des stocks — toujours à jour."
+      },
+      "activity": {
+        "title": "Journaux d'Activité",
+        "text": "Traçabilité complète de qui a fait quoi, pour que rien ne passe inaperçu."
+      },
+      "members": {
+        "title": "Gestion des Membres",
+        "text": "Ajoutez des membres, assignez des co-enregistreurs et donnez aux membres leur propre connexion en lecture seule."
+      },
+      "contributions": {
+        "title": "Contributions",
+        "text": "Enregistrez la contribution d'épargne de chaque membre et voyez le total du groupe se mettre à jour instantanément."
+      },
+      "payouts": {
+        "title": "Paiements",
+        "text": "Suivez équitablement les paiements de tontine ou de dividendes, avec un historique complet par membre."
+      },
+      "loans": {
+        "title": "Prêts de Groupe",
+        "text": "Accordez des prêts aux membres à partir des épargnes du groupe et suivez les remboursements au shilling près."
+      },
+      "groupSummary": {
+        "title": "Résumé du Groupe",
+        "text": "Une vue claire des épargnes totales, des prêts en cours et de la santé du groupe — pour chaque réunion."
+      },
+      "roles": {
+        "title": "Accès par Rôle",
+        "text": "Les administrateurs et les enregistreurs gèrent les entrées ; les membres peuvent toujours voir leurs propres enregistrements."
+      },
+      "expenseLog": {
+        "title": "Journal de Dépenses Rapide",
+        "text": "Ajoutez une dépense en quelques secondes — montant, catégorie, terminé. Pas de feuilles de calcul, pas de friction."
+      },
+      "budgets": {
+        "title": "Budgets par Enveloppe",
+        "text": "Définissez un budget mensuel par catégorie et sachez toujours ce qu'il est sûr de dépenser aujourd'hui."
+      },
+      "habits": {
+        "title": "Habitudes de Dépense",
+        "text": "Étiquetez les dépenses comme nécessaires ou impulsives et regardez vos habitudes s'améliorer semaine après semaine."
+      },
+      "goals": {
+        "title": "Objectifs d'Épargne",
+        "text": "Définissez un objectif, suivez les progrès et restez motivé avec une ligne d'arrivée visuelle claire."
+      },
+      "challenges": {
+        "title": "Défis de Groupe",
+        "text": "Épargnez ensemble avec des amis vers un objectif commun, avec les progrès de chacun en vue."
+      },
+      "insights": {
+        "title": "Aperçus Personnels",
+        "text": "Voyez où va vraiment votre argent, et quelles semaines ou catégories augmentent."
+      }
+    },
+    "accounts": {
+      "title": "Un compte, de toutes les manières dont vous en avez besoin",
+      "subtitle": "Choisissez un compte entreprise, communautaire ou personnel lors de votre inscription — le tableau de bord, les rôles et les rapports s'adaptent.",
+      "business": "Comptes Entreprise",
+      "businessText": "PDV, inventaire, facturation et rapports pour les boutiques, commerçants et entreprises de services de toute taille.",
+      "community": "Comptes Communautaires",
+      "communityText": "Contributions, paiements et prêts de groupe pour les groupes d'épargne et les cercles financiers communautaires.",
+      "personal": "Comptes Personnels",
+      "personalText": "Budgets, habitudes et objectifs d'épargne pour quiconque veut dépenser plus judicieusement, seul ou avec des amis."
+    },
+    "about": {
+      "title": "Conçu pour la façon dont l'argent circule réellement",
+      "description1": "Moneytracer a commencé comme une idée simple : les outils qui aident un propriétaire de boutique, un trésorier de groupe d'épargne ou quelqu'un établissant le budget de son propre salaire ne devraient pas nécessiter un diplôme en comptabilité ou une feuille de calcul. Que vous gériez une quincaillerie, les contributions mensuelles d'une chama, ou que vous essayiez simplement de voir où va votre argent, Moneytracer vous donne un enregistrement clair et honnête en lequel vous pouvez avoir confiance.",
+      "description2": "Nous l'avons conçu d'abord pour les entreprises et communautés africaines — avec support multi-devises sur le continent, flux de travail hors ligne compatibles, et tarification qui a du sens pour une petite entreprise, pas une entreprise mondiale. Pas de jargon, pas de fonctionnalités gonflées que vous n'utiliserez jamais — juste les chiffres qui comptent, toujours à jour.",
+      "countries": "Pays africains supportés",
+      "accountTypes": "Types de comptes — entreprise, communautaire, personnel",
+      "dashboard": "Tableau de bord pour tout ce que vous suivez",
+      "simple": "Conçu pour être simple",
+      "simpleText": "Aucune formation requise. Si vous pouvez utiliser un téléphone, vous pouvez gérer vos comptes sur Moneytracer dès le premier jour.",
+      "protected": "Vos données, protégées",
+      "protectedText": "Chaque compte est isolé et sécurisé, avec un journal d'activité complet pour que vous sachiez toujours qui a changé quoi.",
+      "africa": "Fait pour l'Afrique",
+      "africaText": "Devises locales, réalités locales — conçu autour de la façon dont les entreprises et communautés ici opèrent réellement."
+    },
+    "cta": {
+      "title": "Prêt à mettre vos finances en ordre ?",
+      "subtitle": "Créez un compte en quelques minutes. Pas de feuille de calcul requise.",
+      "button": "Commencer gratuitement",
+      "beta": "Bêta",
+      "betaText": "Moneytracer est gratuit à utiliser pendant les 90 premiers jours pendant que nous sommes en développement actif. Pendant cette phase, vous pouvez voir des changements au jour le jour, des bugs occasionnels ou de brèves interruptions alors que nous déployons des améliorations. Nous annoncerons les plans tarifaires bien avant la fin de la période bêta."
+    },
+    "disclaimer": {
+      "title": "Avertissement",
+      "text": "Moneytracer est actuellement en développement actif (bêta). L'utilisation du Service est soumise à nos Conditions d'Utilisation et Avertissement complets, qui couvrent la perte de données, les limitations de garantie, la responsabilité et la résolution des litiges. Veuillez lire les conditions complètes avant de vous fier au Service pour des enregistrements financiers d'entreprise, communautaires ou personnels.",
+      "legalLink": "Lire les Conditions d'Utilisation & Avertissement complets →",
+      "languages": "Disponible en anglais, français, portugais et kiswahili."
+    },
+    "footer": {
+      "copyright": "© {{year}} Moneytracer.",
+      "login": "Connexion",
+      "signup": "S'inscrire"
+    },
+    "language": {
+      "select": "Langue",
+      "en": "English",
+      "fr": "Français",
+      "pt": "Português",
+      "sw": "Kiswahili"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": "Mon Profil",
+    "username": "Nom d'utilisateur",
+    "fullName": "Nom Complet",
+    "role": "Rôle",
+    "logout": "Déconnexion",
+    "changePassword": "Changer le Mot de Passe",
+    "currentPassword": "Mot de Passe Actuel",
+    "newPassword": "Nouveau Mot de Passe",
+    "updatePassword": "Mettre à jour le Mot de Passe",
+    "demoPassword": "Le mot de passe du compte de démonstration ne peut pas être changé.",
+    "businessSettings": "Paramètres Entreprise",
+    "saveBusinessSettings": "Enregistrer les Paramètres Entreprise",
+    "languagePreference": "Préférence de Langue",
+    "selectLanguage": "Sélectionnez votre langue préférée"
+  }
+}

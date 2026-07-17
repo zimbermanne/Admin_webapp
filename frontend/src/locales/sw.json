@@ -1,0 +1,179 @@
+{
+  "landing": {
+    "brand": {
+      "name": "Moneytracer"
+    },
+    "nav": {
+      "features": "Vipengele",
+      "download": "Pakua programu",
+      "about": "Kuhusu sisi",
+      "pricing": "Bei",
+      "login": "Ingia",
+      "getStarted": "Anza"
+    },
+    "hero": {
+      "title": "Pesa inayoingia, pesa inayoondoka — daima inaonekana.",
+      "subtitle": "Moneytracer ni zana ya uhasibu na fedha kwa biashara ndogo, vikundi vya akiba ya jamii, na matumizi ya binafsi. Fuatilia mauzo na hisa, endeleza michangamo ya chama yako, au simamia bajeti yako mwenyewe — yote kutoka kwa dashibodi rahisi.",
+      "trackBusiness": "Ninaendesha biashara",
+      "trackCommunity": "Ninaendesha kikundi cha akiba",
+      "trackPersonal": "Ninafuatilia matumizi yangu mwenyewe",
+      "setupBusiness": "Weka biashara yangu",
+      "setupCommunity": "Weka kikundi changu cha akiba",
+      "setupPersonal": "Anza kufuatilia matumizi yangu",
+      "haveAccount": "Tayari nina akaunti",
+      "downloadApp": "Pakua programu ya Android"
+    },
+    "features": {
+      "business": {
+        "title": "Kila kitu biashara ndogo inahitaji kufuatilia pesa zake",
+        "subtitle": "Kutoka kwenye kasieri hadi kwenye balansi, Moneytracer inashikilia mauzo yako, hisa, na mtiririko wa pesa zilizopangwa bila kurasa za kuhesabu."
+      },
+      "community": {
+        "title": "Imejengwa kwa ajili ya chama, benki ya meza, na mizunguko ya pesa",
+        "subtitle": "Acha kufuatilia michangamo kwenye daftari. Moneytracer inakupa kikundi chako rekodi ya pamoja na sahihi ambayo kila mwanachama anaweza kuiamini."
+      },
+      "personal": {
+        "title": "Tumia kwa hekima, bila kurasa za kuhesabu",
+        "subtitle": "Rekodi matumizi kwa sekunde, ona ni nini salama kutumia leo, na jenga tabia bora zaidi kwa muda — kwa njia yako, iwe ni bajeti, tabia, au kuokota na marafiki."
+      },
+      "pos": {
+        "title": "Pointi ya Mauzo",
+        "text": "Malipo ya haraka ya vitu vingi na uthibitisho wa hisa wa moja kwa moja, iliyoundwa kwa ajili ya counter."
+      },
+      "inventory": {
+        "title": "Hisa",
+        "text": "Fuatilia viwango vya hisa, ingiza bidhaa kwa wingi, na pata tahadhari za hisa chini kabla ya kukwisha."
+      },
+      "invoices": {
+        "title": "Anuani & Makadirio",
+        "text": "Tuma anuani na makadirio ya kitaalamu, na geuza makadirio yaliyokubaliwa kuwa mauzo."
+      },
+      "debtors": {
+        "title": "Wadeni & Wakopeshaji",
+        "text": "Jua nani anakudai na nani unamkopa, kwa mara moja."
+      },
+      "reports": {
+        "title": "Ripoti",
+        "text": "Faida na hasara, muhtasari wa fedha, na thamani ya hisa — daima ya sasa."
+      },
+      "activity": {
+        "title": "Kumbukumbu za Shughuli",
+        "text": "Ufuatiliaji kamili wa nani alifanya nini, ili kitu kisipite bila kutambulika."
+      },
+      "members": {
+        "title": "Usimamizi wa Wanachama",
+        "text": "Ongeza wanachama, panga wakumbushaji pamoja, na pa wanachama wao wenyewe login ya kusoma tu."
+      },
+      "contributions": {
+        "title": "Michangamo",
+        "text": "Rekodi mchango wa akiba ya kila mwanachama na uone jumla ya kikundi inasasishwa papo hapo."
+      },
+      "payouts": {
+        "title": "Malipo",
+        "text": "Fuatilia malipo ya mizunguko ya pesa au dividends kwa haki, na historia kamili kwa kila mwanachama."
+      },
+      "loans": {
+        "title": "Mikopo ya Kikundi",
+        "text": "Toa mikopo kwa wanachama kutoka kwa akiba ya kikundi na fuatilia marejesho hadi shilingi."
+      },
+      "groupSummary": {
+        "title": "Muhtasari wa Kikundi",
+        "text": "Mwonekano wazi wa akiba jumla, mikopo inayoendelea, na afya ya kikundi — kwa kila mkutano."
+      },
+      "roles": {
+        "title": "Uingia kwa Jukumu",
+        "text": "Wakurugenzi na wakumbushaji wanashughulikia maingizo; wanachama wanaweza daima kuona rekodi zao wenyewe."
+      },
+      "expenseLog": {
+        "title": "Rekodi ya Matumizi ya Haraka",
+        "text": "Ongeza matumizi kwa sekunde — kiasi, kundi, tayari. Bila kurasa za kuhesabu, bila shida."
+      },
+      "budgets": {
+        "title": "Bajeti za Bahasha",
+        "text": "Weka bajeti ya kila mwezi kwa kundi na ujue daima ni nini salama kutumia leo."
+      },
+      "habits": {
+        "title": "Tabia za Matumizi",
+        "text": "Weka alama kwenye matumizi kama muhimu au ya mtego na uone tabia zako zilibokea wiki baada ya wiki."
+      },
+      "goals": {
+        "title": "Lengo la Akiba",
+        "text": "Weka lengo, fuatilia maendeleo, na kaa na motisha kwa mstari wa mwisho unaoweza kuonekana wazi."
+      },
+      "challenges": {
+        "title": "Mashindano ya Kikundi",
+        "text": "Okoa pamoja na marafiki kuelekea lengo la pamoja, na maendeleo ya kila mtu yakiwa wazi."
+      },
+      "insights": {
+        "title": "Maelezo ya Kibinafsi",
+        "text": "Ona pesa yako inakwenda kweli wapi, na wiki au vikundi gani vinavyoongezeka."
+      }
+    },
+    "accounts": {
+      "title": "Akaunti moja, kwa njia yoyote unayohitaji",
+      "subtitle": "Chagua akaunti ya biashara, ya jamii, ya binafsi unapojiandikisha — dashibodi, majukumu, na ripoti zinabadilika.",
+      "business": "Akaunti za Biashara",
+      "businessText": "PDV, hisa, anuani, na ripoti kwa maduka, wafanyabiashara, na biashara za huduma za ukubwa wowote.",
+      "community": "Akaunti za Jamii",
+      "communityText": "Michangamo, malipo, na mikopo ya kikundi kwa vikundi vya akiba na mizunguko ya fedha ya jamii.",
+      "personal": "Akaunti za Binafsi",
+      "personalText": "Bajeti, tabia, na malengo ya akiba kwa yeyote anayetaka kutumia kwa hekima zaidi, peke yake au na marafiki."
+    },
+    "about": {
+      "title": "Imejengwa kwa njia pesa zinavyotiririka kweli",
+      "description1": "Moneytracer ilianza kama wazo rahisi: zana zinazosaidia mmiliki wa duka, hazina wa kikundi cha akiba, au mtu anayeweka bajeti ya mshahara wake mwenyewe hazipaswi kuhitaji shahada ya uhasibu au kurasa za kuhesabu. Iwe ukiendesha duka la chuma, unashughulikia michangamo ya kila mwezi ya chama, au unajaribu tu kuona pesa yako inakwenda wapi, Moneytracer inakupa rekodi wazi na ya kweli unaweza kuiamini.",
+      "description2": "Tuliijenga kwanza kwa biashara na jamii za Kiafrika — na usaidizi wa sarasi nyingi kupitia bara, mtiririko wa kazi wa nje ya mtandao, na bei zinazofaa kwa biashara ndogo, si kampuni ya kimataifa. Bila maneno magumu, bila vipengele vilivyojaa utavuti utakaovitumia kamwe — tu namba zinazohusika, daima za sasa.",
+      "countries": "Nchi za Kiafrika zinasaidiwa",
+      "accountTypes": "Aina za akaunti — biashara, jamii, binafsi",
+      "dashboard": "Dashibodi kwa kila kitu unachofuatilia",
+      "simple": "Imejengwa kuwa rahisi",
+      "simpleText": "Hakuna mafunzo yanayohitajika. Ukipoweza kutumia simu, unaweza kusimamia akaunti zako kwenye Moneytracer tangu siku ya kwanza.",
+      "protected": "Data yako, iliyolindwa",
+      "protectedText": "Kila akaunti ni ya pekee na iliyolindwa, na kumbukumbu kamili ya shughuli ili ujue daima nani alibadilisha nini.",
+      "africa": "Imefanywa kwa Afrika",
+      "africaText": "Sarafi za ndani, ukweli wa ndani — iliyoundwa kulingana na jinsi biashara na jamii hapa zinavyofanya kazi kweli."
+    },
+    "cta": {
+      "title": "Uko tayari kuweka fedha zako katika mpango?",
+      "subtitle": "Unda akaunti kwa dakika. Hakuna kurasa za kuhesabu zinazohitajika.",
+      "button": "Anza bure",
+      "beta": "Beta",
+      "betaText": "Moneytracer ni bure kutumia kwa siku 90 za kwanza wakati tuko katika maendeleo ya amilifu. Wakati wa kipindi hiki unaweza kuona mabadiliko ya kila siku, hitilafu za mara kwa mara, au mapumziko mafupi wakati tunapoanzisha mageuzi. Tutatangaza mipango ya bei mapema kabla ya mwisho wa kipindi cha beta."
+    },
+    "disclaimer": {
+      "title": "Tahadhari",
+      "text": "Moneytracer kwa sasa iko katika maendeleo ya amilifu (beta). Matumizi ya Huduma yana chini ya Masharti ya Matumizi na Tahadhari yetu kamili, yanayofunua upotevu wa data, vikwazo vya dhamana, jukumu, na utatuzi wa migogoro. Tafadhali soma masharti kamili kabla ya kuaminika kwenye Huduma kwa rekodi za fedha za biashara, za jamii, au za binafsi.",
+      "legalLink": "Soma Masharti Kamili ya Matumizi & Tahadhari →",
+      "languages": "Inapatikana kwa Kiingereza, Kifaransa, Kireno, na Kiswahili."
+    },
+    "footer": {
+      "copyright": "© {{year}} Moneytracer.",
+      "login": "Ingia",
+      "signup": "Jiunge"
+    },
+    "language": {
+      "select": "Lugha",
+      "en": "English",
+      "fr": "Français",
+      "pt": "Português",
+      "sw": "Kiswahili"
+    }
+  },
+  "settings": {
+    "title": "Mipangilio",
+    "profile": "Wasifu Wangu",
+    "username": "Jina la Mtumiaji",
+    "fullName": "Jina Kamili",
+    "role": "Jukumu",
+    "logout": "Toka",
+    "changePassword": "Badilisha Nenosiri",
+    "currentPassword": "Nenosiri la Sasa",
+    "newPassword": "Nenosiri Mpya",
+    "updatePassword": "Sasisha Nenosiri",
+    "demoPassword": "Nenosiri la akaunti ya majaribio haliwezi kubadilishwa.",
+    "businessSettings": "Mipangilio ya Biashara",
+    "saveBusinessSettings": "Hifadhi Mipangilio ya Biashara",
+    "languagePreference": "Mapendeleo ya Lugha",
+    "selectLanguage": "Chagua lugha yako unayopenda"
+  }
+}

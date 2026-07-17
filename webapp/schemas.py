@@ -29,6 +29,7 @@ class UserOut(BaseModel):
     account_id: Optional[int] = None
     is_active: bool
     is_demo: bool
+    preferred_language: str = "en"
     created_at: datetime
 
 
@@ -37,6 +38,7 @@ class UserUpdate(BaseModel):
     email: Optional[str] = None
     role: Optional[RoleEnum] = None
     is_active: Optional[bool] = None
+    preferred_language: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
