@@ -23,6 +23,7 @@ class BusinessStructure(str, enum.Enum):
 class AccountType(str, enum.Enum):
     business = "business"
     community = "community"
+    personal = "personal"
 
 
 class Account(Base):
@@ -394,3 +395,85 @@ class GroupLoanRepayment(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     loan = relationship("GroupLoan", back_populates="repayments")
+
+
+# ---------------------------------------------------------------------------
+# Personal spending track (envelope budgets, habit tags, savings challenges).
+# Deliberately separate from business (Account/InventoryItem/Sale/...) and
+# community (SavingsGroup/GroupMember/...) models above, even though a
+# "spending challenge" is conceptually similar to a chama — they are kept as
+# distinct concepts/tables so personal and community data never mix.
+# ---------------------------------------------------------------------------
+
+class SpendingTag(str, enum.Enum):
+    necessary = "necessary"
+    impulse = "impulse"
+
+
+class SpendingCategory(Base):
+    __tablename__ = "spending_categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    name = Column(String(50), nullable=False)
+    icon = Column(String(20), default="")
+    monthly_budget = Column(Float, default=0)  # used in envelope mode, ignored in habit mode
+    is_default = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    transactions = relationship("SpendingTransaction", back_populates="category")
+
+
+class SpendingTransaction(Base):
+    __tablename__ = "spending_transactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    category_id = Column(Integer, ForeignKey("spending_categories.id"), nullable=False, index=True)
+    amount = Column(Float, nullable=False)
+    note = Column(String(255), default="")
+    tag = Column(Enum(SpendingTag), nullable=True)  # only set in habit mode
+    spent_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    category = relationship("SpendingCategory", back_populates="transactions")
+
+
+class SpendingGroup(Base):
+    """A personal savings challenge shared between friends/family.
+    Distinct from the community-track SavingsGroup (chama/table-banking)."""
+    __tablename__ = "spending_groups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    goal_amount = Column(Float, default=0)
+    target_date = Column(DateTime, nullable=True)
+    invite_code = Column(String(20), unique=True, index=True)
+    created_by_account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    members = relationship("SpendingGroupMember", back_populates="group", cascade="all, delete-orphan")
+    contributions = relationship("SpendingGroupContribution", back_populates="group", cascade="all, delete-orphan")
+
+
+class SpendingGroupMember(Base):
+    __tablename__ = "spending_group_members"
+
+    id = Column(Integer, primary_key=True, index=True)
+    group_id = Column(Integer, ForeignKey("spending_groups.id"), nullable=False, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    joined_at = Column(DateTime, default=datetime.utcnow)
+
+    group = relationship("SpendingGroup", back_populates="members")
+
+
+class SpendingGroupContribution(Base):
+    __tablename__ = "spending_group_contributions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    group_id = Column(Integer, ForeignKey("spending_groups.id"), nullable=False, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    amount = Column(Float, default=0)
+    contributed_at = Column(DateTime, default=datetime.utcnow)
+
+    group = relationship("SpendingGroup", back_populates="contributions")
+

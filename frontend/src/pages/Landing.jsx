@@ -19,6 +19,18 @@ const COMMUNITY_FEATURES = [
   { icon: '🔐', title: 'Role-based Access', text: 'Admins and recorders manage entries; members can always see their own records.' },
 ]
 
+<<<<<<< HEAD
+=======
+const PERSONAL_FEATURES = [
+  { icon: '💸', title: 'Quick Expense Log', text: 'Add a spend in seconds — amount, category, done. No spreadsheets, no friction.' },
+  { icon: '🧮', title: 'Envelope Budgets', text: 'Set a monthly budget per category and always know what\'s safe to spend today.' },
+  { icon: '🔁', title: 'Spending Habits', text: 'Tag spends as necessary or impulse and watch your habits improve week over week.' },
+  { icon: '🎯', title: 'Savings Goals', text: 'Set a goal, track progress, and stay motivated with a clear visual finish line.' },
+  { icon: '🧑‍🤝‍🧑', title: 'Group Challenges', text: 'Save together with friends toward a shared goal, with everyone\'s progress in view.' },
+  { icon: '📉', title: 'Personal Insights', text: 'See where your money actually goes, and which weeks or categories creep up.' },
+]
+
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
 function FeatureGrid({ features }) {
   return (
     <div className="landing-grid">
@@ -58,9 +70,16 @@ export default function Landing() {
         <div className="landing-hero-inner">
           <h1>Money in, money out — always in view.</h1>
           <p className="landing-hero-sub">
+<<<<<<< HEAD
             Moneytracer is the bookkeeping and finance tool for small businesses and
             community savings groups. Track sales, stock, and expenses, or run your
             chama's contributions and loans — all from one simple dashboard.
+=======
+            Moneytracer is the bookkeeping and finance tool for small businesses,
+            community savings groups, and personal spending. Track sales and stock,
+            run your chama's contributions, or manage your own budget — all from one
+            simple dashboard.
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
           </p>
 
           <div className="landing-track-switch">
@@ -76,18 +95,37 @@ export default function Landing() {
             >
               I run a savings group
             </button>
+<<<<<<< HEAD
+=======
+            <button
+              className={track === 'personal' ? 'active' : ''}
+              onClick={() => setTrack('personal')}
+            >
+              I track my own spending
+            </button>
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
           </div>
 
           <div className="landing-hero-actions">
             <Link to="/register" className="landing-btn-primary">
+<<<<<<< HEAD
               {track === 'business' ? 'Set up my business' : 'Set up my savings group'}
+=======
+              {track === 'business' && 'Set up my business'}
+              {track === 'community' && 'Set up my savings group'}
+              {track === 'personal' && 'Start tracking my spending'}
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
             </Link>
             <Link to="/login" className="landing-btn-secondary">I already have an account</Link>
           </div>
         </div>
       </section>
 
+<<<<<<< HEAD
       {track === 'business' ? (
+=======
+      {track === 'business' && (
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
         <section id="features" className="landing-section">
           <h2>Everything a small business needs to track its money</h2>
           <p className="landing-section-sub">
@@ -96,7 +134,13 @@ export default function Landing() {
           </p>
           <FeatureGrid features={BUSINESS_FEATURES} />
         </section>
+<<<<<<< HEAD
       ) : (
+=======
+      )}
+
+      {track === 'community' && (
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
         <section id="community" className="landing-section">
           <h2>Built for chamas, table banking, and merry-go-rounds</h2>
           <p className="landing-section-sub">
@@ -107,6 +151,7 @@ export default function Landing() {
         </section>
       )}
 
+<<<<<<< HEAD
       <section className="landing-section landing-section-alt">
         <h2>One account, either way</h2>
         <p className="landing-section-sub">
@@ -114,6 +159,27 @@ export default function Landing() {
           dashboard, roles, and reports adapt to fit.
         </p>
         <div className="landing-grid landing-grid-two">
+=======
+      {track === 'personal' && (
+        <section id="personal" className="landing-section">
+          <h2>Spend wisely, without the spreadsheets</h2>
+          <p className="landing-section-sub">
+            Log a spend in seconds, see what's safe to spend today, and build better
+            habits over time — your way, whether that's budgets, habits, or saving
+            with friends.
+          </p>
+          <FeatureGrid features={PERSONAL_FEATURES} />
+        </section>
+      )}
+
+      <section className="landing-section landing-section-alt">
+        <h2>One account, any way you need it</h2>
+        <p className="landing-section-sub">
+          Choose a business, community, or personal account when you sign up — the
+          dashboard, roles, and reports adapt to fit.
+        </p>
+        <div className="landing-grid landing-grid-three">
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
           <div className="landing-feature-card">
             <div className="landing-feature-icon">🏪</div>
             <div className="landing-feature-title">Business accounts</div>
@@ -130,6 +196,17 @@ export default function Landing() {
               finance circles.
             </div>
           </div>
+<<<<<<< HEAD
+=======
+          <div className="landing-feature-card">
+            <div className="landing-feature-icon">👛</div>
+            <div className="landing-feature-title">Personal accounts</div>
+            <div className="landing-feature-text">
+              Budgets, habits, and savings goals for anyone who wants to spend more
+              wisely, on their own or with friends.
+            </div>
+          </div>
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
         </div>
       </section>
 

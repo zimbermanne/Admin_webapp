@@ -1129,6 +1129,7 @@ label {
 }
 
 .landing-hero {
+<<<<<<< HEAD
   position: relative;
   padding: 96px 24px 64px;
   text-align: center;
@@ -1139,13 +1140,20 @@ label {
   background-position: center;
   background-repeat: no-repeat;
   color: #fff;
+=======
+  padding: 96px 24px 64px;
+  text-align: center;
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
 }
 
 .landing-hero-inner {
   max-width: 720px;
   margin: 0 auto;
+<<<<<<< HEAD
   position: relative;
   z-index: 1;
+=======
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
 }
 
 .landing-hero h1 {
@@ -1153,12 +1161,19 @@ label {
   font-size: clamp(2rem, 5vw, var(--text-3xl));
   line-height: var(--leading-tight);
   margin: 0 0 20px;
+<<<<<<< HEAD
   color: #fff;
+=======
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
 }
 
 .landing-hero-sub {
   font-size: var(--text-md);
+<<<<<<< HEAD
   color: rgba(255, 255, 255, 0.85);
+=======
+  color: var(--text-muted);
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
   line-height: var(--leading-loose);
   margin: 0 auto 32px;
   max-width: 560px;
@@ -1212,7 +1227,11 @@ label {
 }
 
 .landing-btn-secondary {
+<<<<<<< HEAD
   color: #fff;
+=======
+  color: var(--text-dark);
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
   text-decoration: none;
   font-weight: 600;
   padding: 12px 24px;
@@ -1262,6 +1281,15 @@ label {
   margin: 0 auto;
 }
 
+<<<<<<< HEAD
+=======
+.landing-grid-three {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
 .landing-feature-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1327,4 +1355,11 @@ label {
   .landing-grid-two {
     grid-template-columns: 1fr;
   }
+<<<<<<< HEAD
+=======
+
+  .landing-grid-three {
+    grid-template-columns: 1fr;
+  }
+>>>>>>> b6fd16de9e989850adace1f71efc5fe14448477d
 }
