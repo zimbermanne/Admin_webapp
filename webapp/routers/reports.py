@@ -6,10 +6,14 @@ from dateutil.relativedelta import relativedelta
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Sale, Purchase, Expense, Debtor, Creditor, InventoryItem, User, LedgerStatus, RoleEnum
+from models import (
+    Sale, Purchase, Expense, Debtor, Creditor, InventoryItem, User, LedgerStatus, RoleEnum,
+    ChartOfAccount, JournalEntry, JournalLine,
+)
 from schemas import DebtorCreate, CreditorCreate, LedgerOut
 from auth import get_current_user
 from activity import log_activity, log_activity_for_user
@@ -353,6 +357,122 @@ def add_creditor(payload: CreditorCreate, db: Session = Depends(get_db),
     return creditor
 
 
+def _ledger_account_balances(db: Session, account_id, start: datetime = None, end: datetime = None):
+    """Aggregate JournalLine debit/credit totals per ChartOfAccount, scoped to
+    a business account and optional date range. This is the single place that
+    reads the ledger for both Trial Balance and Balance Sheet, so the two
+    reports can never disagree with each other about what the books say."""
+    query = (
+        db.query(
+            ChartOfAccount.id,
+            ChartOfAccount.code,
+            ChartOfAccount.name,
+            ChartOfAccount.account_type,
+            func.coalesce(func.sum(JournalLine.debit), 0.0).label("total_debit"),
+            func.coalesce(func.sum(JournalLine.credit), 0.0).label("total_credit"),
+        )
+        .join(JournalLine, JournalLine.chart_account_id == ChartOfAccount.id)
+        .join(JournalEntry, JournalEntry.id == JournalLine.journal_entry_id)
+    )
+    if account_id is not None:
+        query = query.filter(ChartOfAccount.account_id == account_id)
+    if start is not None:
+        query = query.filter(JournalEntry.date >= start)
+    if end is not None:
+        query = query.filter(JournalEntry.date <= end)
+
+    query = query.group_by(ChartOfAccount.id, ChartOfAccount.code, ChartOfAccount.name, ChartOfAccount.account_type)
+
+    rows = []
+    for acc_id, code, name, acc_type, total_debit, total_credit in query.all():
+        total_debit = round(total_debit or 0.0, 2)
+        total_credit = round(total_credit or 0.0, 2)
+        # Normal balance side depends on account type: assets/expenses are
+        # debit-normal, liabilities/equity/revenue are credit-normal.
+        type_value = acc_type.value if hasattr(acc_type, "value") else acc_type
+        if type_value in ("asset", "expense"):
+            balance = round(total_debit - total_credit, 2)
+        else:
+            balance = round(total_credit - total_debit, 2)
+        rows.append({
+            "account_id": acc_id,
+            "code": code,
+            "name": name,
+            "type": type_value,
+            "total_debit": total_debit,
+            "total_credit": total_credit,
+            "balance": balance,
+        })
+    rows.sort(key=lambda r: r["code"])
+    return rows
+
+
+@router.get("/trial-balance")
+def trial_balance(start: Optional[date] = None, end: Optional[date] = None,
+                   db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Every posted account with its raw debit/credit totals, plus a balance
+    check confirming total debits equal total credits across the ledger —
+    the fundamental double-entry invariant post_journal_entry is supposed to
+    guarantee at write time. If this ever comes back False, something bypassed
+    the ledger service and wrote unbalanced entries directly."""
+    account_id = get_account_filter(current_user)
+    start_dt = datetime.combine(start, datetime.min.time()) if start else None
+    end_dt = datetime.combine(end, datetime.max.time()) if end else None
+
+    accounts = _ledger_account_balances(db, account_id, start_dt, end_dt)
+    total_debits = round(sum(a["total_debit"] for a in accounts), 2)
+    total_credits = round(sum(a["total_credit"] for a in accounts), 2)
+
+    return {
+        "start": str(start) if start else None,
+        "end": str(end) if end else None,
+        "accounts": accounts,
+        "total_debits": total_debits,
+        "total_credits": total_credits,
+        "balanced": abs(total_debits - total_credits) < 0.01,
+    }
+
+
+@router.get("/balance-sheet")
+def balance_sheet(as_of: Optional[date] = None, db: Session = Depends(get_db),
+                   current_user: User = Depends(get_current_user)):
+    """Assets, Liabilities, and Equity as of a given date (defaults to now),
+    derived directly from posted JournalLine balances — not from Sale/Purchase/
+    Expense tables — so this always reflects what's actually in the ledger.
+    Current-period net income (revenue - expenses) is rolled into Equity as
+    'Retained Earnings (current period)' since there's no fiscal closing
+    process yet to move it there permanently."""
+    account_id = get_account_filter(current_user)
+    end_dt = datetime.combine(as_of, datetime.max.time()) if as_of else None
+
+    accounts = _ledger_account_balances(db, account_id, None, end_dt)
+
+    assets = [a for a in accounts if a["type"] == "asset"]
+    liabilities = [a for a in accounts if a["type"] == "liability"]
+    equity = [a for a in accounts if a["type"] == "equity"]
+    revenue = [a for a in accounts if a["type"] == "revenue"]
+    expense = [a for a in accounts if a["type"] == "expense"]
+
+    total_assets = round(sum(a["balance"] for a in assets), 2)
+    total_liabilities = round(sum(a["balance"] for a in liabilities), 2)
+    stated_equity = round(sum(a["balance"] for a in equity), 2)
+    net_income = round(sum(a["balance"] for a in revenue) - sum(a["balance"] for a in expense), 2)
+    total_equity = round(stated_equity + net_income, 2)
+
+    return {
+        "as_of": str(as_of) if as_of else None,
+        "assets": assets,
+        "total_assets": total_assets,
+        "liabilities": liabilities,
+        "total_liabilities": total_liabilities,
+        "equity": equity,
+        "retained_earnings_current_period": net_income,
+        "total_equity": total_equity,
+        "total_liabilities_and_equity": round(total_liabilities + total_equity, 2),
+        "balanced": abs(total_assets - (total_liabilities + total_equity)) < 0.01,
+    }
+
+
 _EXPORTABLE_REPORTS = {
     "financial-summary": "Financial Summary",
     "profit-loss": "Profit and Loss",
@@ -360,6 +480,8 @@ _EXPORTABLE_REPORTS = {
     "debtors": "Debtors Report",
     "creditors": "Creditors Report",
     "inventory-valuation": "Inventory Valuation",
+    "trial-balance": "Trial Balance",
+    "balance-sheet": "Balance Sheet",
 }
 
 
@@ -383,8 +505,12 @@ def export_report(report_type: str, start: Optional[date] = None, end: Optional[
         data = debtors_report(db, current_user)
     elif report_type == "creditors":
         data = creditors_report(db, current_user)
-    else:
+    elif report_type == "inventory-valuation":
         data = inventory_valuation(db, current_user)
+    elif report_type == "trial-balance":
+        data = trial_balance(start, end, db, current_user)
+    else:
+        data = balance_sheet(end, db, current_user)
 
     title = _EXPORTABLE_REPORTS[report_type]
     buf = _dict_to_excel(data, title)
