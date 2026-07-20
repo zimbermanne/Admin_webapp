@@ -791,3 +791,26 @@ class JournalLine(Base):
     journal_entry = relationship("JournalEntry", back_populates="lines")
     account = relationship("ChartOfAccount", back_populates="journal_lines")
 
+
+class FiscalPeriodStatus(str, enum.Enum):
+    open = "open"
+    closed = "closed"
+
+
+class FiscalPeriod(Base):
+    """A named accounting period (e.g. a month or quarter) that can be
+    closed to lock the ledger against further posts/edits inside its date
+    range — see ledger.get_locked_period() and
+    routers/ledgers.py's close/reopen endpoints."""
+    __tablename__ = "fiscal_periods"
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    name = Column(String(80), nullable=False)
+    start_date = Column(DateTime, nullable=False, index=True)
+    end_date = Column(DateTime, nullable=False, index=True)
+    status = Column(Enum(FiscalPeriodStatus), default=FiscalPeriodStatus.open, index=True)
+    closed_by = Column(String(80), nullable=True)
+    closed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
