@@ -37,6 +37,9 @@ _MIGRATIONS = {
         # Pan-African Reference App: country and revenue authority references.
         ("country_id", "INTEGER", None),
         ("revenue_authority_id", "INTEGER", None),
+        # Yearly SaaS subscription (M-Pesa STK Push) — see routers/payments.py.
+        ("plan", "VARCHAR(20)", "'free'"),
+        ("subscription_expires_at", "TIMESTAMP", None),
     ],
 }
 
@@ -63,6 +66,16 @@ _SCHEMA_MIGRATIONS = {
         # deliberately separate from invoice_no, which is sequential and easy
         # to guess, so scanning a QR can't be used to enumerate invoices.
         ("verify_token", "VARCHAR(40)", None),
+        # Set once this invoice has generated its Sale records (on first
+        # transition to "paid"). Existing invoices default to false, which is
+        # correct even for ones that were already paid before this feature
+        # shipped — see the backfill note in update_status().
+        ("converted_to_sale", "BOOLEAN", "false"),
+    ],
+    ("business", "invoice_items"): [
+        # Optional link to inventory so a paid invoice can decrement stock
+        # and record a proper Sale against the item it actually sold.
+        ("item_id", "INTEGER", None),
     ],
 }
 

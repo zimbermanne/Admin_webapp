@@ -135,6 +135,14 @@ async def get_current_user(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Account is suspended. Please contact support."
             )
+        # Lazy downgrade: no scheduled job runs to sweep expired subscriptions,
+        # so the check happens here on the account's next request instead. A
+        # lapsed paid account drops to "free" (fewer features elsewhere in the
+        # app gate on this) rather than being locked out like is_suspended.
+        if account and account.plan == "paid" and account.subscription_expires_at \
+                and account.subscription_expires_at < datetime.utcnow():
+            account.plan = "free"
+            db.commit()
     
     return user
 

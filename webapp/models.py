@@ -56,6 +56,13 @@ class Account(Base):
     is_active = Column(Boolean, default=True)
     is_suspended = Column(Boolean, default=False)
     onboarding_completed = Column(Boolean, default=False)
+    # SaaS subscription (separate from is_suspended, which is an admin/manual
+    # lock). "plan" gates paid-tier features elsewhere in the app; when a paid
+    # subscription lapses the account is lazily downgraded to free rather than
+    # suspended — see auth.get_current_user — so the user keeps read access
+    # on the free tier instead of being locked out entirely.
+    plan = Column(String(20), default="free")  # "free" | "paid"
+    subscription_expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     users = relationship("User", back_populates="account")
@@ -63,10 +70,53 @@ class Account(Base):
     revenue_authority = relationship("RevenueAuthority")
 
 
+class PaymentStatus(str, enum.Enum):
+    pending = "pending"
+    success = "success"
+    failed = "failed"
+
+
+class SubscriptionPayment(Base):
+    """One row per STK Push attempt for the yearly SaaS subscription fee.
+    Lives in the default schema (like Account/User) since it's billing for
+    platform access itself, not a business-track record."""
+    __tablename__ = "subscription_payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    phone = Column(String(20), nullable=False)  # normalized 2547XXXXXXXX
+    amount = Column(Float, default=20000)  # TZS, yearly subscription fee
+    # Safaricom's identifiers for this push — CheckoutRequestID is what the
+    # callback uses to tell us which attempt it's reporting on.
+    merchant_request_id = Column(String(60), nullable=True)
+    checkout_request_id = Column(String(60), unique=True, index=True, nullable=True)
+    status = Column(Enum(PaymentStatus), default=PaymentStatus.pending, index=True)
+    mpesa_receipt = Column(String(40), default="")
+    result_desc = Column(String(255), default="")
+    initiated_by = Column(String(80), default="")
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    account = relationship("Account")
+
+
 class PaymentMode(str, enum.Enum):
     cash = "cash"
     credit = "credit"
     mobile_money = "mobile_money"
+
+
+class PurchaseOrderStatus(str, enum.Enum):
+    # Deliberately not reusing DocumentStatus.paid — a PO's meaningful event
+    # is goods arriving (which is what should move stock and post the
+    # ledger), not payment, since many purchases are made on credit and
+    # settled separately later. Defined here (rather than next to
+    # DocumentStatus further down) because PurchaseOrder itself is defined
+    # right after Purchase, well before DocumentStatus's usual spot.
+    draft = "draft"
+    sent = "sent"
+    received = "received"
+    cancelled = "cancelled"
 
 
 class LedgerStatus(str, enum.Enum):
@@ -160,6 +210,63 @@ class Purchase(Base):
     item = relationship("InventoryItem")
 
 
+class PurchaseOrder(Base):
+    """A document sent to a supplier requesting goods — distinct from
+    Purchase (an actual received/paid transaction). A PurchaseOrder only
+    turns into real Purchase rows (and only then affects stock and the
+    ledger) once it's marked 'received' — mirrors how Invoice only becomes
+    a Sale once marked 'paid'."""
+    __tablename__ = "purchase_orders"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    po_no = Column(String(30), default="")
+    supplier_name = Column(String(150), default="")
+    supplier_phone = Column(String(50), default="")
+    supplier_address = Column(String(255), default="")
+    supplier_tin = Column(String(50), default="")
+    supplier_vrn = Column(String(50), default="")
+    expected_date = Column(DateTime, nullable=True)
+    subtotal = Column(Float, default=0)
+    tax_rate = Column(Float, default=0)
+    tax_amount = Column(Float, default=0)
+    discount = Column(Float, default=0)
+    total = Column(Float, default=0)
+    notes = Column(String(500), default="")
+    status = Column(Enum(PurchaseOrderStatus), default=PurchaseOrderStatus.draft)
+    # Set once this PO has generated its Purchase rows (on first transition
+    # to "received"). Prevents double-booking stock if received is set twice.
+    converted_to_purchase = Column(Boolean, default=False)
+    created_by = Column(String(80), default="")
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    items = relationship("PurchaseOrderItem", back_populates="po", cascade="all, delete-orphan")
+
+
+class PurchaseOrderItem(Base):
+    __tablename__ = "purchase_order_items"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    po_id = Column(Integer, ForeignKey(fk_ref("purchase_orders.id", SCHEMA_BUSINESS)), nullable=False)
+    # Optional link to an existing inventory item, picked from the dropdown.
+    # Null means a freehand line — something new you're stocking for the
+    # first time, or a non-inventory line (freight, customs, etc.).
+    item_id = Column(Integer, ForeignKey(fk_ref("inventory_items.id", SCHEMA_BUSINESS)), nullable=True)
+    description = Column(String(255), default="")
+    quantity = Column(Float, default=1)
+    # Named unit_price (not unit_cost) so this row is interchangeable with
+    # InvoiceItem/DocumentLineOut for the shared PDF renderer — semantically
+    # this is what you're paying the supplier per unit, i.e. your cost.
+    unit_price = Column(Float, default=0)
+    total = Column(Float, default=0)
+
+    po = relationship("PurchaseOrder", back_populates="items")
+    item = relationship("InventoryItem")
+
+
 class Expense(Base):
     __tablename__ = "expenses"
     __table_args__ = schema_args(SCHEMA_BUSINESS)
@@ -233,6 +340,10 @@ class Invoice(Base):
     total = Column(Float, default=0)
     notes = Column(String(500), default="")
     status = Column(Enum(DocumentStatus), default=DocumentStatus.sent)
+    # True once this invoice has generated Sale records (happens exactly once,
+    # the moment it's marked paid — see routers/invoices.py update_status).
+    # Prevents double-booking sales if the status is toggled paid more than once.
+    converted_to_sale = Column(Boolean, default=False)
     created_by = Column(String(80), default="")
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
@@ -246,12 +357,17 @@ class InvoiceItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
     invoice_id = Column(Integer, ForeignKey(fk_ref("invoices.id", SCHEMA_BUSINESS)), nullable=False)
+    # Optional link to a tracked inventory item. Null means this line was
+    # typed in freehand for something not carried in inventory (a service
+    # fee, a one-off item, etc.) — those lines never touch stock levels.
+    item_id = Column(Integer, ForeignKey(fk_ref("inventory_items.id", SCHEMA_BUSINESS)), nullable=True)
     description = Column(String(255), default="")
     quantity = Column(Float, default=1)
     unit_price = Column(Float, default=0)
     total = Column(Float, default=0)
 
     invoice = relationship("Invoice", back_populates="items")
+    item = relationship("InventoryItem")
 
 
 class Quotation(Base):
@@ -656,13 +772,9 @@ class JournalEntry(Base):
     reference = Column(String(100), nullable=True)  # e.g., invoice number, receipt number
     created_by = Column(String(80), nullable=True)
     is_locked = Column(Boolean, default=False)  # Prevents edits once posted/closed period
-    is_reversal = Column(Boolean, default=False)  # True if this entry itself is a reversal
-    reversed_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True)  # set on the reversal, pointing back at the original
-    is_voided = Column(Boolean, default=False)  # True on the original once a reversal has been posted against it
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     lines = relationship("JournalLine", back_populates="journal_entry", cascade="all, delete-orphan")
-    reversed_entry = relationship("JournalEntry", remote_side=[id], backref="reversals")
 
 
 class JournalLine(Base):
@@ -678,30 +790,4 @@ class JournalLine(Base):
 
     journal_entry = relationship("JournalEntry", back_populates="lines")
     account = relationship("ChartOfAccount", back_populates="journal_lines")
-
-
-class FiscalPeriodStatus(str, enum.Enum):
-    open = "open"
-    closed = "closed"
-
-
-class FiscalPeriod(Base):
-    """A closable accounting period (e.g. a calendar month). Once closed, no
-    journal entry may be posted with a date inside [start_date, end_date] —
-    corrections must go through a reversing entry in an open period instead."""
-    __tablename__ = "fiscal_periods"
-
-    id = Column(Integer, primary_key=True, index=True)
-    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
-    name = Column(String(80), nullable=False)  # e.g. "2026-06" or "Q2 2026"
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=False)
-    status = Column(Enum(FiscalPeriodStatus), default=FiscalPeriodStatus.open, index=True)
-    closed_by = Column(String(80), nullable=True)
-    closed_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    __table_args__ = (
-        UniqueConstraint("account_id", "name", name="uq_fiscal_period_account_name"),
-    )
 

@@ -11,20 +11,13 @@ from database import Base, engine, ensure_schemas
 import models  # noqa: F401 ensures models are registered before create_all
 from migrate import run_migrations
 from rate_limit import limiter
-from routers import auth, inventory, sales, purchases, expenses, ledgers, reports, users, activity, backup, agent, invoices, quotations, customers, accounts, reminders, community, personal, public, reference
-from scheduler import start_scheduler
+from routers import auth, inventory, sales, purchases, expenses, ledgers, reports, users, activity, backup, agent, invoices, quotations, customers, accounts, reminders, community, personal, public, reference, purchase_orders, payments
 
 ensure_schemas(engine)
 Base.metadata.create_all(bind=engine)
 run_migrations(engine)
 
 app = FastAPI(title="Moneytracer API", version="2.5.0")
-
-
-@app.on_event("startup")
-def _start_background_jobs():
-    # Runs in-process — see scheduler.py docstring for the multi-instance caveat.
-    start_scheduler()
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -60,6 +53,7 @@ app.include_router(auth.router)
 app.include_router(inventory.router)
 app.include_router(sales.router)
 app.include_router(purchases.router)
+app.include_router(purchase_orders.router)
 app.include_router(expenses.router)
 app.include_router(ledgers.router)
 app.include_router(reports.router)
@@ -76,6 +70,7 @@ app.include_router(community.router)
 app.include_router(personal.router)
 app.include_router(public.router)
 app.include_router(reference.router)
+app.include_router(payments.router)
 
 
 @app.get("/api/health")
