@@ -1,11 +1,12 @@
 from typing import List
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Debtor, Creditor, User, LedgerStatus, RoleEnum
-from schemas import DebtorCreate, CreditorCreate, LedgerOut, PaymentRequest
-from auth import get_current_user
+from models import Debtor, Creditor, User, LedgerStatus, RoleEnum, FiscalPeriod, FiscalPeriodStatus
+from schemas import DebtorCreate, CreditorCreate, LedgerOut, PaymentRequest, FiscalPeriodCreate, FiscalPeriodOut
+from auth import get_current_user, require_manager_up
 from activity import log_activity_for_user
 
 router = APIRouter(prefix="/api/ledgers", tags=["ledgers"])
@@ -110,3 +111,94 @@ def pay_creditor(creditor_id: int, payload: PaymentRequest, db: Session = Depend
     db.refresh(creditor)
     log_activity_for_user(db, current_user, "creditor_payment", f"Paid {creditor.name} {payload.amount}")
     return creditor
+
+
+# ---------- Fiscal Periods ----------
+
+@router.get("/fiscal-periods", response_model=List[FiscalPeriodOut])
+def list_fiscal_periods(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    account_id = get_account_filter(current_user)
+    q = db.query(FiscalPeriod)
+    if account_id is not None:
+        q = q.filter(FiscalPeriod.account_id == account_id)
+    return q.order_by(FiscalPeriod.start_date.desc()).all()
+
+
+@router.post("/fiscal-periods", response_model=FiscalPeriodOut)
+def create_fiscal_period(payload: FiscalPeriodCreate, db: Session = Depends(get_db),
+                          current_user: User = Depends(require_manager_up)):
+    account_id = get_account_filter(current_user)
+    if account_id is None:
+        raise HTTPException(status_code=403, detail="Superadmin cannot create fiscal periods")
+    if payload.end_date <= payload.start_date:
+        raise HTTPException(status_code=400, detail="end_date must be after start_date")
+
+    overlap = (
+        db.query(FiscalPeriod)
+        .filter(
+            FiscalPeriod.account_id == account_id,
+            FiscalPeriod.start_date <= payload.end_date,
+            FiscalPeriod.end_date >= payload.start_date,
+        )
+        .first()
+    )
+    if overlap:
+        raise HTTPException(status_code=400, detail=f"Overlaps existing period '{overlap.name}'")
+
+    period = FiscalPeriod(account_id=account_id, name=payload.name,
+                           start_date=payload.start_date, end_date=payload.end_date)
+    db.add(period)
+    db.commit()
+    db.refresh(period)
+    log_activity_for_user(db, current_user, "fiscal_period_create", f"Created period {period.name}")
+    return period
+
+
+@router.post("/fiscal-periods/{period_id}/close", response_model=FiscalPeriodOut)
+def close_fiscal_period(period_id: int, db: Session = Depends(get_db),
+                         current_user: User = Depends(require_manager_up)):
+    """Locks the period: post_journal_entry will reject any entry dated
+    inside it from this point on. Existing entries are untouched — the
+    lock only blocks new posts and edits, never mutates history."""
+    account_id = get_account_filter(current_user)
+    q = db.query(FiscalPeriod).filter(FiscalPeriod.id == period_id)
+    if account_id is not None:
+        q = q.filter(FiscalPeriod.account_id == account_id)
+    period = q.first()
+    if not period:
+        raise HTTPException(status_code=404, detail="Fiscal period not found")
+    if period.status == FiscalPeriodStatus.closed:
+        raise HTTPException(status_code=400, detail="Fiscal period is already closed")
+
+    period.status = FiscalPeriodStatus.closed
+    period.closed_by = current_user.username
+    period.closed_at = datetime.utcnow()
+    db.commit()
+    db.refresh(period)
+    log_activity_for_user(db, current_user, "fiscal_period_close", f"Closed period {period.name}")
+    return period
+
+
+@router.post("/fiscal-periods/{period_id}/reopen", response_model=FiscalPeriodOut)
+def reopen_fiscal_period(period_id: int, db: Session = Depends(get_db),
+                          current_user: User = Depends(require_manager_up)):
+    """Reopening is intentionally left available to managers+ (not locked to
+    superadmin) since small businesses need to fix a mistaken close without
+    filing a support ticket — but every reopen is logged so it's auditable."""
+    account_id = get_account_filter(current_user)
+    q = db.query(FiscalPeriod).filter(FiscalPeriod.id == period_id)
+    if account_id is not None:
+        q = q.filter(FiscalPeriod.account_id == account_id)
+    period = q.first()
+    if not period:
+        raise HTTPException(status_code=404, detail="Fiscal period not found")
+    if period.status == FiscalPeriodStatus.open:
+        raise HTTPException(status_code=400, detail="Fiscal period is already open")
+
+    period.status = FiscalPeriodStatus.open
+    period.closed_by = None
+    period.closed_at = None
+    db.commit()
+    db.refresh(period)
+    log_activity_for_user(db, current_user, "CRITICAL: fiscal_period_reopen", f"Reopened period {period.name}")
+    return period

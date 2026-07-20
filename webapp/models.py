@@ -656,9 +656,13 @@ class JournalEntry(Base):
     reference = Column(String(100), nullable=True)  # e.g., invoice number, receipt number
     created_by = Column(String(80), nullable=True)
     is_locked = Column(Boolean, default=False)  # Prevents edits once posted/closed period
+    is_reversal = Column(Boolean, default=False)  # True if this entry itself is a reversal
+    reversed_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True)  # set on the reversal, pointing back at the original
+    is_voided = Column(Boolean, default=False)  # True on the original once a reversal has been posted against it
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     lines = relationship("JournalLine", back_populates="journal_entry", cascade="all, delete-orphan")
+    reversed_entry = relationship("JournalEntry", remote_side=[id], backref="reversals")
 
 
 class JournalLine(Base):
@@ -674,4 +678,30 @@ class JournalLine(Base):
 
     journal_entry = relationship("JournalEntry", back_populates="lines")
     account = relationship("ChartOfAccount", back_populates="journal_lines")
+
+
+class FiscalPeriodStatus(str, enum.Enum):
+    open = "open"
+    closed = "closed"
+
+
+class FiscalPeriod(Base):
+    """A closable accounting period (e.g. a calendar month). Once closed, no
+    journal entry may be posted with a date inside [start_date, end_date] —
+    corrections must go through a reversing entry in an open period instead."""
+    __tablename__ = "fiscal_periods"
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    name = Column(String(80), nullable=False)  # e.g. "2026-06" or "Q2 2026"
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+    status = Column(Enum(FiscalPeriodStatus), default=FiscalPeriodStatus.open, index=True)
+    closed_by = Column(String(80), nullable=True)
+    closed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("account_id", "name", name="uq_fiscal_period_account_name"),
+    )
 

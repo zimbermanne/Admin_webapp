@@ -21,7 +21,31 @@ Sale/Purchase/Expense row in each router. It's intentionally decoupled
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from models import ChartOfAccount, JournalEntry, JournalLine, LedgerAccountType
+from models import ChartOfAccount, JournalEntry, JournalLine, LedgerAccountType, FiscalPeriod, FiscalPeriodStatus
+
+
+class FiscalPeriodLockedError(ValueError):
+    """Raised when a post/edit is attempted against a date inside a closed
+    fiscal period. Callers should surface this as a 400, not swallow it —
+    per the integrity guardrail, closed periods are never silently skipped."""
+    pass
+
+
+def get_locked_period(db: Session, account_id: int, when: datetime) -> FiscalPeriod:
+    """Return the closed FiscalPeriod covering `when`, or None if the date
+    falls in an open period or no period has been defined for it at all
+    (undefined periods are treated as open, not locked)."""
+    when = when or datetime.utcnow()
+    return (
+        db.query(FiscalPeriod)
+        .filter(
+            FiscalPeriod.account_id == account_id,
+            FiscalPeriod.status == FiscalPeriodStatus.closed,
+            FiscalPeriod.start_date <= when,
+            FiscalPeriod.end_date >= when,
+        )
+        .first()
+    )
 
 
 # code -> (name, type). Kept small and flat; sub-accounts can be added later
@@ -75,11 +99,19 @@ def post_journal_entry(db: Session, account_id: int, description: str, lines: li
             f"Unbalanced journal entry '{description}': debits {total_debit} != credits {total_credit}"
         )
 
+    entry_date = date or datetime.utcnow()
+    locked = get_locked_period(db, account_id, entry_date)
+    if locked is not None:
+        raise FiscalPeriodLockedError(
+            f"Cannot post '{description}' on {entry_date.date()} — fiscal period "
+            f"'{locked.name}' is closed. Use a correction/reversing entry in an open period instead."
+        )
+
     chart = ensure_default_chart_of_accounts(db, account_id)
 
     entry = JournalEntry(
         account_id=account_id,
-        date=date or datetime.utcnow(),
+        date=entry_date,
         description=description,
         reference=reference,
         created_by=created_by,
@@ -157,3 +189,50 @@ def post_expense_entry(db: Session, account_id: int, expense, created_by: str = 
         created_by=created_by,
         date=expense.created_at,
     )
+
+
+def find_journal_entry_by_reference(db: Session, account_id: int, reference: str) -> JournalEntry:
+    """Look up the (non-reversal) journal entry originally posted for a
+    given transaction reference, e.g. 'sale-42' or 'expense-7'."""
+    return (
+        db.query(JournalEntry)
+        .filter(
+            JournalEntry.account_id == account_id,
+            JournalEntry.reference == reference,
+            JournalEntry.is_reversal.is_(False),
+        )
+        .first()
+    )
+
+
+def reverse_journal_entry(db: Session, account_id: int, original: JournalEntry,
+                           created_by: str = None, reason: str = "Void/correction") -> JournalEntry:
+    """Post an equal-and-opposite entry against `original` instead of ever
+    deleting or mutating a posted entry. The original is marked voided (kept
+    for audit trail) and the reversal links back to it via reversed_entry_id.
+    Posts today, in whatever period is currently open — reversals of a
+    closed-period entry still land in an open period, never back-dated into
+    the closed one."""
+    if original is None:
+        raise ValueError("Cannot reverse a journal entry that does not exist")
+    if original.is_voided:
+        raise ValueError(f"Journal entry {original.id} has already been reversed")
+
+    # Flip every debit/credit pair.
+    lines = [(line.account.code, line.credit, line.debit) for line in original.lines]
+
+    reversal = post_journal_entry(
+        db, account_id,
+        description=f"Reversal: {original.description} ({reason})",
+        lines=lines,
+        reference=f"reversal-of-{original.reference or original.id}",
+        created_by=created_by,
+        date=datetime.utcnow(),
+    )
+    reversal.is_reversal = True
+    reversal.reversed_entry_id = original.id
+    original.is_voided = True
+    original.is_locked = True
+    db.commit()
+    db.refresh(reversal)
+    return reversal

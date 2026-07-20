@@ -7,7 +7,7 @@ from models import Expense, User, RoleEnum
 from schemas import ExpenseCreate, ExpenseOut
 from auth import get_current_user, require_manager_up
 from activity import log_activity_for_user
-from ledger import post_expense_entry
+from ledger import post_expense_entry, find_journal_entry_by_reference, reverse_journal_entry, FiscalPeriodLockedError
 
 router = APIRouter(prefix="/api/expenses", tags=["expenses"])
 
@@ -37,7 +37,7 @@ def record_expense(payload: ExpenseCreate, db: Session = Depends(get_db),
     except ValueError as e:
         # Ledger posting failure shouldn't block the expense record itself,
         # but it must not fail silently — surface it in the activity log.
-        log_activity_for_user(db, current_user, "ledger_post_failed", str(e))
+        log_activity_for_user(db, current_user, "CRITICAL: ledger_post_failed", str(e))
     log_activity_for_user(db, current_user, "expense_record", f"Recorded expense {expense.amount} ({expense.category})")
     return expense
 
@@ -90,7 +90,18 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db),
     expense = query.first()
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
+
+    original_entry = find_journal_entry_by_reference(db, expense.account_id, f"expense-{expense.id}")
+    if original_entry is not None:
+        try:
+            reverse_journal_entry(db, expense.account_id, original_entry, created_by=current_user.username,
+                                   reason=f"Expense {expense_id} deleted")
+        except FiscalPeriodLockedError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except ValueError as e:
+            log_activity_for_user(db, current_user, "CRITICAL: ledger_reversal_failed", str(e))
+
     db.delete(expense)
     db.commit()
-    log_activity_for_user(db, current_user, "expense_delete", f"Deleted expense {expense_id}")
-    return {"detail": "Expense deleted"}
+    log_activity_for_user(db, current_user, "expense_delete", f"Deleted expense {expense_id}, ledger reversed")
+    return {"detail": "Expense deleted and ledger entry reversed"}
