@@ -12,12 +12,19 @@ import models  # noqa: F401 ensures models are registered before create_all
 from migrate import run_migrations
 from rate_limit import limiter
 from routers import auth, inventory, sales, purchases, expenses, ledgers, reports, users, activity, backup, agent, invoices, quotations, customers, accounts, reminders, community, personal, public, reference
+from scheduler import start_scheduler
 
 ensure_schemas(engine)
 Base.metadata.create_all(bind=engine)
 run_migrations(engine)
 
 app = FastAPI(title="Moneytracer API", version="2.5.0")
+
+
+@app.on_event("startup")
+def _start_background_jobs():
+    # Runs in-process — see scheduler.py docstring for the multi-instance caveat.
+    start_scheduler()
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

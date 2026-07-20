@@ -265,6 +265,25 @@ class ExpenseOut(BaseModel):
     created_at: datetime
 
 
+# ---------- Fiscal Periods ----------
+class FiscalPeriodCreate(BaseModel):
+    name: str
+    start_date: datetime
+    end_date: datetime
+
+
+class FiscalPeriodOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+    start_date: datetime
+    end_date: datetime
+    status: str
+    closed_by: Optional[str] = None
+    closed_at: Optional[datetime] = None
+    created_at: datetime
+
+
 # ---------- Ledgers ----------
 class DebtorCreate(BaseModel):
     name: str

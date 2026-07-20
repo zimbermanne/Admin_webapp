@@ -11,7 +11,7 @@ from models import Sale, InventoryItem, Debtor, User, PaymentMode, LedgerStatus,
 from schemas import SaleCreate, SaleOut, CheckoutRequest, CheckoutResponse
 from auth import get_current_user, require_manager_up
 from activity import log_activity_for_user
-from ledger import post_sale_entry
+from ledger import post_sale_entry, find_journal_entry_by_reference, reverse_journal_entry, FiscalPeriodLockedError
 
 router = APIRouter(prefix="/api/sales", tags=["sales"])
 
@@ -82,7 +82,7 @@ def record_sale(payload: SaleCreate, db: Session = Depends(get_db),
     try:
         post_sale_entry(db, account_id, sale, created_by=current_user.username)
     except ValueError as e:
-        log_activity_for_user(db, current_user, "ledger_post_failed", str(e))
+        log_activity_for_user(db, current_user, "CRITICAL: ledger_post_failed", str(e))
     log_activity_for_user(db, current_user, "sale_record", f"Sold {payload.quantity} x {item_name}")
     return sale
 
@@ -271,11 +271,21 @@ def delete_sale(sale_id: int, db: Session = Depends(get_db), current_user: User 
     sale = query.first()
     if not sale:
         raise HTTPException(status_code=404, detail="Sale not found")
+    original_entry = find_journal_entry_by_reference(db, account_id or sale.account_id, sale.receipt_no or f"sale-{sale.id}")
+    if original_entry is not None:
+        try:
+            reverse_journal_entry(db, sale.account_id, original_entry, created_by=current_user.username,
+                                   reason=f"Sale {sale_id} deleted")
+        except FiscalPeriodLockedError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except ValueError as e:
+            log_activity_for_user(db, current_user, "CRITICAL: ledger_reversal_failed", str(e))
+
     if sale.item_id:
         item = db.query(InventoryItem).filter(InventoryItem.id == sale.item_id).first()
         if item:
             item.quantity += sale.quantity
     db.delete(sale)
     db.commit()
-    log_activity_for_user(db, current_user, "sale_delete", f"Deleted sale {sale_id}, stock restored")
-    return {"detail": "Sale deleted and stock restored"}
+    log_activity_for_user(db, current_user, "sale_delete", f"Deleted sale {sale_id}, stock restored, ledger reversed")
+    return {"detail": "Sale deleted, stock restored, and ledger entry reversed"}

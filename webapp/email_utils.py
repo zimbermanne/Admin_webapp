@@ -44,3 +44,25 @@ def send_email_with_attachment(to_email: str, subject: str, body: str,
             server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
         server.send_message(msg)
+
+
+def send_plain_email(to_email: str, subject: str, body: str):
+    """Like send_email_with_attachment, but for notifications (e.g. overdue
+    invoice reminders) that have no PDF to attach."""
+    if not is_configured():
+        raise RuntimeError(
+            "Email sending isn't configured yet. Set SMTP_HOST, SMTP_USER and "
+            "SMTP_PASSWORD (and optionally SMTP_PORT, SMTP_FROM) on the backend."
+        )
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = SMTP_FROM
+    msg["To"] = to_email
+    msg.set_content(body)
+
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20) as server:
+        if SMTP_USE_TLS:
+            server.starttls()
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.send_message(msg)

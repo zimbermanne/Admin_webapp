@@ -15,6 +15,7 @@ from schemas import InvoiceCreate, InvoiceUpdate, InvoiceOut
 from auth import get_current_user, require_manager_up
 from activity import log_activity_for_user
 from email_utils import send_email_with_attachment
+from ledger import get_locked_period
 
 router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 
@@ -147,6 +148,14 @@ def update_invoice(invoice_id: int, payload: InvoiceUpdate, db: Session = Depend
     if invoice.status == DocumentStatus.paid:
         raise HTTPException(status_code=400, detail="Paid invoices cannot be edited")
 
+    locked = get_locked_period(db, invoice.account_id, invoice.created_at)
+    if locked is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invoice falls in closed fiscal period '{locked.name}' and cannot be edited. "
+                   f"Issue a correction/credit note instead.",
+        )
+
     if payload.customer_name is not None: invoice.customer_name = payload.customer_name
     if payload.customer_phone is not None: invoice.customer_phone = payload.customer_phone
     if payload.customer_address is not None: invoice.customer_address = payload.customer_address
@@ -238,6 +247,15 @@ def delete_invoice(invoice_id: int, db: Session = Depends(get_db),
         q = q.filter(Invoice.account_id == account_id)
     inv = q.first()
     if not inv: raise HTTPException(404, "Invoice not found")
+
+    locked = get_locked_period(db, inv.account_id, inv.created_at)
+    if locked is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invoice falls in closed fiscal period '{locked.name}' and cannot be deleted. "
+                   f"Issue a correction/credit note instead.",
+        )
+
     db.delete(inv); db.commit()
     log_activity_for_user(db, current_user, "invoice_delete", f"Deleted {inv.invoice_no}")
     return {"detail": "Invoice deleted"}
