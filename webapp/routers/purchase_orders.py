@@ -246,7 +246,7 @@ def purchase_order_pdf(po_id: int, db: Session = Depends(get_db), current_user: 
     if not po: raise HTTPException(404, "Purchase order not found")
 
     account = get_account_details(db, po.account_id)
-    buf = _render_pdf(_PdfDocAdapter(po), "PURCHASE ORDER", account, party_label="Supplier")
+    buf = _render_pdf(_PdfDocAdapter(po), "PURCHASE ORDER", account, party_label="Supplier", is_payable=False)
     log_activity_for_user(db, current_user, "po_pdf", f"Exported {po.po_no}")
     return StreamingResponse(buf, media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="PurchaseOrder-{po.po_no}.pdf"'})

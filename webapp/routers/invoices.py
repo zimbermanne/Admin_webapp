@@ -422,7 +422,8 @@ def email_invoice(invoice_id: int, payload: EmailDocRequest, db: Session = Depen
 
 
 def _render_pdf(doc: Invoice, label: str, account: dict = None, show_prices: bool = True,
-                 signature_block: bool = False, verify_url: str = None, party_label: str = "Bill To") -> io.BytesIO:
+                 signature_block: bool = False, verify_url: str = None, party_label: str = "Bill To",
+                 is_payable: bool = True) -> io.BytesIO:
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import mm
@@ -561,9 +562,12 @@ def _render_pdf(doc: Invoice, label: str, account: dict = None, show_prices: boo
         ]))
         elems.append(tt)
 
-    # Bank details (left) + Notes (right) — only shown on price-bearing documents,
-    # since a packing list/delivery note has nothing to be paid against.
-    if show_prices:
+    # Bank details (left) + Notes (right) — only shown on price-bearing documents
+    # you're asking someone else to pay (invoices), never on a packing list/delivery
+    # note (nothing owed), and never on a Purchase Order — a PO is money going OUT
+    # to a supplier, so there's no bank-to-pay-us info and no "due within N days"
+    # framed as if the recipient owes you.
+    if show_prices and is_payable:
         bank_name = (account or {}).get("bank_name") or ""
         bank_acct_name = (account or {}).get("bank_account_name") or ""
         bank_acct_no = (account or {}).get("bank_account_number") or ""
