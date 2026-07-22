@@ -44,6 +44,9 @@ def send_overdue_invoice_reminders():
     test), not just from the scheduler."""
     db = SessionLocal()
     try:
+        log_activity(db, username="system", action="scheduler_heartbeat",
+                     details="overdue_invoice_reminders run started", account_id=None)
+
         now = datetime.utcnow()
         overdue = (
             db.query(Invoice)

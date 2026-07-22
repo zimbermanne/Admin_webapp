@@ -11,7 +11,7 @@ from database import Base, engine, ensure_schemas
 import models  # noqa: F401 ensures models are registered before create_all
 from migrate import run_migrations
 from rate_limit import limiter
-from routers import auth, inventory, sales, purchases, expenses, ledgers, reports, users, activity, backup, agent, invoices, quotations, customers, accounts, reminders, community, personal, public, reference, purchase_orders
+from routers import auth, inventory, sales, purchases, expenses, ledgers, reports, users, activity, backup, agent, invoices, quotations, customers, accounts, reminders, community, personal, public, reference, purchase_orders, superadmin
 from scheduler import start_scheduler
 
 ensure_schemas(engine)
@@ -72,6 +72,7 @@ app.include_router(invoices.router)
 app.include_router(quotations.router)
 app.include_router(customers.router)
 app.include_router(accounts.router)
+app.include_router(superadmin.router)
 app.include_router(reminders.router)
 app.include_router(community.router)
 app.include_router(personal.router)

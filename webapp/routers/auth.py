@@ -7,9 +7,9 @@ from models import User, RoleEnum, Account, AccountType
 from schemas import UserCreate, UserOut, LoginRequest, Token, ChangePasswordRequest, AccountCreate
 from auth import (
     hash_password, authenticate_user, create_access_token,
-    get_current_user, require_admin, set_auth_cookie, clear_auth_cookie,
+    get_current_user, require_admin, require_superadmin, set_auth_cookie, clear_auth_cookie,
 )
-from activity import log_activity_for_user
+from activity import log_activity_for_user, log_activity
 from rate_limit import limiter
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -187,3 +187,48 @@ def reset_password(
     db.commit()
     log_activity_for_user(db, admin, "reset_password", f"Reset password for {username}")
     return {"detail": f"Password reset for {username}"}
+
+
+IMPERSONATION_MINUTES = 30
+
+
+@router.post("/impersonate/{user_id}", response_model=Token)
+def impersonate(user_id: int, db: Session = Depends(get_db),
+                 superadmin: User = Depends(require_superadmin)):
+    """Issue a short-lived token that logs in AS the target user — the
+    'Login as' support tool. Deliberately narrow:
+    - 30 minutes only, regardless of the platform's normal token lifetime.
+    - Can't target another superadmin (no lateral platform-access escalation
+      via a support tool — a superadmin who needs another superadmin's
+      access has a different problem to solve, not this one).
+    - Can't target an inactive user (nothing to support there).
+    - Always logged to the TARGET account's activity log, not just a
+      superadmin-side log — the account owner should be able to see that
+      support accessed their account, when, and as whom.
+    The token is otherwise indistinguishable from the user's own login token
+    (same 'sub'/'role'/'account_id' shape) so it works everywhere in the app
+    without special-casing — the short expiry and the audit trail are what
+    make this safe, not a different code path at request time.
+    """
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    if target.role == RoleEnum.superadmin:
+        raise HTTPException(status_code=403, detail="Cannot impersonate a superadmin")
+    if not target.is_active:
+        raise HTTPException(status_code=400, detail="User is inactive")
+
+    token_data = {"sub": target.username, "role": target.role.value, "impersonated_by": superadmin.username}
+    if target.account_id:
+        token_data["account_id"] = target.account_id
+
+    token = create_access_token(token_data, expires_minutes=IMPERSONATION_MINUTES)
+
+    log_activity(
+        db, username=target.username,
+        action="CRITICAL: superadmin_impersonation",
+        details=f"{superadmin.username} started a support session as {target.username} "
+                f"(expires in {IMPERSONATION_MINUTES} min)",
+        account_id=target.account_id,
+    )
+    return Token(access_token=token, user=target)
