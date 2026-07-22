@@ -24,11 +24,11 @@ from models import (
     Account, User, RoleEnum, AccountType, ActivityLog,
     Sale, Purchase, Expense, Invoice, Quotation, PurchaseOrder,
     JournalEntry, FiscalPeriod, FiscalPeriodStatus, Reminder,
-    Announcement, AnnouncementLevel, ServerLog,
+    Announcement, AnnouncementLevel,
 )
 from schemas import (
     ActivityOut, AccountAdminOut, PlanUpdate, NotesUpdate, BulkAccountIds,
-    RoleUpdate, AnnouncementCreate, AnnouncementOut, ServerLogOut,
+    RoleUpdate, AnnouncementCreate, AnnouncementOut,
 )
 from auth import require_superadmin
 from activity import log_activity_for_user
@@ -477,29 +477,3 @@ def deactivate_announcement(announcement_id: int, db: Session = Depends(get_db),
     db.commit()
     log_activity_for_user(db, superadmin, "announcement_deactivate", f"Deactivated announcement #{announcement_id}")
     return {"detail": "Announcement deactivated"}
-
-
-# ---------- Server logs (unhandled-exception monitoring) ----------
-# Populated by main.py's global exception handler. This is the "what's
-# actually breaking, with a real traceback" view for an operator who doesn't
-# have access to host-level deploy/process logs.
-
-@router.get("/logs", response_model=List[ServerLogOut])
-def list_server_logs(
-    limit: int = Query(100, ge=1, le=1000),
-    path_contains: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    superadmin: User = Depends(require_superadmin),
-):
-    q = db.query(ServerLog)
-    if path_contains:
-        q = q.filter(ServerLog.path.like(f"%{path_contains}%"))
-    return q.order_by(ServerLog.created_at.desc()).limit(limit).all()
-
-
-@router.delete("/logs")
-def clear_server_logs(db: Session = Depends(get_db), superadmin: User = Depends(require_superadmin)):
-    deleted = db.query(ServerLog).delete()
-    db.commit()
-    log_activity_for_user(db, superadmin, "server_logs_clear", f"Cleared {deleted} server log entr(ies)")
-    return {"detail": f"Cleared {deleted} log entr(ies)"}
