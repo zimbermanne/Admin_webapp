@@ -102,6 +102,45 @@ function CommunityDashboard() {
   )
 }
 
+function LoansAndDeadlinesWidget({ loans, deadlines }) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+
+  const activeLoans = (loans || []).filter((l) => l.status === 'active')
+  const totalOutstanding = activeLoans.reduce((s, l) => {
+    const paidPrincipal = (l.payments || []).reduce((sp, p) => sp + p.principal_portion, 0)
+    return s + (l.principal - paidPrincipal)
+  }, 0)
+
+  const upcomingDeadlines = [...(deadlines || [])]
+    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+    .slice(0, 3)
+
+  if (activeLoans.length === 0 && upcomingDeadlines.length === 0) return null
+
+  return (
+    <div className="card-grid" style={{ marginBottom: 20 }}>
+      {activeLoans.length > 0 && (
+        <div className="card metric-card" style={{ cursor: 'pointer' }} onClick={() => navigate('/app/bank-loans')}>
+          <div className="label">{t('bankLoans.totalOutstanding')}</div>
+          <div className="value">TZS {totalOutstanding.toLocaleString()}</div>
+        </div>
+      )}
+      {upcomingDeadlines.length > 0 && (
+        <div className="card" style={{ cursor: 'pointer', gridColumn: 'span 2' }} onClick={() => navigate('/app/deadlines')}>
+          <div className="label" style={{ marginBottom: 8 }}>{t('deadlines.upcomingCompliance')}</div>
+          {upcomingDeadlines.map((d) => (
+            <div key={d.id} style={{ fontSize: 13, display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+              <span>{d.label}</span>
+              <span style={{ color: 'var(--text-muted)' }}>{new Date(d.due_date).toLocaleDateString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function BusinessDashboard() {
   const api = useApi()
   const navigate = useNavigate()
@@ -112,6 +151,8 @@ function BusinessDashboard() {
   const [cashflow, setCashflow] = useState(null)
   const [salesStats, setSalesStats] = useState(null)
   const [lowStock, setLowStock] = useState([])
+  const [loans, setLoans] = useState([])
+  const [deadlines, setDeadlines] = useState([])
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -122,14 +163,18 @@ function BusinessDashboard() {
       api.get('/reports/cashflow?months=12'),
       api.get('/sales/stats/summary'),
       api.get('/inventory/low-stock/alerts'),
+      api.get('/bank-loans/').catch(() => []),
+      api.get('/deadlines/').catch(() => []),
     ])
-      .then(([d, i, f, c, s, ls]) => {
+      .then(([d, i, f, c, s, ls, bl, dl]) => {
         setDaily(d)
         setInv(i)
         setFin(f)
         setCashflow(c)
         setSalesStats(s)
         setLowStock(ls)
+        setLoans(bl)
+        setDeadlines(dl)
       })
       .catch((e) => setError(e.message))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -212,6 +257,8 @@ function BusinessDashboard() {
           </div>
         </div>
       </div>
+
+      <LoansAndDeadlinesWidget loans={loans} deadlines={deadlines} />
 
       <CashflowChart series={cashflow?.series} />
     </div>

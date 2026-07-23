@@ -51,6 +51,8 @@ function buildNav(t) {
       ],
     },
     { type: 'item', label: t('nav.expensesItem'), icon: '💸', path: '/app/expenses' },
+    { type: 'item', label: t('nav.bankLoans'), icon: '🏦', path: '/app/bank-loans' },
+    { type: 'item', label: t('nav.deadlines'), icon: '⏰', path: '/app/deadlines' },
     { type: 'item', label: t('nav.activityLogsItem'), icon: '🕵️', path: '/app/activity', roles: ['manager', 'admin', 'superadmin'] },
     { type: 'item', label: t('nav.settingsItem'), icon: '⚙️', path: '/app/settings' },
   ]
@@ -77,6 +79,8 @@ export const PAGE_TITLE_KEYS = {
   '/app/reports/creditors': 'nav.creditorsReport',
   '/app/reports/inventory-valuation': 'nav.inventoryValuation',
   '/app/expenses': 'nav.expensesItem',
+  '/app/bank-loans': 'nav.bankLoans',
+  '/app/deadlines': 'nav.deadlines',
   '/app/activity': 'nav.activityLogsItem',
   '/app/settings': 'nav.settingsItem',
 }

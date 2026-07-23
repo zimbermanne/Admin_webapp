@@ -56,7 +56,9 @@
     "activityLogsItem": "Kumbukumbu za Shughuli",
     "settingsItem": "Mipangilio",
     "logOut": "Toka",
-    "purchaseOrders": "Maagizo ya Ununuzi"
+    "purchaseOrders": "Maagizo ya Ununuzi",
+    "bankLoans": "Mikopo ya Benki",
+    "deadlines": "Muda wa Uzingatiaji Sheria"
   },
   "auth": {
     "login": "Ingia",
@@ -399,5 +401,79 @@
     "readFullTerms": "Soma Masharti kamili ya Matumizi na Tamko la Kutowajibika →",
     "availableInLanguages": "Inapatikana kwa lugha nyingi, ikiwemo Kiswahili, Kiingereza, Kifaransa, Kireno, Kiarabu, Kihausa, na Kiamhari.",
     "copyright": "Moneytracer."
+  },
+  "bankLoans": {
+    "title": "Mikopo ya Benki",
+    "newLoan": "Mkopo Mpya",
+    "lender": "Mkopeshaji",
+    "principal": "Kiasi cha Mkopo",
+    "currentBalance": "Salio la Sasa",
+    "interestType": "Aina ya Riba",
+    "simple": "Rahisi",
+    "reducingBalance": "Riba Inayopungua",
+    "annualRate": "Kiwango cha Riba kwa Mwaka",
+    "startDate": "Tarehe ya Kuanza",
+    "dueDay": "Siku ya Malipo kwa Mwezi",
+    "termMonths": "Muda (miezi)",
+    "gracePeriod": "Muda wa Neema (siku)",
+    "totalOutstanding": "Jumla Isiyolipwa",
+    "activeLoans": "Mikopo Inayoendelea",
+    "noLoans": "Hakuna mikopo iliyorekodiwa bado.",
+    "outstanding": "haijalipwa",
+    "logPayment": "Rekodi Malipo",
+    "markClosed": "Weka Imefungwa",
+    "markDefaulted": "Weka Haikulipwa",
+    "paymentHistory": "Historia ya Malipo",
+    "noPayments": "Hakuna malipo yaliyorekodiwa bado.",
+    "interest": "Riba",
+    "principalPortion": "Sehemu ya Mkopo",
+    "balanceAfter": "Salio Baada",
+    "roadmap": "Ratiba ya Malipo",
+    "viewRoadmap": "Angalia Ratiba",
+    "confirmDelete": "Futa mkopo huu?",
+    "lenderRequired": "Jina la mkopeshaji linahitajika",
+    "principalRequired": "Kiasi cha mkopo lazima kiwe zaidi ya sifuri",
+    "startDateRequired": "Tarehe ya kuanza inahitajika",
+    "status": {
+      "active": "Unaendelea",
+      "closed": "Umefungwa",
+      "defaulted": "Haukulipwa"
+    }
+  },
+  "deadlines": {
+    "title": "Muda wa Uzingatiaji Sheria",
+    "newDeadline": "Muda Mpya",
+    "editDeadline": "Hariri Muda",
+    "label": "Jina",
+    "type": "Aina",
+    "dueDate": "Tarehe ya Mwisho",
+    "recurrence": "Marudio",
+    "noDeadlines": "Hakuna muda uliorekodiwa bado.",
+    "deactivate": "Zima",
+    "confirmDelete": "Futa muda huu?",
+    "labelRequired": "Jina linahitajika",
+    "dueDateRequired": "Tarehe ya mwisho inahitajika",
+    "upcomingCompliance": "Uzingatiaji Unaokuja",
+    "groups": {
+      "overdue": "Umechelewa",
+      "thisWeek": "Wiki Hii",
+      "later": "Baadaye"
+    },
+    "recurrences": {
+      "monthly": "Kila Mwezi",
+      "yearly": "Kila Mwaka",
+      "once": "Mara Moja"
+    },
+    "types": {
+      "tra_paye": "TRA — PAYE",
+      "tra_sdl": "TRA — SDL",
+      "tra_vat": "TRA — VAT",
+      "brela_annual_fee": "Ada ya Mwaka ya BRELA",
+      "business_name_renewal": "Usajili wa Jina la Biashara",
+      "nssf": "NSSF",
+      "wcf": "WCF",
+      "osha": "OSHA",
+      "custom": "Nyingine"
+    }
   }
 }

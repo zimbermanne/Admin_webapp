@@ -56,7 +56,9 @@
     "activityLogsItem": "Activity Logs",
     "settingsItem": "Settings",
     "logOut": "Log out",
-    "purchaseOrders": "Purchase Orders"
+    "purchaseOrders": "Purchase Orders",
+    "bankLoans": "Bank Loans",
+    "deadlines": "Compliance Deadlines"
   },
   "auth": {
     "login": "Login",
@@ -399,5 +401,79 @@
     "readFullTerms": "Read the full Terms of Use & Disclaimer →",
     "availableInLanguages": "Available in multiple languages, including English, French, Portuguese, Swahili, Arabic, Hausa, and Amharic.",
     "copyright": "Moneytracer."
+  },
+  "bankLoans": {
+    "title": "Bank Loans",
+    "newLoan": "New Loan",
+    "lender": "Lender",
+    "principal": "Principal",
+    "currentBalance": "Current Balance",
+    "interestType": "Interest Type",
+    "simple": "Simple",
+    "reducingBalance": "Reducing Balance",
+    "annualRate": "Annual Rate",
+    "startDate": "Start Date",
+    "dueDay": "Due Day of Month",
+    "termMonths": "Term (months)",
+    "gracePeriod": "Grace Period (days)",
+    "totalOutstanding": "Total Outstanding",
+    "activeLoans": "Active Loans",
+    "noLoans": "No loans recorded yet.",
+    "outstanding": "outstanding",
+    "logPayment": "Log a Payment",
+    "markClosed": "Mark as Closed",
+    "markDefaulted": "Mark as Defaulted",
+    "paymentHistory": "Payment History",
+    "noPayments": "No payments logged yet.",
+    "interest": "Interest",
+    "principalPortion": "Principal",
+    "balanceAfter": "Balance After",
+    "roadmap": "Repayment Roadmap",
+    "viewRoadmap": "View Roadmap",
+    "confirmDelete": "Delete this loan?",
+    "lenderRequired": "Lender name is required",
+    "principalRequired": "Principal must be greater than zero",
+    "startDateRequired": "Start date is required",
+    "status": {
+      "active": "Active",
+      "closed": "Closed",
+      "defaulted": "Defaulted"
+    }
+  },
+  "deadlines": {
+    "title": "Compliance Deadlines",
+    "newDeadline": "New Deadline",
+    "editDeadline": "Edit Deadline",
+    "label": "Label",
+    "type": "Type",
+    "dueDate": "Due Date",
+    "recurrence": "Recurrence",
+    "noDeadlines": "No deadlines recorded yet.",
+    "deactivate": "Deactivate",
+    "confirmDelete": "Delete this deadline?",
+    "labelRequired": "Label is required",
+    "dueDateRequired": "Due date is required",
+    "upcomingCompliance": "Upcoming Compliance",
+    "groups": {
+      "overdue": "Overdue",
+      "thisWeek": "This Week",
+      "later": "Later"
+    },
+    "recurrences": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "once": "One-time"
+    },
+    "types": {
+      "tra_paye": "TRA — PAYE",
+      "tra_sdl": "TRA — SDL",
+      "tra_vat": "TRA — VAT",
+      "brela_annual_fee": "BRELA Annual Fee",
+      "business_name_renewal": "Business Name Renewal",
+      "nssf": "NSSF",
+      "wcf": "WCF",
+      "osha": "OSHA",
+      "custom": "Custom"
+    }
   }
 }

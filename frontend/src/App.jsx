@@ -30,6 +30,8 @@ import Customers from './pages/Customers.jsx'
 import Settings from './pages/Settings.jsx'
 import ActivityLogs from './pages/ActivityLogs.jsx'
 import VerifyDocument from './pages/VerifyDocument.jsx'
+import BankLoans from './pages/BankLoans.jsx'
+import Deadlines from './pages/Deadlines.jsx'
 
 function pageTitle(pathname, t) {
   const key = PAGE_TITLE_KEYS[pathname]
@@ -130,6 +132,8 @@ function PrivateRoutes() {
         <Route path="/customers" element={<Customers />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/activity" element={<ActivityLogs />} />
+        <Route path="/bank-loans" element={<BankLoans />} />
+        <Route path="/deadlines" element={<Deadlines />} />
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>
     </Layout>
