@@ -58,6 +58,8 @@
     "logOut": "Log out",
     "purchaseOrders": "Purchase Orders",
     "bankLoans": "Bank Loans",
+    "assets": "Assets",
+    "personal": "Personal Finance",
     "deadlines": "Compliance Deadlines"
   },
   "auth": {

@@ -11,6 +11,8 @@ from database import get_db
 from models import (
     User, SpendingCategory, SpendingTransaction, SpendingGroup,
     SpendingGroupMember, SpendingGroupContribution,
+    Asset, BankLoan, LoanStatus, Debtor, Creditor, Expense,
+    GroupMember, Contribution, GroupLoan, GroupLoanStatus, SavingsGroup,
 )
 from schemas import (
     SpendingCategoryCreate, SpendingCategoryOut,
@@ -19,6 +21,7 @@ from schemas import (
     SpendingGroupCreate, SpendingGroupOut, SpendingGroupContributionCreate,
     SpendingGroupProgress,
     CategorySuggestion, RecurringExpense, SpendingAlert, SmartInsights,
+    PersonalOverview, VikobaMembershipSummary,
 )
 from auth import require_account_user
 from activity import log_activity_for_user
@@ -435,3 +438,67 @@ def smart_insights(db: Session = Depends(get_db), user: User = Depends(require_a
     )
     recurring = _detect_recurring(db, user.account_id)
     return SmartInsights(alerts=alerts, recurring=recurring)
+
+
+# ---------- Overview (one call: assets, debts, expenses, Vikoba memberships) ----------
+
+@router.get("/overview", response_model=PersonalOverview)
+def personal_overview(db: Session = Depends(get_db), user: User = Depends(require_account_user)):
+    account_id = user.account_id
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    total_assets = sum(a.estimated_value for a in db.query(Asset).filter(Asset.account_id == account_id).all())
+
+    active_loans = db.query(BankLoan).filter(
+        BankLoan.account_id == account_id, BankLoan.status == LoanStatus.active,
+    ).all()
+    total_bank_debt = 0.0
+    for loan in active_loans:
+        paid_principal = sum(p.principal_portion for p in loan.payments)
+        total_bank_debt += max(loan.principal - paid_principal, 0)
+
+    total_creditors = sum(
+        max(c.total_owed - c.amount_paid, 0)
+        for c in db.query(Creditor).filter(Creditor.account_id == account_id).all()
+    )
+    total_debtors = sum(
+        max(d.total_owed - d.amount_paid, 0)
+        for d in db.query(Debtor).filter(Debtor.account_id == account_id).all()
+    )
+
+    expenses_this_month = sum(
+        e.amount for e in db.query(Expense).filter(
+            Expense.account_id == account_id, Expense.created_at >= month_start,
+        ).all()
+    )
+
+    # Vikoba memberships: GroupMember rows tied to THIS user, regardless of
+    # which (community-type) account owns the group they belong to — this
+    # is the bridge that lets a personal user see groups they don't own.
+    memberships = db.query(GroupMember).filter(GroupMember.user_id == user.id).all()
+    vikoba_summaries = []
+    for m in memberships:
+        group = db.query(SavingsGroup).filter(SavingsGroup.id == m.group_id).first()
+        if not group:
+            continue
+        total_contributed = sum(
+            c.amount for c in db.query(Contribution).filter(Contribution.member_id == m.id).all()
+        )
+        active_loan = db.query(GroupLoan).filter(
+            GroupLoan.member_id == m.id, GroupLoan.status == GroupLoanStatus.active,
+        ).first()
+        vikoba_summaries.append(VikobaMembershipSummary(
+            group_id=group.id, group_name=group.name, group_role=m.group_role,
+            total_contributed=total_contributed,
+            active_loan_balance=active_loan.balance if active_loan else 0,
+        ))
+
+    return PersonalOverview(
+        total_assets_value=total_assets,
+        total_bank_debt=total_bank_debt,
+        total_owed_to_creditors=total_creditors,
+        total_owed_by_debtors=total_debtors,
+        expenses_this_month=expenses_this_month,
+        vikoba_memberships=vikoba_summaries,
+    )

@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict
 from models import (
     RoleEnum, PaymentMode, LedgerStatus, DocumentStatus, BusinessStructure,
     AccountType, ContributionStyle, CycleFrequency, GroupLoanStatus, PurchaseOrderStatus,
-    LoanInterestType, LoanStatus, DeadlineType, DeadlineRecurrence,
+    LoanInterestType, LoanStatus, DeadlineType, DeadlineRecurrence, AssetCategory,
 )
 
 
@@ -306,6 +306,52 @@ class ExpenseOut(BaseModel):
     category: str
     description: str
     amount: float
+    created_at: datetime
+
+
+# ---------- Personal overview ----------
+class VikobaMembershipSummary(BaseModel):
+    group_id: int
+    group_name: str
+    group_role: str
+    total_contributed: float
+    active_loan_balance: float
+
+
+class PersonalOverview(BaseModel):
+    total_assets_value: float
+    total_bank_debt: float
+    total_owed_to_creditors: float
+    total_owed_by_debtors: float
+    expenses_this_month: float
+    vikoba_memberships: List[VikobaMembershipSummary]
+
+
+# ---------- Assets ----------
+class AssetCreate(BaseModel):
+    name: str
+    category: AssetCategory = AssetCategory.other
+    estimated_value: float = 0
+    acquired_date: Optional[datetime] = None
+    notes: Optional[str] = ""
+
+
+class AssetUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[AssetCategory] = None
+    estimated_value: Optional[float] = None
+    acquired_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class AssetOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+    category: AssetCategory
+    estimated_value: float
+    acquired_date: Optional[datetime] = None
+    notes: str
     created_at: datetime
 
 

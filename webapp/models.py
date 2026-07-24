@@ -746,6 +746,37 @@ class LoanStatus(str, enum.Enum):
     defaulted = "defaulted"
 
 
+# ---------------------------------------------------------------------------
+# Assets — a flat value-tracker (house, vehicle, equipment, etc). No
+# depreciation schedule for v1; estimated_value is whatever the owner last
+# updated it to. account_id is intentionally not restricted to business-type
+# accounts — personal-type tenants use these same endpoints/tables directly
+# (the personal/business/community separation is enforced elsewhere, e.g.
+# community.py's ownership check; it was never actually enforced here).
+# ---------------------------------------------------------------------------
+
+class AssetCategory(str, enum.Enum):
+    property = "property"
+    vehicle = "vehicle"
+    equipment = "equipment"
+    other = "other"
+
+
+class Asset(Base):
+    __tablename__ = "assets"
+    __table_args__ = schema_args(SCHEMA_BUSINESS)
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    name = Column(String(150), nullable=False)
+    category = Column(Enum(AssetCategory), default=AssetCategory.other)
+    estimated_value = Column(Float, default=0)
+    acquired_date = Column(DateTime, nullable=True)
+    notes = Column(String(255), default="")
+    created_by = Column(String(80), default="")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class BankLoan(Base):
     __tablename__ = "bank_loans"
     __table_args__ = schema_args(SCHEMA_BUSINESS)

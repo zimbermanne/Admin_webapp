@@ -9,38 +9,38 @@ import { useNavigationGuard } from '../hooks/useNavigationGuard.jsx'
 function buildNav(t) {
   return [
     { type: 'item', label: t('nav.home'), icon: '🏠', path: '/app' },
-    { type: 'item', label: t('nav.pos'), icon: '🧾', path: '/app/pos' },
+    { type: 'item', label: t('nav.pos'), icon: '🧾', path: '/app/pos', accountTypes: ['business', 'community'] },
     {
-      type: 'group', label: t('nav.salesGroup'), key: 'sales',
+      type: 'group', label: t('nav.salesGroup'), key: 'sales', accountTypes: ['business', 'community'],
       children: [
         { label: t('nav.salesHistory'), icon: '📜', path: '/app/sales' },
         { label: t('nav.customers'), icon: '👥', path: '/app/customers' },
-        { label: t('nav.clientsDebtors'), icon: '📒', path: '/app/debtors' },
       ],
     },
+    { type: 'item', label: t('nav.clientsDebtors'), icon: '📒', path: '/app/debtors' },
     {
-      type: 'group', label: t('nav.purchasesGroup'), key: 'purchases',
+      type: 'group', label: t('nav.purchasesGroup'), key: 'purchases', accountTypes: ['business', 'community'],
       children: [
         { label: t('nav.purchasesLedger'), icon: '📦', path: '/app/purchases' },
         { label: t('nav.purchaseOrders'), icon: '📝', path: '/app/purchase-orders' },
-        { label: t('nav.creditorsLedger'), icon: '🏦', path: '/app/creditors' },
       ],
     },
+    { type: 'item', label: t('nav.creditorsLedger'), icon: '🏦', path: '/app/creditors' },
     {
-      type: 'group', label: t('nav.proformaGroup'), key: 'proforma',
+      type: 'group', label: t('nav.proformaGroup'), key: 'proforma', accountTypes: ['business', 'community'],
       children: [
         { label: t('nav.invoices'), icon: '🧾', path: '/app/invoices' },
         { label: t('nav.quotations'), icon: '📑', path: '/app/quotations' },
       ],
     },
     {
-      type: 'group', label: t('nav.inventoryGroup'), key: 'inventory',
+      type: 'group', label: t('nav.inventoryGroup'), key: 'inventory', accountTypes: ['business', 'community'],
       children: [
         { label: t('nav.inventoryLedger'), icon: '📋', path: '/app/inventory' },
       ],
     },
     {
-      type: 'group', label: t('nav.reportsGroup'), key: 'reports',
+      type: 'group', label: t('nav.reportsGroup'), key: 'reports', accountTypes: ['business', 'community'],
       children: [
         { label: t('nav.profitLoss'), icon: '📈', path: '/app/reports/profit-loss' },
         { label: t('nav.financialSummary'), icon: '💰', path: '/app/reports/financial-summary' },
@@ -52,6 +52,8 @@ function buildNav(t) {
     },
     { type: 'item', label: t('nav.expensesItem'), icon: '💸', path: '/app/expenses' },
     { type: 'item', label: t('nav.bankLoans'), icon: '🏦', path: '/app/bank-loans' },
+    { type: 'item', label: t('nav.assets'), icon: '🏠', path: '/app/assets' },
+    { type: 'item', label: t('nav.personal'), icon: '💰', path: '/app/personal' },
     { type: 'item', label: t('nav.deadlines'), icon: '⏰', path: '/app/deadlines' },
     { type: 'item', label: t('nav.activityLogsItem'), icon: '🕵️', path: '/app/activity', roles: ['manager', 'admin', 'superadmin'] },
     { type: 'item', label: t('nav.settingsItem'), icon: '⚙️', path: '/app/settings' },
@@ -80,6 +82,8 @@ export const PAGE_TITLE_KEYS = {
   '/app/reports/inventory-valuation': 'nav.inventoryValuation',
   '/app/expenses': 'nav.expensesItem',
   '/app/bank-loans': 'nav.bankLoans',
+  '/app/assets': 'nav.assets',
+  '/app/personal': 'nav.personal',
   '/app/deadlines': 'nav.deadlines',
   '/app/activity': 'nav.activityLogsItem',
   '/app/settings': 'nav.settingsItem',
@@ -88,7 +92,7 @@ export const PAGE_TITLE_KEYS = {
 export default function Sidebar({ mobileOpen, onClose }) {
   const location = useLocation()
   const { guardedNavigate } = useNavigationGuard()
-  const { user, logout } = useAuth()
+  const { user, account, logout } = useAuth()
   const [openGroups, setOpenGroups] = useState({})
   const { t } = useTranslation()
   const NAV = buildNav(t)
@@ -122,7 +126,9 @@ export default function Sidebar({ mobileOpen, onClose }) {
       </div>
 
       <nav className="sidebar-nav">
-        {NAV.filter((entry) => !entry.roles || entry.roles.includes(user?.role)).map((entry) => {
+        {NAV.filter((entry) => !entry.roles || entry.roles.includes(user?.role))
+          .filter((entry) => !entry.accountTypes || entry.accountTypes.includes(account?.account_type))
+          .map((entry) => {
           if (entry.type === 'item') {
             const active = location.pathname === entry.path
             return (
